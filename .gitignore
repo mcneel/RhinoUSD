@@ -1,0 +1,103 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+*.rhp
+*.pdb
+*.pdb.bak
+
+# MacOS cruft
+.DS_Store
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Visual Studio temp files
+*.suo
+*.sdf
+
+# NUGET folders
+packages/
+
+# Git
+hooks/
+lfs/
+
+# Output folders
+bin/
+Debug/
+Release/
+x64/
+obj/
+ipch/
+win/
+
+# but allow all under openimageio, openexr, embree, boost
+!boost/**/debug
+!boost/**/*.lib
+!boost/**/*.dll
+!boost/stagerelease
+!OpenEXR*/**/*.lib
+!OpenEXR*/**/*.dll
+!OpenEXR*/**/*.dylib
+!OpenImage*/**/*.lib
+!OpenImage*/**/*.dll
+!OpenImage*/**/*.dylib
+!embree*/**/*.lib
+!embree*/**/*.dll
+!embree*/**/*.dylib
+
+# MSBuild cruft
+*.metaproj
+*.metaproj.tmp
+*.opensdf
+*.vcxproj.user
+
+# Intermediate C/H files for COM
+*_h.h
+*_i.h
+*_i.c
+*_p.c
+
+# Specific files
+src4/version.h
+src4/version.cs
+src4/version.vb
+src4/version.wxi
+src4/Builder/
+src4/BuildSolutions/Rhino.opensdf
+src4/DotNetSDK/rhinocommon/dotnet/AutoNativeEnums.cs
+src4/DotNetSDK/rhinocommon/dotnet/AutoNativeMethods.cs
+src4/DotNetSDK/rhinocommon/dotnet/AutoNativeMethodsRdk.cs
+src4/DotNetSDK/rhinocommon/MethodGen.exe.config
+src4/Zoo/crypto/doc/crypto.xml
+src4/rhino4/Plug-ins/RhinoHandlers/dlldata.c
+*.log
+*.tlog
+
+# OpenDesign crud
+OpenDesign/22.12/VS2019/**/include/
+OpenDesign/22.12/VS2019/**/*.dir/
+OpenDesign/23.4/VS2022/**/include/
+OpenDesign/23.4/VS2022/**/*.dir/
