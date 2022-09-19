@@ -73,6 +73,7 @@
 #include "RhRdkHeaders.h" 
 
 // TODO: include additional Rhino-related header files here
+#include <pxr/pxr.h>
 
 #if defined(RHINO_DEBUG_PLUGIN)
 // Now that all the system headers are read, we can
