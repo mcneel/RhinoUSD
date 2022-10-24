@@ -1,5 +1,4 @@
-﻿#include "StdAfx.h"
-#include "rhinoSdkPlugInDeclare.h"
+#include "StdAfx.h"
 #include "ImportUSDPlugIn.h"
 #include "Resource.h"
 
@@ -8,55 +7,46 @@
 #pragma init_seg(lib)
 #pragma warning(pop)
 
-RHINO_PLUG_IN_DECLARE
-RHINO_PLUG_IN_NAME(L"ImportUSD");
-RHINO_PLUG_IN_ID(L"7C5D9A51-4AF7-4CE1-8661-30FE69473C6E");
-RHINO_PLUG_IN_VERSION(__DATE__ "  " __TIME__)
-RHINO_PLUG_IN_DESCRIPTION(L"Import Pixar USD");
-RHINO_PLUG_IN_ICON_RESOURCE_ID(IDI_ICON);
+// rhinoSdkPlugInDeclare.h defines the RHINO_PLUG_IN_DECLARE macro
+#include "../../../SDK/inc/rhinoSdkPlugInDeclare.h"
 
-RHINO_PLUG_IN_DEVELOPER_ORGANIZATION(L"Robert McNeel & Associates");
-RHINO_PLUG_IN_DEVELOPER_ADDRESS(L"146 North Canal Street, Suite 320\r\nSeattle, WA 98103");
-RHINO_PLUG_IN_DEVELOPER_COUNTRY(L"United States");
-RHINO_PLUG_IN_DEVELOPER_PHONE(L"(206) 545-7000");
-RHINO_PLUG_IN_DEVELOPER_FAX(L"(206) 545-7321");
-RHINO_PLUG_IN_DEVELOPER_EMAIL(L"tech@mcneel.com");
-RHINO_PLUG_IN_DEVELOPER_WEBSITE(L"https://www.rhino3d.com/");
-RHINO_PLUG_IN_UPDATE_URL(L"https://www.rhino3d.com/");
+// Rhino plug-in declarations
+RHINO_PLUG_IN_DECLARE
+RHINO_PLUG_IN_NAME(L"Import Pixar USD");
+RHINO_PLUG_IN_ID(L"7C5D9A51-4AF7-4CE1-8661-30FE69473C6E");
+RHINO_PLUG_IN_VERSION(RHINO_VERSION_NUMBER_STRING)
+RHINO_PLUG_IN_UPDATE_URL(L"http://www.rhino3d.com/download");
 
 // The one and only CImportUSDPlugIn object
 static class CImportUSDPlugIn thePlugIn;
 
 // CImportUSDPlugIn definition
 
-CImportUSDPlugIn& ImportUSDPlugIn()
-{
-	return thePlugIn;
-}
-
-CImportUSDPlugIn::CImportUSDPlugIn()
-{
-	m_plugin_version = RhinoPlugInVersion();
-}
-
-// Required overrides
-
 const wchar_t* CImportUSDPlugIn::PlugInName() const
 {
 	return RhinoPlugInName();
 }
 
+const wchar_t* CImportUSDPlugIn::LocalPlugInName() const
+{
+  return RHSTR(L"Import Pixar USD");
+}
+
 const wchar_t* CImportUSDPlugIn::PlugInVersion() const
 {
-	return m_plugin_version;
+  static wchar_t plugin_version[128] = { 0 };
+  if (0 == plugin_version[0])
+    ON_ConvertUTF8ToWideChar(false, RhinoPlugInVersion(), 0, plugin_version, sizeof(plugin_version) / sizeof(plugin_version[0]) - 1, 0, 0, 0, 0);
+  return plugin_version;
 }
 
 GUID CImportUSDPlugIn::PlugInID() const
 {
-	return ON_UuidFromString(RhinoPlugInId());
+  static GUID plugin_id = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
+  if (0 == plugin_id.Data1 && ON_UuidIsNil(plugin_id))
+    plugin_id = ON_UuidFromString(RhinoPlugInId());
+  return plugin_id;
 }
-
-// Additional overrides
 
 BOOL CImportUSDPlugIn::OnLoadPlugIn()
 {
@@ -67,21 +57,19 @@ void CImportUSDPlugIn::OnUnloadPlugIn()
 {
 }
 
-// File import overrides
-
 void CImportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileReadOptions& options)
 {
-	UNREFERENCED_PARAMETER(options);
-	CRhinoFileType ft(PlugInID(), L"Pixar USD (*.usd)", L"usd");
-	extensions.Append(ft);
+  CRhinoFileType ft;
+  ft.SetFileTypePlugInID(PlugInID());
+  ft.FileTypeDescription(RHSTR(L"Pixar USD (*.usd)"));
+  ft.AddFileTypeExtension(RHSTR_LIT(L"usd"));
+  extensions.Append(ft);
 }
 
-BOOL CImportUSDPlugIn::ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options)
+BOOL32 CImportUSDPlugIn::ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options)
 {
-	UNREFERENCED_PARAMETER(filename);
-	UNREFERENCED_PARAMETER(index);
-	UNREFERENCED_PARAMETER(doc);
-	UNREFERENCED_PARAMETER(options);
+  if (nullptr == filename || 0 == filename[0] || !CRhinoFileUtilities::FileExists(filename))
+    return FALSE;
 
 	// TODO: Add file import code here.
 

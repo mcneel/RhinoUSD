@@ -1,13 +1,14 @@
 #pragma once
 
-class CExportUSDPlugIn : public CRhinoFileExportPlugIn
+class CExportUSDPlugIn : public CRhinoFileExportSystemPlugIn
 {
 public:
-  CExportUSDPlugIn();
+  CExportUSDPlugIn() = default;
   ~CExportUSDPlugIn() = default;
 
   // Required overrides
   const wchar_t* PlugInName() const override;
+  const wchar_t* LocalPlugInName() const override;
   const wchar_t* PlugInVersion() const override;
   GUID PlugInID() const override;
   
@@ -15,13 +16,7 @@ public:
   BOOL OnLoadPlugIn() override;
   void OnUnloadPlugIn() override;
 
-  // File export overrides
+  // File export plug-in overrides
   void AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileWriteOptions& options) override;
-  BOOL WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options) override;
-
-private:
-  ON_wString m_plugin_version;
+  int WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options) override;
 };
-
-// Return a reference to the one and only CExportUSDPlugIn object
-CExportUSDPlugIn& ExportUSDPlugIn();

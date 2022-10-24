@@ -13,11 +13,13 @@ CImportUSDApp theApp;
 
 BOOL CImportUSDApp::InitInstance()
 {
-	CWinApp::InitInstance();
+  // CRITICAL: DO NOT CALL RHINO SDK FUNCTIONS HERE!
+  CWinApp::InitInstance();
 	return TRUE;
 }
 
 int CImportUSDApp::ExitInstance()
 {
+  // CRITICAL: DO NOT CALL RHINO SDK FUNCTIONS HERE!
   return CWinApp::ExitInstance();
 }

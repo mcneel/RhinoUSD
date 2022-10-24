@@ -13,11 +13,13 @@ CExportUSDApp theApp;
 
 BOOL CExportUSDApp::InitInstance()
 {
+	// CRITICAL: DO NOT CALL RHINO SDK FUNCTIONS HERE!
 	CWinApp::InitInstance();
 	return TRUE;
 }
 
 int CExportUSDApp::ExitInstance()
 {
-  return CWinApp::ExitInstance();
+	// CRITICAL: DO NOT CALL RHINO SDK FUNCTIONS HERE!
+	return CWinApp::ExitInstance();
 }
