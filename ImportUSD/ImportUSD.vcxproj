@@ -30,7 +30,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\ExportUSD\ExportUSD_Version.rc" />
+    <ResourceCompile Include="ImportUSD_Version.rc" />
     <ResourceCompile Include="ImportUSD.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
