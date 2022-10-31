@@ -29,7 +29,7 @@ const wchar_t* CImportUSDPlugIn::PlugInName() const
 
 const wchar_t* CImportUSDPlugIn::LocalPlugInName() const
 {
-  return RHSTR(L"Import Pixar USD");
+  return RhLocalizeString( L"Import Pixar USD", 55139);
 }
 
 const wchar_t* CImportUSDPlugIn::PlugInVersion() const
@@ -61,7 +61,7 @@ void CImportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, co
 {
   CRhinoFileType ft;
   ft.SetFileTypePlugInID(PlugInID());
-  ft.FileTypeDescription(RHSTR(L"Pixar USD (*.usd)"));
+  ft.FileTypeDescription(RhLocalizeString( L"Pixar USD (*.usd)", 55140));
   ft.AddFileTypeExtension(RHSTR_LIT(L"usd"));
   extensions.Append(ft);
 }
