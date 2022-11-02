@@ -24,6 +24,9 @@
     <ClCompile Include="ImportUSDPlugIn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\devinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImportUSDApp.h">
@@ -38,12 +41,6 @@
     <ClInclude Include="ImportUSDPlugIn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ImportUSD.def">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ImportUSD.rc">

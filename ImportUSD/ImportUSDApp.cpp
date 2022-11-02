@@ -7,7 +7,7 @@ BEGIN_MESSAGE_MAP(CImportUSDApp, CWinApp)
 END_MESSAGE_MAP()
 
 // The one and only CImportUSDApp object
-CImportUSDApp theApp;
+static class CImportUSDApp theApp;
 
 // CImportUSDApp initialization
 

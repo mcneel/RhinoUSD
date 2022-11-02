@@ -43,12 +43,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ExportUSD.def">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="ExportUSD.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>

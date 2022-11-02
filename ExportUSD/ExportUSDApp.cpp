@@ -7,7 +7,7 @@ BEGIN_MESSAGE_MAP(CExportUSDApp, CWinApp)
 END_MESSAGE_MAP()
 
 // The one and only CExportUSDApp object
-CExportUSDApp theApp;
+static class CExportUSDApp theApp;
 
 // CExportUSDApp initialization
 
