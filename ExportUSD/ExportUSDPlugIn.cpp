@@ -46,166 +46,104 @@ GUID CExportUSDPlugIn::PlugInID() const
 	return plugin_id;
 }
 
-BOOL CExportUSDPlugIn::OnLoadPlugIn()
-{
-	return TRUE;
-}
-
-void CExportUSDPlugIn::OnUnloadPlugIn()
-{
-}
-
 void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileWriteOptions& options)
 {
 	CRhinoFileType ft;
 	ft.SetFileTypePlugInID(PlugInID());
-	ft.FileTypeDescription(RhLocalizeString( L"Pixar USD (*.usda)", 55138));
+	ft.FileTypeDescription(L"Pixar USD (*.usda)");
 	ft.AddFileTypeExtension(RHSTR_LIT(L"usda"));
-	extensions.Append(ft);
+  //ft.AddFileTypeExtension(RHSTR_LIT(L"usdc"));
+  //ft.AddFileTypeExtension(RHSTR_LIT(L"usdz"));
+  extensions.Append(ft);
 }
 
 
 int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
 {
 	if (nullptr == filename || 0 == filename[0])
-		return FALSE;
+		return 0;
 
-  tinyusdz::Stage stage; // empty scene
-  tinyusdz::Xform xform;
-  xform.name = "root";
 
-  tinyusdz::XformOp op;
-  op.op_type = tinyusdz::XformOp::OpType::Translate;
-  tinyusdz::value::double3 translate;
-  translate[0] = 1.0;
-  translate[1] = 2.0;
-  translate[2] = 3.0;
-  op.set_value(translate);
+  ON_SimpleArray<const CRhinoObject*> object(256);
 
-  xform.xformOps.push_back(op);
-
-  tinyusdz::GeomMesh mesh;
-  mesh.name = "quad";
-
+  CRhinoObjectIterator it(doc.RuntimeSerialNumber(), options);
+  for (CRhinoObject* obj = it.First(); obj; obj = it.Next())
   {
-    std::vector<tinyusdz::value::point3f> pts;
-    pts.push_back({ 0.0f, 0.0f, 0.0f });
-
-    pts.push_back({ 1.0f, 0.0f, 0.0f });
-
-    pts.push_back({ 1.0f, 1.0f, 0.0f });
-
-    pts.push_back({ 0.0f, 1.0f, 0.0f });
-
-    mesh.points.set_value(pts);
+    object.Append(obj);
   }
 
+  // Get meshes to export (meshes breps, copys mesh object meshes,
+  // deals with instance references that contain meshes and breps,
+  ON_MeshParameters mp = ON_MeshParameters::DefaultMesh;
+  int mesh_ui_style = 4;
+  ON_ClassArray<CRhinoObjectMesh> mesh_list;
+  CRhinoCommand::result rcMesh = RhinoMeshObjects(object, mp, options.Transformation(), mesh_ui_style, mesh_list);
+  if (CRhinoCommand::cancel == rcMesh || mesh_list.Count()<1)
+    return 0;
+  
+  tinyusdz::Stage stage; // empty scene
+  for (int meshIndex = 0; meshIndex < mesh_list.Count(); meshIndex++)
   {
-    // quad plane composed of 2 triangles.
+    const CRhinoObjectMesh& objectMesh = mesh_list[meshIndex];
+    if (nullptr == objectMesh.m_mesh)
+      continue;
+
+    tinyusdz::GeomMesh mesh;
+    ON_String s;
+    s.Format("mesh%d", meshIndex + 1);
+    mesh.name = s;
+
+    std::vector<tinyusdz::value::point3f> pts;
+    for (int i = 0; i < objectMesh.m_mesh->m_V.Count(); i++)
+    {
+      const ON_3fPoint pt = objectMesh.m_mesh->m_V[i];
+      tinyusdz::value::point3f pt3f;
+      pt3f.x = pt.x;
+      pt3f.y = pt.y;
+      pt3f.z = pt.z;
+      pts.push_back(pt3f);
+    }
+    mesh.points.set_value(pts);
+
     std::vector<int> indices;
     std::vector<int> counts;
-    counts.push_back(3);
-    counts.push_back(3);
+    for (int i = 0; i < objectMesh.m_mesh->m_F.Count(); i++)
+    {
+      const ON_MeshFace& face = objectMesh.m_mesh->m_F[i];
+      indices.push_back(face.vi[0]);
+      indices.push_back(face.vi[1]);
+      indices.push_back(face.vi[2]);
+      if (face.IsTriangle())
+      {
+        counts.push_back(3);
+      }
+      else
+      {
+        counts.push_back(4);
+        indices.push_back(face.vi[3]);
+      }
+    }
     mesh.faceVertexCounts.set_value(counts);
-
-    indices.push_back(0);
-    indices.push_back(1);
-    indices.push_back(2);
-
-    indices.push_back(0);
-    indices.push_back(2);
-    indices.push_back(3);
-
     mesh.faceVertexIndices.set_value(indices);
+
+    tinyusdz::Prim meshPrim(mesh);
+    stage.root_prims().push_back(meshPrim);
   }
 
-  // primvar and custom attribute can be added to generic Property container `props`
-  {
-    // primvar is simply an attribute with prefix `primvars:`
-    //
-    // texCoord2f[] primvars:uv = [ ... ] ( interpolation = "vertex" )
-    // int[] primvars:uv:indices = [ ... ]
-    //
-    {
-      tinyusdz::Attribute uvAttr;
-      std::vector<tinyusdz::value::texcoord2f> uvs;
-
-      uvs.push_back({ 0.0f, 0.0f });
-      uvs.push_back({ 1.0f, 0.0f });
-      uvs.push_back({ 1.0f, 1.0f });
-      uvs.push_back({ 0.0f, 1.0f });
-
-      // Fast path. Set the value directly to Attribute.
-      uvAttr.set_value(uvs);
-
-      // or we can first build primvar::PrimVar
-      //tinyusdz::primvar::PrimVar uvVar;
-      //uvVar.set_value(uvs);
-      //uvAttr.set_var(std::move(uvVar));
-
-      // Currently `interpolation` is described in Attribute metadataum.
-      tinyusdz::AttrMeta meta;
-      meta.interpolation = tinyusdz::Interpolation::Vertex;
-      uvAttr.metas() = meta;
-
-      tinyusdz::Property uvProp(uvAttr, /* custom*/false);
-
-      mesh.props.emplace("primvars:uv", uvProp);
-
-      // ----------------------
-
-      tinyusdz::Attribute uvIndexAttr;
-      std::vector<int> uvIndices;
-
-      // FIXME: Validate
-      uvIndices.push_back(0);
-      uvIndices.push_back(1);
-      uvIndices.push_back(2);
-      uvIndices.push_back(3);
-
-
-      tinyusdz::primvar::PrimVar uvIndexVar;
-      uvIndexVar.set_value(uvIndices);
-      uvIndexAttr.set_var(std::move(uvIndexVar));
-
-      tinyusdz::Property uvIndexProp(uvIndexAttr, /* custom*/false);
-      mesh.props.emplace("primvars:uv:indices", uvIndexProp);
-
-    }
-
-    // `custom uniform double myvalue = 3.0 ( hidden = 0 )`
-    {
-      tinyusdz::Attribute attrib;
-      double myvalue = 3.0;
-      tinyusdz::primvar::PrimVar var;
-      var.set_value(myvalue);
-      attrib.set_var(std::move(var));
-
-      attrib.variability() = tinyusdz::Variability::Uniform;
-
-      tinyusdz::AttrMeta meta;
-      meta.hidden = false;
-      attrib.metas() = meta;
-
-      tinyusdz::Property prop(attrib, /* custom*/true);
-
-      mesh.props.emplace("myvalue", prop);
-    }
-
-  }
-
-  tinyusdz::Prim meshPrim(mesh);
-  tinyusdz::Prim xformPrim(xform);
-
-  // [Xform]
-  //  |
-  //  +- [Mesh]
-  //
-  xformPrim.children().emplace_back(std::move(meshPrim));
-
-  stage.root_prims().emplace_back(std::move(xformPrim));
   std::string warn;
   std::string err;
-  bool ret = tinyusdz::usda::SaveAsUSDA(filename, stage, &warn, &err);
-	return ret ? TRUE : FALSE;
+
+  bool success = false;
+  ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(filename);
+  if (extension.EqualOrdinal(L".usda", true))
+  {
+    success = tinyusdz::usda::SaveAsUSDA(filename, stage, &warn, &err);
+  }
+  // USDC writing is not implemented yet in tinyusdz
+  //else
+  //{
+  //  ON_String fname(filename);
+  //  success = tinyusdz::usdc::SaveAsUSDCToFile(fname.Array(), stage, &warn, &err);
+  //}
+  return success ? 1 : 0;
 }
