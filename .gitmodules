@@ -1,0 +1,3 @@
+[submodule "tinyusdz"]
+	path = tinyusdz
+	url = https://github.com/syoyo/tinyusdz.git
