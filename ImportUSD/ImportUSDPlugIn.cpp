@@ -53,7 +53,7 @@ void CImportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, co
 {
   CRhinoFileType ft;
   ft.SetFileTypePlugInID(PlugInID());
-  ft.FileTypeDescription(RHSTR( L"Pixar USD (*.usda, *.usdc, *.usdz)"));
+  ft.FileTypeDescription(RhLocalizeString( L"Pixar USD (*.usda, *.usdc, *.usdz)", 55291));
   ft.AddFileTypeExtension(RHSTR_LIT(L"usda"));
   ft.AddFileTypeExtension(RHSTR_LIT(L"usdc"));
   ft.AddFileTypeExtension(RHSTR_LIT(L"usdz"));
