@@ -48,30 +48,77 @@ GUID CImportUSDPlugIn::PlugInID() const
   return plugin_id;
 }
 
-BOOL CImportUSDPlugIn::OnLoadPlugIn()
-{
-	return TRUE;
-}
-
-void CImportUSDPlugIn::OnUnloadPlugIn()
-{
-}
 
 void CImportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileReadOptions& options)
 {
   CRhinoFileType ft;
   ft.SetFileTypePlugInID(PlugInID());
-  ft.FileTypeDescription(RhLocalizeString( L"Pixar USD (*.usd)", 55140));
-  ft.AddFileTypeExtension(RHSTR_LIT(L"usd"));
+  ft.FileTypeDescription(RHSTR( L"Pixar USD (*.usda, *.usdc, *.usdz)"));
+  ft.AddFileTypeExtension(RHSTR_LIT(L"usda"));
+  ft.AddFileTypeExtension(RHSTR_LIT(L"usdc"));
+  ft.AddFileTypeExtension(RHSTR_LIT(L"usdz"));
   extensions.Append(ft);
 }
 
 BOOL32 CImportUSDPlugIn::ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options)
 {
   if (nullptr == filename || 0 == filename[0] || !CRhinoFileUtilities::FileExists(filename))
-    return FALSE;
+    return 0;
 
-	// TODO: Add file import code here.
+  tinyusdz::Stage stage;
+  std::string warn;
+  std::string err;
+  ON_String fname(filename);
+  bool success = tinyusdz::LoadUSDFromFile(fname.Array(), &stage, &warn, &err);
+  if (!success)
+    return 0;
 
-	return TRUE;
+  std::vector<tinyusdz::Prim>& primatives = stage.root_prims();
+  for (int i = 0; i < primatives.size(); i++)
+  {
+    tinyusdz::Prim& primative = primatives[i];
+    const tinyusdz::GeomMesh* usdzmesh = primative.as<tinyusdz::GeomMesh>();
+    if (usdzmesh)
+    {
+      const std::vector<tinyusdz::value::point3f> points = usdzmesh->get_points();
+      const std::vector<int32_t> counts = usdzmesh->get_faceVertexCounts();
+      const std::vector<int32_t> indices = usdzmesh->get_faceVertexIndices();
+
+      if (points.size() < 1 || counts.size() < 1 || indices.size() < 1)
+        continue;
+
+      ON_Mesh mesh;
+      mesh.m_V.Reserve(points.size());
+      for (int j = 0; j < points.size(); j++)
+      {
+        const tinyusdz::value::point3f& pt = points[j];
+        mesh.m_V.Append(ON_3fPoint(pt.x, pt.y, pt.z));
+      }
+
+      int currentIndex = 0;
+      for (int j = 0; j < counts.size(); j++)
+      {
+        // only deal with 3 and 4 index faces for now
+        int count = counts[j];
+        if (3 == count || 4 == count)
+        {
+          ON_MeshFace face;
+          face.vi[0] = indices[currentIndex];
+          face.vi[1] = indices[currentIndex+1];
+          face.vi[2] = indices[currentIndex+2];
+          if (3 == count)
+            face.vi[3] = face.vi[2];
+          else
+            face.vi[3] = indices[currentIndex + 3];
+          mesh.m_F.Append(face);
+        }
+        currentIndex += count;
+      }
+
+      doc.AddMeshObject(mesh);
+    }
+  }
+
+
+	return 1;
 }
