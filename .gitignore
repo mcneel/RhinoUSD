@@ -104,3 +104,4 @@ OpenDesign/23.4/VS2022/**/*.dir/
 tinyusdz
 
 .vs/
+opennurbs_usd_console/output/
