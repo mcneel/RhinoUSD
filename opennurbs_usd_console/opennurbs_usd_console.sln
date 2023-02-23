@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opennurbs_usd_console", "opennurbs_usd_console.vcxproj", "{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8} = {1356641D-0B22-4123-B519-A69EE5CDC7F8}
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29} = {7B90C09F-DC78-42B2-AD34-380F6D466B29}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opennurbs_public", "opennurbs\opennurbs_public.vcxproj", "{1356641D-0B22-4123-B519-A69EE5CDC7F8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29} = {7B90C09F-DC78-42B2-AD34-380F6D466B29}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "opennurbs\zlib\zlib.vcxproj", "{7B90C09F-DC78-42B2-AD34-380F6D466B29}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Debug|x64.ActiveCfg = Debug|x64
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Debug|x64.Build.0 = Debug|x64
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Debug|x86.ActiveCfg = Debug|Win32
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Debug|x86.Build.0 = Debug|Win32
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Release|x64.ActiveCfg = Release|x64
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Release|x64.Build.0 = Release|x64
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Release|x86.ActiveCfg = Release|Win32
+		{42FFBFCE-1C8A-4C90-B924-409318AC6FC8}.Release|x86.Build.0 = Release|Win32
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Debug|x64.ActiveCfg = Debug|x64
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Debug|x64.Build.0 = Debug|x64
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Debug|x86.ActiveCfg = Debug|Win32
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Debug|x86.Build.0 = Debug|Win32
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Release|x64.ActiveCfg = Release|x64
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Release|x64.Build.0 = Release|x64
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Release|x86.ActiveCfg = Release|Win32
+		{1356641D-0B22-4123-B519-A69EE5CDC7F8}.Release|x86.Build.0 = Release|Win32
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Debug|x64.ActiveCfg = Debug|x64
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Debug|x64.Build.0 = Debug|x64
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Debug|x86.ActiveCfg = Debug|Win32
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Debug|x86.Build.0 = Debug|Win32
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Release|x64.ActiveCfg = Release|x64
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Release|x64.Build.0 = Release|x64
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Release|x86.ActiveCfg = Release|Win32
+		{7B90C09F-DC78-42B2-AD34-380F6D466B29}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85B16A7F-112D-4D99-B207-715D9F751834}
+	EndGlobalSection
+EndGlobal
