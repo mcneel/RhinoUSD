@@ -7,7 +7,8 @@ int main()
 {
   ON_3dPoint point(1, 2, 3);
   point.IsNotZero();
-   std::cout << "Hello World!\n";
+
+  std::cout << "Hello World!\n";
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
