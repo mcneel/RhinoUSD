@@ -1,3 +1,6 @@
 [submodule "tinyusdz"]
 	path = tinyusdz
 	url = https://github.com/syoyo/tinyusdz.git
+[submodule "opennurbs_usd_console/opennurbs"]
+	path = opennurbs_usd_console/opennurbs
+	url = https://github.com/mcneel/opennurbs.git

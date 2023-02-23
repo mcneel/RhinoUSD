@@ -102,3 +102,6 @@ OpenDesign/22.12/VS2019/**/*.dir/
 OpenDesign/23.4/VS2022/**/include/
 OpenDesign/23.4/VS2022/**/*.dir/
 tinyusdz
+
+.vs/
+opennurbs_usd_console/output/
