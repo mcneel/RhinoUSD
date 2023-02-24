@@ -108,6 +108,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   if (0 == currentIndex)
     return 0;
 
+  // use an ON_String to convert from unicode to mbcs which is what usd wants
   ON_String usdPath(filename);
   if (usdModel->Export(usdPath.Array()))
     return 1;
