@@ -71,10 +71,16 @@ static bool WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wStrin
   if (mesh->HasVertexColors())
   {
     pxr::VtArray<pxr::GfVec3f> colors;
-    colors.resize(mesh->m_C.Count());
-    for (int i = 0; i < mesh->m_C.Count(); i++)
+    int colorsCount = mesh->m_C.Count();
+    for (int i = 0; i < colorsCount; i++)
     {
+      ON_Color clr = mesh->m_C[i];
+      GfVec3f usdClr((float)clr.FractionRed(), (float)clr.FractionGreen(), (float)clr.FractionBlue());
+      std::cout << usdClr << "--" << colors.size() << std::endl;
+      colors.push_back(usdClr);
     }
+    UsdAttribute cattr = usdMesh.CreateDisplayColorAttr();
+    cattr.Set(colors);
   }
 
   VtVec3fArray extents(2);
