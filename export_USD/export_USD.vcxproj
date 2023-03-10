@@ -77,13 +77,13 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\usd\win_release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\usd\win_release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
