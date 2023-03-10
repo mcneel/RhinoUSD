@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\UsdShared\UsdShared.cpp" />
     <ClCompile Include="ExportUSDApp.cpp" />
     <ClCompile Include="ExportUSDPlugIn.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -20,6 +21,7 @@
     <ClCompile Include="write_usd.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UsdShared\UsdShared.h" />
     <ClInclude Include="ExportUSDApp.h" />
     <ClInclude Include="ExportUSDPlugIn.h" />
     <ClInclude Include="Resource.h" />

@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "opennurbs/opennurbs_textiterator.h"
+//#include "opennurbs/opennurbs_textiterator.h"
 //#include "opennurbs/opennurbs_system.h"
 #include "write_usd.h"
 #include <iostream>
 
-using namespace pxrInternal_v0_23__pxrReserved__;
+using namespace pxr;
 
 static std::string ON_wStringToStdString(const ON_wString& onwstr)
 {
