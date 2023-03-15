@@ -61,4 +61,5 @@
 #include "pxr/usd/usdGeom/mesh.h"
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdGeom/sphere.h"
+#include "pxr/usd/usdGeom/metrics.h"
 #pragma warning(pop)

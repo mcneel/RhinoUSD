@@ -160,11 +160,13 @@ xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\UsdShared\UsdShared.cpp" />
+    <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="write_usd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\UsdShared\UsdShared.h" />
+    <ClInclude Include="..\UsdShared\ON_Helpers.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="write_usd.h" />
   </ItemGroup>

@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\UsdShared\UsdShared.cpp" />
+    <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
     <ClCompile Include="ExportUSDApp.cpp" />
     <ClCompile Include="ExportUSDPlugIn.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -22,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\UsdShared\UsdShared.h" />
+    <ClInclude Include="..\UsdShared\ON_Helpers.h" />
     <ClInclude Include="ExportUSDApp.h" />
     <ClInclude Include="ExportUSDPlugIn.h" />
     <ClInclude Include="Resource.h" />

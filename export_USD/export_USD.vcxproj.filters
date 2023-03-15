@@ -30,6 +30,9 @@
     <ClCompile Include="..\UsdShared\UsdShared.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\UsdShared\ON_Helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExportUSDApp.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\UsdShared\UsdShared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UsdShared\ON_Helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
