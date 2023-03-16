@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\UsdShared\UsdShared.cpp" />
+    <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
     <ClCompile Include="ExportUSDApp.cpp" />
     <ClCompile Include="ExportUSDPlugIn.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -20,6 +22,8 @@
     <ClCompile Include="write_usd.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UsdShared\UsdShared.h" />
+    <ClInclude Include="..\UsdShared\ON_Helpers.h" />
     <ClInclude Include="ExportUSDApp.h" />
     <ClInclude Include="ExportUSDPlugIn.h" />
     <ClInclude Include="Resource.h" />
@@ -75,13 +79,13 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\usd\win_release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\usd\win_release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>

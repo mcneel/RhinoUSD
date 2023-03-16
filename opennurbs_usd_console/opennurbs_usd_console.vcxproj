@@ -71,13 +71,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\usd\win_debug;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\obj\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(Platform)\$(Configuration)\obj\</IntDir>
-    <IncludePath>$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\usd\include\boost-1_78;$(SolutionDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\usd\win_release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -159,10 +159,14 @@ xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\UsdShared\UsdShared.cpp" />
+    <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="write_usd.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UsdShared\UsdShared.h" />
+    <ClInclude Include="..\UsdShared\ON_Helpers.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="write_usd.h" />
   </ItemGroup>

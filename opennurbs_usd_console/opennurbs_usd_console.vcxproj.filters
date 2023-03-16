@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="UsdShared">
+      <UniqueIdentifier>{6be4fd27-37f0-48a6-ab4a-8d9b1dc6f412}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -21,6 +24,12 @@
     <ClCompile Include="write_usd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\UsdShared\UsdShared.cpp">
+      <Filter>UsdShared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\UsdShared\ON_Helpers.cpp">
+      <Filter>UsdShared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="write_usd.h">
@@ -28,6 +37,12 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UsdShared\UsdShared.h">
+      <Filter>UsdShared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UsdShared\ON_Helpers.h">
+      <Filter>UsdShared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@
 int main()
 {
   ON_FileIterator fit;
-  fit.Initialize(L"./opennurbs/example_files/V7", L"*.3dm");
+  fit.Initialize(L"./opennurbs/example_files/V7", L"*logo_nurbs.3dm");
   for (bool haveItem = fit.FirstItem(); haveItem; haveItem = fit.NextItem())
   {
     if (fit.CurrentItemIsFile())
