@@ -1,5 +1,10 @@
 #include "stdafx.h"
+#if defined( CORE_BUILD )
+#include "../../../SDK/inc/rhinoSdkPlugInDeclare.h"
+#else
 #include "rhinoSdkPlugInDeclare.h"
+#endif
+
 #include "ExportUSDPlugIn.h"
 #include "Resource.h"
 
@@ -63,7 +68,7 @@ void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, co
 	CRhinoFileType ft;
 	ft.SetFileTypePlugInID(PlugInID());
 	ft.FileTypeDescription(L"USD (*.usd, *.usda)");
-  //ft.AddFileTypeExtension(L"usd");
+  ft.AddFileTypeExtension(L"usd");
   ft.AddFileTypeExtension(L"usda");
   extensions.Append(ft);
 }
