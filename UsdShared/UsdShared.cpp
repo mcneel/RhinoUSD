@@ -6,7 +6,14 @@
 
 using namespace pxr;
 
-UsdExportImport::UsdExportImport() : currentMeshIndex(0)
+UsdExportImport::UsdExportImport() :
+  currentMeshIndex(0),
+  currentMaterialIndex(0),
+  currentShaderIndex(0),
+  tokPreviewSurface("UsdPreviewSurface"),
+  tokSurface("surface"),
+  tokDiffuseColor("diffuseColor"),
+  tokOpacity("opacity")
 {
   stage = UsdStage::CreateInMemory();
   // Set the Z up direction for Rhino
@@ -22,9 +29,51 @@ void UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>
     currentMeshIndex++;
 }
 
+void UsdExportImport::__addMat(const pxr::GfVec3f& diffuseColor, float opacity, const std::vector<ON_wString>& layerNames)
+{
+  ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
+  ON_wString name;
+  name.Format(L"/material%d", currentMaterialIndex++);
+  name = layerNamesPath + name;
+  std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
+  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrName));
+
+
+  ON_wString shaderName;
+  shaderName.Format(L"/shader%d", currentShaderIndex++);
+  shaderName = layerNamesPath + shaderName;
+  std::string stdStrShaderName = ON_Helpers::ON_wStringToStdString(shaderName);
+  pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
+  shader.CreateIdAttr(pxr::VtValue(tokPreviewSurface));
+  usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
+
+  shader.CreateInput(tokDiffuseColor, pxr::SdfValueTypeNames->Color3f).Set(diffuseColor);
+  shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
+}
+
+void UsdExportImport::AddMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames)
+{
+  float r(material->Diffuse().FractionRed());
+  float b(material->Diffuse().FractionBlue());
+  float g(material->Diffuse().FractionGreen());
+  pxr::GfVec3f diffColor(r, b, g);
+
+  float opacity(material->Transparency());
+
+  __addMat(diffColor, opacity, layerNames);
+}
+
+void UsdExportImport::AddPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames)
+{
+  ON_4fColor color = pbrMaterial->BaseColor();
+  pxr::GfVec3f diffColor(color.Red(), color.Green(), color.Blue());
+  float o(pbrMaterial->Opacity());
+  __addMat(diffColor, o, layerNames);
+}
+
 bool UsdExportImport::AnythingToSave()
 {
-  return currentMeshIndex > 0;
+  return currentMeshIndex > 0 || currentMaterialIndex > 0;
 }
 
 void UsdExportImport::Save(const ON_wString& fileName)
@@ -84,7 +133,6 @@ bool UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wS
     pxr::GfVec3f pt(rhinoPt.x, rhinoPt.y, rhinoPt.z);
     points.push_back(pt);
   }
-  //usdMesh.GetPointsAttr().Set(points);
   usdMesh.CreatePointsAttr().Set(points);
 
   pxr::VtArray<int> faceVertexCounts;
