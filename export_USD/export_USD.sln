@@ -7,10 +7,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "export_USD", "export_USD.vc
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		CoreDebug|x64 = CoreDebug|x64
+		CoreRelease|x64 = CoreRelease|x64
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD251B46-F60B-46F9-886E-646EA428E39A}.CoreDebug|x64.ActiveCfg = CoreDebug|x64
+		{BD251B46-F60B-46F9-886E-646EA428E39A}.CoreDebug|x64.Build.0 = CoreDebug|x64
+		{BD251B46-F60B-46F9-886E-646EA428E39A}.CoreRelease|x64.ActiveCfg = CoreRelease|x64
+		{BD251B46-F60B-46F9-886E-646EA428E39A}.CoreRelease|x64.Build.0 = CoreRelease|x64
 		{BD251B46-F60B-46F9-886E-646EA428E39A}.Debug|x64.ActiveCfg = Debug|x64
 		{BD251B46-F60B-46F9-886E-646EA428E39A}.Debug|x64.Build.0 = Debug|x64
 		{BD251B46-F60B-46F9-886E-646EA428E39A}.Release|x64.ActiveCfg = Release|x64
