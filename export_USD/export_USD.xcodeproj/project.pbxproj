@@ -1,0 +1,281 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		223BC30C29D22B390090D5E8 /* ExportUSDPlugIn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC30A29D22B390090D5E8 /* ExportUSDPlugIn.cpp */; };
+		223BC30D29D22B390090D5E8 /* write_usd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC30B29D22B390090D5E8 /* write_usd.cpp */; };
+		22C600CA29D23121002FBBF0 /* OpenNURBS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C600C929D23121002FBBF0 /* OpenNURBS.framework */; };
+		22C600CC29D23121002FBBF0 /* RhCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C600CB29D23121002FBBF0 /* RhCore.framework */; };
+		22C600D229D2361C002FBBF0 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C600D129D2361C002FBBF0 /* libtbb.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		220221EB29D22A31005357DE /* export_USD.rhp */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = export_USD.rhp; sourceTree = BUILT_PRODUCTS_DIR; };
+		223BC30829D22B280090D5E8 /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
+		223BC30929D22B280090D5E8 /* ExportUSDPlugIn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportUSDPlugIn.h; sourceTree = "<group>"; };
+		223BC30A29D22B390090D5E8 /* ExportUSDPlugIn.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExportUSDPlugIn.cpp; sourceTree = "<group>"; };
+		223BC30B29D22B390090D5E8 /* write_usd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = write_usd.cpp; sourceTree = "<group>"; };
+		223BC30E29D22B6E0090D5E8 /* PluginDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDebug.xcconfig; path = ../../../../Mac/XCConfig/PluginDebug.xcconfig; sourceTree = "<group>"; };
+		223BC30F29D22B6E0090D5E8 /* PluginDistribution.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDistribution.xcconfig; path = ../../../../Mac/XCConfig/PluginDistribution.xcconfig; sourceTree = "<group>"; };
+		223BC31029D22B6E0090D5E8 /* PluginRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginRelease.xcconfig; path = ../../../../Mac/XCConfig/PluginRelease.xcconfig; sourceTree = "<group>"; };
+		22C600C929D23121002FBBF0 /* OpenNURBS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenNURBS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		22C600CB29D23121002FBBF0 /* RhCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RhCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		22C600D129D2361C002FBBF0 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../MacOS/Frameworks/libtbb.dylib; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		220221E829D22A31005357DE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22C600CA29D23121002FBBF0 /* OpenNURBS.framework in Frameworks */,
+				22C600CC29D23121002FBBF0 /* RhCore.framework in Frameworks */,
+				22C600D229D2361C002FBBF0 /* libtbb.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		220221E229D22A31005357DE = {
+			isa = PBXGroup;
+			children = (
+				223BC30629D22AC90090D5E8 /* Header Files */,
+				223BC30729D22AD90090D5E8 /* Source Files */,
+				223BC30529D22AB30090D5E8 /* Supporting Files */,
+				220221EC29D22A31005357DE /* Products */,
+				22C600C829D23121002FBBF0 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		220221EC29D22A31005357DE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				220221EB29D22A31005357DE /* export_USD.rhp */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		223BC30529D22AB30090D5E8 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				223BC30E29D22B6E0090D5E8 /* PluginDebug.xcconfig */,
+				223BC30F29D22B6E0090D5E8 /* PluginDistribution.xcconfig */,
+				223BC31029D22B6E0090D5E8 /* PluginRelease.xcconfig */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		223BC30629D22AC90090D5E8 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				223BC30929D22B280090D5E8 /* ExportUSDPlugIn.h */,
+				223BC30829D22B280090D5E8 /* stdafx.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		223BC30729D22AD90090D5E8 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				223BC30A29D22B390090D5E8 /* ExportUSDPlugIn.cpp */,
+				223BC30B29D22B390090D5E8 /* write_usd.cpp */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		22C600C829D23121002FBBF0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				22C600D129D2361C002FBBF0 /* libtbb.dylib */,
+				22C600C929D23121002FBBF0 /* OpenNURBS.framework */,
+				22C600CB29D23121002FBBF0 /* RhCore.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		220221EA29D22A31005357DE /* export_USD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 220221EF29D22A31005357DE /* Build configuration list for PBXNativeTarget "export_USD" */;
+			buildPhases = (
+				220221E729D22A31005357DE /* Sources */,
+				220221E829D22A31005357DE /* Frameworks */,
+				220221E929D22A31005357DE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = export_USD;
+			productName = export_USD;
+			productReference = 220221EB29D22A31005357DE /* export_USD.rhp */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		220221E329D22A31005357DE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1420;
+				TargetAttributes = {
+					220221EA29D22A31005357DE = {
+						CreatedOnToolsVersion = 14.2;
+					};
+				};
+			};
+			buildConfigurationList = 220221E629D22A31005357DE /* Build configuration list for PBXProject "export_USD" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 220221E229D22A31005357DE;
+			productRefGroup = 220221EC29D22A31005357DE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				220221EA29D22A31005357DE /* export_USD */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		220221E929D22A31005357DE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		220221E729D22A31005357DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				223BC30D29D22B390090D5E8 /* write_usd.cpp in Sources */,
+				223BC30C29D22B390090D5E8 /* ExportUSDPlugIn.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		220221ED29D22A31005357DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 223BC30E29D22B6E0090D5E8 /* PluginDebug.xcconfig */;
+			buildSettings = {
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					../usd/include,
+					"../usd/include/boost-1_78",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../MacOS/Frameworks,
+				);
+			};
+			name = Debug;
+		};
+		220221EE29D22A31005357DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 223BC31029D22B6E0090D5E8 /* PluginRelease.xcconfig */;
+			buildSettings = {
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					../usd/include,
+					"../usd/include/boost-1_78",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../MacOS/Frameworks,
+				);
+			};
+			name = Release;
+		};
+		220221F029D22A31005357DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.export-USD";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = rhp;
+			};
+			name = Debug;
+		};
+		220221F129D22A31005357DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.export-USD";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = rhp;
+			};
+			name = Release;
+		};
+		223BC31129D22B910090D5E8 /* Distribution */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 223BC30F29D22B6E0090D5E8 /* PluginDistribution.xcconfig */;
+			buildSettings = {
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					../usd/include,
+					"../usd/include/boost-1_78",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../MacOS/Frameworks,
+				);
+			};
+			name = Distribution;
+		};
+		223BC31229D22B910090D5E8 /* Distribution */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.export-USD";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = rhp;
+			};
+			name = Distribution;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		220221E629D22A31005357DE /* Build configuration list for PBXProject "export_USD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				220221ED29D22A31005357DE /* Debug */,
+				220221EE29D22A31005357DE /* Release */,
+				223BC31129D22B910090D5E8 /* Distribution */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		220221EF29D22A31005357DE /* Build configuration list for PBXNativeTarget "export_USD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				220221F029D22A31005357DE /* Debug */,
+				220221F129D22A31005357DE /* Release */,
+				223BC31229D22B910090D5E8 /* Distribution */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 220221E329D22A31005357DE /* Project object */;
+}
