@@ -12,6 +12,9 @@
 		22C600CA29D23121002FBBF0 /* OpenNURBS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C600C929D23121002FBBF0 /* OpenNURBS.framework */; };
 		22C600CC29D23121002FBBF0 /* RhCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C600CB29D23121002FBBF0 /* RhCore.framework */; };
 		22C600D229D2361C002FBBF0 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C600D129D2361C002FBBF0 /* libtbb.dylib */; };
+		997ED8B529D3DB6C00DAE8F8 /* libusd_ms.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 997ED8B429D3DB6C00DAE8F8 /* libusd_ms.dylib */; };
+		997ED8BC29D3DC4D00DAE8F8 /* UsdShared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 997ED8B829D3DC4D00DAE8F8 /* UsdShared.cpp */; };
+		997ED8BD29D3DC4D00DAE8F8 /* ON_Helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 997ED8B929D3DC4D00DAE8F8 /* ON_Helpers.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +29,11 @@
 		22C600C929D23121002FBBF0 /* OpenNURBS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenNURBS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C600CB29D23121002FBBF0 /* RhCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RhCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C600D129D2361C002FBBF0 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../MacOS/Frameworks/libtbb.dylib; sourceTree = "<group>"; };
+		997ED8B429D3DB6C00DAE8F8 /* libusd_ms.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libusd_ms.dylib; path = ../../../MacOS/Frameworks/libusd_ms.dylib; sourceTree = "<group>"; };
+		997ED8B829D3DC4D00DAE8F8 /* UsdShared.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UsdShared.cpp; path = ../UsdShared/UsdShared.cpp; sourceTree = "<group>"; };
+		997ED8B929D3DC4D00DAE8F8 /* ON_Helpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ON_Helpers.cpp; path = ../UsdShared/ON_Helpers.cpp; sourceTree = "<group>"; };
+		997ED8BA29D3DC4D00DAE8F8 /* UsdShared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UsdShared.h; path = ../UsdShared/UsdShared.h; sourceTree = "<group>"; };
+		997ED8BB29D3DC4D00DAE8F8 /* ON_Helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ON_Helpers.h; path = ../UsdShared/ON_Helpers.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +44,7 @@
 				22C600CA29D23121002FBBF0 /* OpenNURBS.framework in Frameworks */,
 				22C600CC29D23121002FBBF0 /* RhCore.framework in Frameworks */,
 				22C600D229D2361C002FBBF0 /* libtbb.dylib in Frameworks */,
+				997ED8B529D3DB6C00DAE8F8 /* libusd_ms.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,6 +85,8 @@
 			children = (
 				223BC30929D22B280090D5E8 /* ExportUSDPlugIn.h */,
 				223BC30829D22B280090D5E8 /* stdafx.h */,
+				997ED8BB29D3DC4D00DAE8F8 /* ON_Helpers.h */,
+				997ED8BA29D3DC4D00DAE8F8 /* UsdShared.h */,
 			);
 			name = "Header Files";
 			sourceTree = "<group>";
@@ -83,6 +94,8 @@
 		223BC30729D22AD90090D5E8 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				997ED8B929D3DC4D00DAE8F8 /* ON_Helpers.cpp */,
+				997ED8B829D3DC4D00DAE8F8 /* UsdShared.cpp */,
 				223BC30A29D22B390090D5E8 /* ExportUSDPlugIn.cpp */,
 				223BC30B29D22B390090D5E8 /* write_usd.cpp */,
 			);
@@ -92,6 +105,7 @@
 		22C600C829D23121002FBBF0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				997ED8B429D3DB6C00DAE8F8 /* libusd_ms.dylib */,
 				22C600D129D2361C002FBBF0 /* libtbb.dylib */,
 				22C600C929D23121002FBBF0 /* OpenNURBS.framework */,
 				22C600CB29D23121002FBBF0 /* RhCore.framework */,
@@ -166,7 +180,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				997ED8BC29D3DC4D00DAE8F8 /* UsdShared.cpp in Sources */,
 				223BC30D29D22B390090D5E8 /* write_usd.cpp in Sources */,
+				997ED8BD29D3DC4D00DAE8F8 /* ON_Helpers.cpp in Sources */,
 				223BC30C29D22B390090D5E8 /* ExportUSDPlugIn.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
