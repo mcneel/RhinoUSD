@@ -1,5 +1,3 @@
-#pragma once
-
 #include "stdafx.h"
 #include "UsdShared.h"
 #include "ON_Helpers.h"
