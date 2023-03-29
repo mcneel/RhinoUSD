@@ -9,4 +9,5 @@ namespace ON_Helpers
 {
   std::string ON_wStringToStdString(const ON_wString& onwstr);
   ON_wString StringVectorToPath(const std::vector<ON_wString>& names);
+  void RotateYUp(ON_Mesh* mesh);
 }
