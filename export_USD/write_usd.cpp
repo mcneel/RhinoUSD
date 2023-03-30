@@ -31,6 +31,14 @@ static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhi
 
 int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
 {
+#if defined(ON_RUNTIME_APPLE)
+  std::vector<std::string> searchPath;
+  NSString* resources = [[NSBundle mainBundle] resourcePath];
+  ON_String usd_resource_path = [resources ONString];
+  usd_resource_path += "/usd";
+  pxr::PlugRegistry::GetInstance().RegisterPlugins(std::string(usd_resource_path.Array()));
+#endif
+
   CRhinoWaitCursor hourglass;
   ON_wString backupname;
 
