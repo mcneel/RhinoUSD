@@ -60,44 +60,6 @@ LANGUAGE 9, 1
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Version
-//
-
-VS_VERSION_INFO     VERSIONINFO
-  FILEVERSION       1,0,0,1
-  PRODUCTVERSION    1,0,0,1
- FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
-#ifdef _DEBUG
- FILEFLAGS VS_FF_DEBUG
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS VOS_NT_WINDOWS32
- FILETYPE VFT_DLL
- FILESUBTYPE VFT2_UNKNOWN
-BEGIN
-	BLOCK "StringFileInfo"
-	BEGIN
-        BLOCK "0409"
-		BEGIN
-            VALUE "CompanyName", "My Company Name"
-            VALUE "FileDescription", "ExportUSD"
-			VALUE "FileVersion",     "1.0.0.0"
-			VALUE "InternalName",    "ExportUSD.rhp"
-            VALUE "LegalCopyright", "Copyright © 2023, My Company Name"
-			VALUE "OriginalFilename","ExportUSD.rhp"
-            VALUE "ProductName", "ExportUSD"
-			VALUE "ProductVersion",  "1.0.0.0"
-		END
-	END
-	BLOCK "VarFileInfo"
-	BEGIN
-		VALUE "Translation", 0x0409, 1252
-    END
-END
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Icon
 //
 
@@ -118,7 +80,6 @@ IDI_ICON ICON                    "res\\ExportUSD.ico"
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE 9, 1
-#include "res\\ExportUSD.rc2"  // non-Microsoft Visual C++ edited resources
 #ifndef _AFXDLL
 #include "afxres.rc"      // Standard components
 #endif

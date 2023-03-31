@@ -33,6 +33,9 @@
     <ClCompile Include="..\UsdShared\ON_Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\devinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExportUSDApp.h">
@@ -58,12 +61,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\ExportUSD.rc2">
-      <Filter>Resource Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="ExportUSD.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="res\ExportUSD-Version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

@@ -28,13 +28,6 @@ RHINO_PLUG_IN_DESCRIPTION(L"Export USD and USDA file formats");
 // Icon resource should contain 16, 24, 32, 48, and 256-pixel image sizes.
 RHINO_PLUG_IN_ICON_RESOURCE_ID(IDI_ICON);
 
-RHINO_PLUG_IN_DEVELOPER_ORGANIZATION(L"Robert McNeel & Associates");
-RHINO_PLUG_IN_DEVELOPER_ADDRESS(L"3670 Woodland Park Avenue North\015\012Seattle WA 98103");
-RHINO_PLUG_IN_DEVELOPER_COUNTRY(L"United States");
-RHINO_PLUG_IN_DEVELOPER_PHONE(L"206-545-6877");
-RHINO_PLUG_IN_DEVELOPER_FAX(L"206-545-7321");
-RHINO_PLUG_IN_DEVELOPER_EMAIL(L"tech@mcneel.com");
-RHINO_PLUG_IN_DEVELOPER_WEBSITE(L"http://www.rhino3d.com");
 RHINO_PLUG_IN_UPDATE_URL( L"http://www2.rhino3d.com/sr/plugin.asp?id=36803D82-097C-4B55-8F42-E4D44764C9DD" );
 
 // The one and only CExportUSDPlugIn object

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\devinfo.cpp" />
     <ClCompile Include="..\UsdShared\UsdShared.cpp" />
     <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
     <ClCompile Include="ExportUSDApp.cpp" />
@@ -41,10 +42,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\ExportUSD.rc2" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="ExportUSD.rc" />
+    <ResourceCompile Include="res\ExportUSD-Version.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ExportUSD.ico" />
