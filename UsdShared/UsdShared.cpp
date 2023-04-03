@@ -17,6 +17,8 @@ UsdExportImport::UsdExportImport() :
   tokOpacity("opacity")
 {
   stage = UsdStage::CreateInMemory();
+  //stage = UsdStage::CreateNew(<some path>);
+
   // Set the Z up direction for Rhino
   //pxr::TfToken upAxis = pxr::UsdGeomTokens->z;
   //if (!pxr::UsdGeomSetStageUpAxis(stage, upAxis))
@@ -27,15 +29,13 @@ UsdExportImport::UsdExportImport() :
 
 void UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames)
 {
-  ON_Mesh* meshCopy = mesh->Duplicate();
-  ON_Helpers::RotateYUp(meshCopy);
+  ON_Mesh meshCopy(*mesh);
+  ON_Helpers::RotateYUp(&meshCopy);
 
   UsdShared::SetUsdLayersAsXformable(layerNames, stage);
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
-  if (UsdShared::WriteUSDMesh(stage, meshCopy, layerNamesPath, currentMeshIndex))
+  if (UsdShared::WriteUSDMesh(stage, &meshCopy, layerNamesPath, currentMeshIndex))
     currentMeshIndex++;
-
-  delete meshCopy;
 }
 
 void UsdExportImport::__addMat(const pxr::GfVec3f& diffuseColor, float opacity, const std::vector<ON_wString>& layerNames)
@@ -89,6 +89,7 @@ void UsdExportImport::Save(const ON_wString& fileName)
 {
   std::string fn = ON_Helpers::ON_wStringToStdString(fileName);
   stage->Export(fn);
+  //stage->Save(); paired with UsdStage::CreateNew(pathname)?
 }
 
 bool UsdShared::IsAcceptableUsdCharacter(wchar_t c)
