@@ -52,69 +52,59 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
   ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
 
-  UsdExportImport usdEI{};
+  UsdExportImport usdEI;
 
-  //ON_SimpleArray<const CRhinoObject*> rhinoObjects;
+  ON_ClassArray<CRhinoObjectMesh> mesh_list;
+  ON_SimpleArray<const CRhinoObject*> object(256);
   CRhinoObjectIterator it(doc.RuntimeSerialNumber(), options);
-  for (const CRhinoObject* obj = it.First(); obj; obj = it.Next())
+  for (CRhinoObject* obj = it.First(); obj; obj = it.Next())
+    object.Append(obj);
+
+  CRhinoCommand::result rs = RhinoMeshObjects(object, mp, options.Transformation(), mesh_ui_style, mesh_list);
+  if (CRhinoCommand::success != rs)
   {
-    std::vector<ON_wString> layerNames = GetLayerNames(obj, doc);
+    return 0;
+  }
+  if (CRhinoCommand::success == rs)
+  {
+    if (4 != mesh_ui_style)
+      CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
+    CExportUSDPlugIn::ThePlugin().m_saved_mp = mp;
+  }
+  doc.Redraw(); // clean up display after interactive meshing.
 
-    ON_SimpleArray<const CRhinoObject*> array_of_one;
-    array_of_one.Append(obj);
-    ON_ClassArray<CRhinoObjRef> output_meshes;
-    const int number_of_meshes_returned = RhinoGetRenderMeshes(array_of_one, output_meshes);
-    for (int i = 0; i < output_meshes.Count(); i++)
-		{
-			const CRhinoObjRef& obj_ref = output_meshes[i];
-			const ON_Mesh* mesh = obj_ref.Mesh();
-      ON_wString meshPath;
-      if (mesh)
+  for (int i = 0; i < mesh_list.Count(); i++)
+  {
+    CRhinoObjectMesh& objectMesh = mesh_list[i];
+    if (nullptr == objectMesh.m_parent_object || nullptr == objectMesh.m_mesh)
+      continue;
+
+    std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc);
+    ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, layerNames);
+
+    const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
+    if (pMaterial)
+    {
+      const ON_Material& material = pMaterial->SimulatedMaterial();
+      if (material.IsPhysicallyBased())
       {
-        meshPath = usdEI.AddMesh(mesh, layerNames);
+        //Shiny new Pixar approved material.
+        std::shared_ptr <ON_PhysicallyBasedMaterial> ppbr = material.PhysicallyBased();
+        if (ppbr)
+        {
+          ON_PhysicallyBasedMaterial& pbr = *ppbr;
+          usdEI.AddAndBindPbrMaterial(&pbr, layerNames, meshPath);
+          //auto color = pbr.BaseColor();
+        }
       }
-			const CRhinoObject* p = obj_ref.Object();
-			if (p)
-			{
-        const CRhRdkMaterial* pMaterial = p->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
-				if (pMaterial)
-				{
-					const ON_Material& material = pMaterial->SimulatedMaterial();
-					if (material.IsPhysicallyBased())
-					{
-						//Shiny new Pixar approved material.
-						std::shared_ptr <ON_PhysicallyBasedMaterial> ppbr = material.PhysicallyBased();
-						if (ppbr)
-						{
-							ON_PhysicallyBasedMaterial& pbr = *ppbr;
-              usdEI.AddAndBindPbrMaterial(&pbr, layerNames, meshPath);
-							//auto color = pbr.BaseColor();
-						}
-					}
-					else
-					{
-						//Old skool 1981 material.
-            usdEI.AddAndBindMaterial(&material, layerNames, meshPath);
-						//material.Diffuse();
-						//material.Transparency();
-					}
-				}
-			}
-		}
-
-
-
-    ////rhinoObjects.Append(obj);
-    //ON_SimpleArray<const ON_Mesh*> meshes;
-    //int meshCount = obj->GetMeshes(ON::any_mesh, meshes);
-    //if (meshCount < 1)
-    //  continue;
-    //std::vector<ON_wString> layerNames = GetLayerNames(obj, doc);
-    //for (int i = 0; i < meshCount; i++)
-    //{
-    //  const ON_Mesh* mesh = meshes[i];
-    //  usdEI.AddMesh(mesh, layerNames);
-    //}
+      else
+      {
+        //Old skool 1981 material.
+        usdEI.AddAndBindMaterial(&material, layerNames, meshPath);
+        //material.Diffuse();
+        //material.Transparency();
+      }
+    }
   }
 
 

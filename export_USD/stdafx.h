@@ -37,6 +37,9 @@
 #include "../../../RhinoCorePlugInStdAfx.h"
 #include "../../../rhino3SystemPlugIn.h"
 
+#include "../../RDK/RDK/RhRdkHeaders.h"
+#pragma comment(lib, "\"" RHINO_PLUGIN_DIR "/" "rdk.lib" "\"")
+
 #else
 
 #include "RhinoSdkStdafxPreamble.h"
