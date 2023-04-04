@@ -60,9 +60,10 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
 		{
 			const CRhinoObjRef& obj_ref = output_meshes[i];
 			const ON_Mesh* mesh = obj_ref.Mesh();
+      ON_wString meshPath;
       if (mesh)
       {
-        usdEI.AddMesh(mesh, layerNames);
+        meshPath = usdEI.AddMesh(mesh, layerNames);
       }
 			const CRhinoObject* p = obj_ref.Object();
 			if (p)
@@ -78,14 +79,14 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
 						if (ppbr)
 						{
 							ON_PhysicallyBasedMaterial& pbr = *ppbr;
-              usdEI.AddPbrMaterial(&pbr, layerNames);
+              usdEI.AddAndBindPbrMaterial(&pbr, layerNames, meshPath);
 							//auto color = pbr.BaseColor();
 						}
 					}
 					else
 					{
 						//Old skool 1981 material.
-            usdEI.AddMaterial(&material, layerNames);
+            usdEI.AddAndBindMaterial(&material, layerNames, meshPath);
 						//material.Diffuse();
 						//material.Transparency();
 					}

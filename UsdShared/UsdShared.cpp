@@ -27,19 +27,24 @@ UsdExportImport::UsdExportImport() :
   //};
 }
 
-void UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames)
+ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames)
 {
   ON_Mesh meshCopy(*mesh);
   ON_Helpers::RotateYUp(&meshCopy);
 
   UsdShared::SetUsdLayersAsXformable(layerNames, stage);
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
-  if (UsdShared::WriteUSDMesh(stage, &meshCopy, layerNamesPath, currentMeshIndex))
-    currentMeshIndex++;
+  ON_wString meshPath = UsdShared::WriteUSDMesh(stage, &meshCopy, layerNamesPath, currentMeshIndex);
+  currentMeshIndex++;
+  return meshPath;
 }
 
-void UsdExportImport::__addMat(const pxr::GfVec3f& diffuseColor, float opacity, const std::vector<ON_wString>& layerNames)
+void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float opacity, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
 {
+  std::string strMeshPath = ON_Helpers::ON_wStringToStdString(meshPath);
+  pxr::SdfPath mp(strMeshPath);
+  pxr::UsdPrim mesh = stage->GetPrimAtPath(mp);
+
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
   ON_wString name;
   name.Format(L"/material%d", currentMaterialIndex++);
@@ -58,9 +63,15 @@ void UsdExportImport::__addMat(const pxr::GfVec3f& diffuseColor, float opacity, 
 
   shader.CreateInput(tokDiffuseColor, pxr::SdfValueTypeNames->Color3f).Set(diffuseColor);
   shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
+
+
+  //billboard.GetPrim().ApplyAPI(UsdShade.MaterialBindingAPI)
+  //UsdShade.MaterialBindingAPI(billboard).Bind(material)
+  mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
+  pxr::UsdShadeMaterialBindingAPI(mesh).Bind(usdMaterial);
 }
 
-void UsdExportImport::AddMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames)
+void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
 {
   float r(material->Diffuse().FractionRed());
   float b(material->Diffuse().FractionBlue());
@@ -69,15 +80,15 @@ void UsdExportImport::AddMaterial(const ON_Material* material, const std::vector
 
   float opacity(material->Transparency());
 
-  __addMat(diffColor, opacity, layerNames);
+  __addAndBindMat(diffColor, opacity, layerNames, meshPath);
 }
 
-void UsdExportImport::AddPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames)
+void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
 {
   ON_4fColor color = pbrMaterial->BaseColor();
   pxr::GfVec3f diffColor(color.Red(), color.Green(), color.Blue());
   float o(pbrMaterial->Opacity());
-  __addMat(diffColor, o, layerNames);
+  __addAndBindMat(diffColor, o, layerNames, meshPath);
 }
 
 bool UsdExportImport::AnythingToSave()
@@ -125,10 +136,10 @@ ON_wString UsdShared::RhinoLayerNameToUsd(const ON_wString& rhLayerName)
   return rc;
 }
 
-bool UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index)
+ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index)
 {
   if (nullptr == mesh)
-    return false;
+    return "";
 
   ON_wString name;
   name.Format(L"/mesh%d", index);
@@ -199,7 +210,7 @@ bool UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wS
   extents[0].Set((float)bbox.m_min.x, (float)bbox.m_min.y, (float)bbox.m_min.z);
   extents[1].Set((float)bbox.m_max.x, (float)bbox.m_max.y, (float)bbox.m_max.z);
   usdMesh.GetExtentAttr().Set(extents);
-  return true;
+  return name;
 }
 
 void UsdShared::SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage)
