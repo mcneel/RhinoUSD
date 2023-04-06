@@ -69,6 +69,16 @@ void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float op
   if (metallic != -1.0)
     shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(metallic);
 
+  // trying to get the 2 transparent sphere's in Andy's file to show up
+  // the file, some_common_material_cases.3dm, can be found here: https://mcneel.myjetbrains.com/youtrack/issue/RH-73726
+  if (opacity < 0.01)
+  {
+    pxr::TfToken tokClearcoat("clearcoat");
+    shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(1.0);
+    pxr::TfToken tokIor("ior");
+    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(1.0);
+  }
+
 
   //billboard.GetPrim().ApplyAPI(UsdShade.MaterialBindingAPI)
   //UsdShade.MaterialBindingAPI(billboard).Bind(material)
