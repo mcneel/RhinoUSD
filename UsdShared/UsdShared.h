@@ -15,7 +15,7 @@ public:
   bool AnythingToSave();
   void Save(const ON_wString& fileName);
 private:
-  void __addAndBindMat(const pxr::GfVec3f& diffuseColor, float opacity, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
+  void __addAndBindMat(const pxr::GfVec3f& diffuseColor, float opacity, float roughness, float metallic, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
   UsdStageRefPtr stage;
   int currentMeshIndex;
   int currentMaterialIndex;
@@ -24,6 +24,8 @@ private:
   pxr::TfToken tokSurface;
   pxr::TfToken tokDiffuseColor;
   pxr::TfToken tokOpacity;
+  pxr::TfToken tokRoughness;
+  pxr::TfToken tokMetallic;
 };
 
 namespace UsdShared

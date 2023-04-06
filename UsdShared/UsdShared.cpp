@@ -12,7 +12,9 @@ UsdExportImport::UsdExportImport() :
   tokPreviewSurface("UsdPreviewSurface"),
   tokSurface("surface"),
   tokDiffuseColor("diffuseColor"),
-  tokOpacity("opacity")
+  tokOpacity("opacity"),
+  tokRoughness("roughness"),
+  tokMetallic("metallic")
 {
   stage = UsdStage::CreateInMemory();
   //stage = UsdStage::CreateNew(<some path>);
@@ -37,7 +39,7 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   return meshPath;
 }
 
-void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float opacity, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
+void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float opacity, float roughness, float metallic, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
 {
   std::string strMeshPath = ON_Helpers::ON_wStringToStdString(meshPath);
   pxr::SdfPath mp(strMeshPath);
@@ -62,6 +64,11 @@ void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float op
   shader.CreateInput(tokDiffuseColor, pxr::SdfValueTypeNames->Color3f).Set(diffuseColor);
   shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
 
+  if (roughness != -1.0)
+    shader.CreateInput(tokRoughness, pxr::SdfValueTypeNames->Float).Set(roughness);
+  if (metallic != -1.0)
+    shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(metallic);
+
 
   //billboard.GetPrim().ApplyAPI(UsdShade.MaterialBindingAPI)
   //UsdShade.MaterialBindingAPI(billboard).Bind(material)
@@ -78,7 +85,7 @@ void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std:
 
   float opacity(1.0 - material->Transparency());
 
-  __addAndBindMat(diffColor, opacity, layerNames, meshPath);
+  __addAndBindMat(diffColor, opacity, -1.0, -1.0, layerNames, meshPath);
 }
 
 void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
@@ -86,7 +93,9 @@ void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pb
   ON_4fColor color = pbrMaterial->BaseColor();
   pxr::GfVec3f diffColor(color.Red(), color.Green(), color.Blue());
   float o(pbrMaterial->Opacity());
-  __addAndBindMat(diffColor, o, layerNames, meshPath);
+  float r(pbrMaterial->Roughness());
+  float m(pbrMaterial->Metallic());
+  __addAndBindMat(diffColor, o, r, m, layerNames, meshPath);
 }
 
 bool UsdExportImport::AnythingToSave()
