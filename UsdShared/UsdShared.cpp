@@ -18,11 +18,11 @@ UsdExportImport::UsdExportImport() :
   //stage = UsdStage::CreateNew(<some path>);
 
   // Set the Z up direction for Rhino
-  //pxr::TfToken upAxis = pxr::UsdGeomTokens->z;
-  //if (!pxr::UsdGeomSetStageUpAxis(stage, upAxis))
-  //{
-  //  std::cout << "nope";
-  //};
+  pxr::TfToken upAxis = pxr::UsdGeomTokens->y; // z;
+  if (!pxr::UsdGeomSetStageUpAxis(stage, upAxis))
+  {
+    std::cout << "nope";
+  };
 }
 
 ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames)
@@ -76,7 +76,7 @@ void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std:
   float g(material->Diffuse().FractionGreen());
   pxr::GfVec3f diffColor(r, b, g);
 
-  float opacity(material->Transparency());
+  float opacity(1.0 - material->Transparency());
 
   __addAndBindMat(diffColor, opacity, layerNames, meshPath);
 }
