@@ -62,21 +62,32 @@ void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float op
   usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
 
   shader.CreateInput(tokDiffuseColor, pxr::SdfValueTypeNames->Color3f).Set(diffuseColor);
+  //if (opacity < 0.01)
+  //  opacity = 0.5;
+  
+  //pxr::TfToken tokOpacityThreshold("opacityThreshold");
+  //shader.CreateInput(tokOpacityThreshold, pxr::SdfValueTypeNames->Float).Set(0.0);
+
+  pxr::TfToken tokUseSpecularWorkflow("useSpecularWorkflow");
+  shader.CreateInput(tokUseSpecularWorkflow, pxr::SdfValueTypeNames->Int).Set(1);
+
   shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
 
   if (roughness != -1.0)
     shader.CreateInput(tokRoughness, pxr::SdfValueTypeNames->Float).Set(roughness);
   if (metallic != -1.0)
-    shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(metallic);
+    // from what I understand this is either 0 (dielectric) and 1 (metallic)
+    shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(/*metallic*/0.0);
 
   // trying to get the 2 transparent sphere's in Andy's file to show up
   // the file, some_common_material_cases.3dm, can be found here: https://mcneel.myjetbrains.com/youtrack/issue/RH-73726
   if (opacity < 0.01)
   {
-    pxr::TfToken tokClearcoat("clearcoat");
-    shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(1.0);
+    //pxr::TfToken tokClearcoat("clearcoat");
+    //shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(1.0);
     pxr::TfToken tokIor("ior");
-    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(1.0);
+    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(1.52);
+    //pxr::TfToken tokAlpha
   }
 
 
