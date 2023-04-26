@@ -39,7 +39,23 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   return meshPath;
 }
 
-void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float opacity, float roughness, float metallic, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
+void UsdExportImport::__addAndBindMat(
+  const pxr::GfVec3f& diffuseColor,
+  float opacity,
+  float roughness,
+  float metallic,
+  float oior,
+  float rior,
+  float alpha,
+  float clearcoat,
+  float anisotropic,
+  float sheen,
+  float sheenTint,
+  pxr::GfVec3f emission,
+  float specular,
+  float specularTint,
+  const std::vector<ON_wString>& layerNames,
+  const ON_wString meshPath)
 {
   std::string strMeshPath = ON_Helpers::ON_wStringToStdString(meshPath);
   pxr::SdfPath mp(strMeshPath);
@@ -81,18 +97,70 @@ void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float op
 
   // trying to get the 2 transparent sphere's in Andy's file to show up
   // the file, some_common_material_cases.3dm, can be found here: https://mcneel.myjetbrains.com/youtrack/issue/RH-73726
-  if (opacity < 0.01)
+
+  // opacity IOR
+  if (oior != -1.0)
   {
-    //pxr::TfToken tokClearcoat("clearcoat");
-    //shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(1.0);
     pxr::TfToken tokIor("ior");
-    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(1.52);
-    //pxr::TfToken tokAlpha
+    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(oior);
   }
 
+  // reflective IOR
+  //if (rior != -1.0)
+  //{
+  //  pxr::TfToken tokIor("ior");
+  //  shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
+  //}
 
-  //billboard.GetPrim().ApplyAPI(UsdShade.MaterialBindingAPI)
-  //UsdShade.MaterialBindingAPI(billboard).Bind(material)
+
+  //if (alpha != -1.0)
+  //{
+  //  pxr::TfToken tokAlpha("?");
+  //  shader.CreateInput(tokAlpha, pxr::SdfValueTypeNames->Float).Set(alpha);
+  //}
+
+  if (clearcoat != -1.0)
+  {
+    pxr::TfToken tokClearcoat("clearcoat");
+    shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(clearcoat);
+  }
+
+  if (anisotropic != -1.0)
+  {
+    pxr::TfToken tokAnisotropic("?");
+    shader.CreateInput(tokAnisotropic, pxr::SdfValueTypeNames->Float).Set(anisotropic);
+  }
+
+  //if (sheen != -1.0)
+  //{
+  //  pxr::TfToken tokSheen("?");
+  //  shader.CreateInput(tokSheen, pxr::SdfValueTypeNames->Float).Set(sheen);
+  //}
+
+  //if (sheenTint != -1.0)
+  //{
+  //  pxr::TfToken tokSheenTint("?");
+  //  shader.CreateInput(tokSheenTint, pxr::SdfValueTypeNames->Float).Set(sheenTint);
+  //}
+
+  if (/*emission[0[!= -1.0*/ true)
+  {
+    pxr::TfToken tokEmission("emissiveColor");
+    shader.CreateInput(tokEmission, pxr::SdfValueTypeNames->Color3f).Set(emission);
+  }
+
+  //if (specular != -1.0)
+  //{
+  //  pxr::TfToken tokSpecular("?");
+  //  shader.CreateInput(tokSpecular, pxr::SdfValueTypeNames->Float).Set(specular);
+  //}
+
+  //if (specularTint != -1.0)
+  //{
+  //  pxr::TfToken tokSpecularTint("?");
+  //  shader.CreateInput(tokSpecularTint, pxr::SdfValueTypeNames->Float).Set(specularTint);
+  //}
+
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
   pxr::UsdShadeMaterialBindingAPI(mesh).Bind(usdMaterial);
 }
@@ -106,7 +174,9 @@ void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std:
 
   float opacity(1.0 - material->Transparency());
 
-  __addAndBindMat(diffColor, opacity, -1.0, -1.0, layerNames, meshPath);
+  pxr::GfVec3f emission(-1.0, -1.0, -1.0);
+
+  __addAndBindMat(diffColor, opacity, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, emission, -1.0, -1.0, layerNames, meshPath);
 }
 
 void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
@@ -116,7 +186,18 @@ void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pb
   float o(pbrMaterial->Opacity());
   float r(pbrMaterial->Roughness());
   float m(pbrMaterial->Metallic());
-  __addAndBindMat(diffColor, o, r, m, layerNames, meshPath);
+  float oior(pbrMaterial->OpacityIOR());
+  float rior(pbrMaterial->ReflectiveIOR());
+  float alpha(pbrMaterial->Alpha());
+  float clearcoat(pbrMaterial->Clearcoat());
+  float anisotropic(pbrMaterial->Anisotropic());
+  float sheen(pbrMaterial->Sheen());
+  float sheenTint(pbrMaterial->SheenTint());
+  ON_4fColor e(pbrMaterial->Emission());
+  pxr::GfVec3f emission(e.Red(), e.Green(), e.Blue());
+  float specular(pbrMaterial->Specular());
+  float specularTint(pbrMaterial->SpecularTint());
+  __addAndBindMat(diffColor, o, r, m, oior, rior, alpha, clearcoat, anisotropic, sheen, sheenTint, emission, specular, specularTint, layerNames, meshPath);
 }
 
 bool UsdExportImport::AnythingToSave()
