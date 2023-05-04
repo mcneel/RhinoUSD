@@ -40,6 +40,7 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
 }
 
 void UsdExportImport::__addAndBindMat(
+  const ON_wString& namePrefix,
   const pxr::GfVec3f& diffuseColor,
   float opacity,
   float roughness,
@@ -63,7 +64,7 @@ void UsdExportImport::__addAndBindMat(
 
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
   ON_wString name;
-  name.Format(L"/material%d", currentMaterialIndex++);
+  name.Format(L"/%smaterial%d", namePrefix, currentMaterialIndex++);
   name = layerNamesPath + name;
   std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
   pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrName));
@@ -99,18 +100,18 @@ void UsdExportImport::__addAndBindMat(
   // the file, some_common_material_cases.3dm, can be found here: https://mcneel.myjetbrains.com/youtrack/issue/RH-73726
 
   // opacity IOR
-  if (oior != -1.0)
-  {
-    pxr::TfToken tokIor("ior");
-    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(oior);
-  }
-
-  // reflective IOR
-  //if (rior != -1.0)
+  //if (oior != -1.0)
   //{
   //  pxr::TfToken tokIor("ior");
-  //  shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
+  //  shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(oior);
   //}
+
+  // reflective IOR
+  if (rior != -1.0)
+  {
+    pxr::TfToken tokIor("ior");
+    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
+  }
 
 
   //if (alpha != -1.0)
@@ -143,7 +144,7 @@ void UsdExportImport::__addAndBindMat(
   //  shader.CreateInput(tokSheenTint, pxr::SdfValueTypeNames->Float).Set(sheenTint);
   //}
 
-  if (/*emission[0[!= -1.0*/ true)
+  if (namePrefix == L"on_pbr_")
   {
     pxr::TfToken tokEmission("emissiveColor");
     shader.CreateInput(tokEmission, pxr::SdfValueTypeNames->Color3f).Set(emission);
@@ -174,9 +175,13 @@ void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std:
 
   float opacity(1.0 - material->Transparency());
 
+  float r(-1.0);
+  float m(-1.0);
+
   pxr::GfVec3f emission(-1.0, -1.0, -1.0);
 
-  __addAndBindMat(diffColor, opacity, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, emission, -1.0, -1.0, layerNames, meshPath);
+  ON_wString namePrefix(L"on_");
+  __addAndBindMat(namePrefix, diffColor, opacity, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, emission, -1.0, -1.0, layerNames, meshPath);
 }
 
 void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
@@ -197,7 +202,10 @@ void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pb
   pxr::GfVec3f emission(e.Red(), e.Green(), e.Blue());
   float specular(pbrMaterial->Specular());
   float specularTint(pbrMaterial->SpecularTint());
-  __addAndBindMat(diffColor, o, r, m, oior, rior, alpha, clearcoat, anisotropic, sheen, sheenTint, emission, specular, specularTint, layerNames, meshPath);
+  pbrMaterial->FindTexture()
+  pbrMaterial->FindTexture()
+  ON_wString namePrefix(L"on_pbr_");
+  __addAndBindMat(namePrefix, diffColor, o, r, m, oior, rior, alpha, clearcoat, anisotropic, sheen, sheenTint, emission, specular, specularTint, layerNames, meshPath);
 }
 
 bool UsdExportImport::AnythingToSave()

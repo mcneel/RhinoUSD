@@ -16,6 +16,7 @@ public:
   void Save(const ON_wString& fileName);
 private:
   void __addAndBindMat(
+    const ON_wString& namePrefix,
     const pxr::GfVec3f& diffuseColor,
     float opacity,
     float roughness,
