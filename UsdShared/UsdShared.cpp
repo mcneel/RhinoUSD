@@ -9,6 +9,7 @@ UsdExportImport::UsdExportImport() :
   currentMeshIndex(0),
   currentMaterialIndex(0),
   currentShaderIndex(0),
+  currentNurbsCurveIndex(0),
   tokPreviewSurface("UsdPreviewSurface"),
   tokSurface("surface"),
   tokDiffuseColor("diffuseColor"),
@@ -39,7 +40,24 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   return meshPath;
 }
 
-void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float opacity, float roughness, float metallic, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
+void UsdExportImport::__addAndBindMat(
+  const ON_wString& namePrefix,
+  const pxr::GfVec3f& diffuseColor,
+  float opacity,
+  float roughness,
+  float metallic,
+  float oior,
+  float rior,
+  float alpha,
+  float clearcoat,
+  float anisotropic,
+  float sheen,
+  float sheenTint,
+  pxr::GfVec3f emission,
+  float specular,
+  float specularTint,
+  const std::vector<ON_wString>& layerNames,
+  const ON_wString meshPath)
 {
   std::string strMeshPath = ON_Helpers::ON_wStringToStdString(meshPath);
   pxr::SdfPath mp(strMeshPath);
@@ -47,7 +65,7 @@ void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float op
 
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
   ON_wString name;
-  name.Format(L"/material%d", currentMaterialIndex++);
+  name.Format(L"/%smaterial%d", namePrefix, currentMaterialIndex++);
   name = layerNamesPath + name;
   std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
   pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrName));
@@ -62,26 +80,89 @@ void UsdExportImport::__addAndBindMat(const pxr::GfVec3f& diffuseColor, float op
   usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
 
   shader.CreateInput(tokDiffuseColor, pxr::SdfValueTypeNames->Color3f).Set(diffuseColor);
+  //if (opacity < 0.01)
+  //  opacity = 0.5;
+  
+  //pxr::TfToken tokOpacityThreshold("opacityThreshold");
+  //shader.CreateInput(tokOpacityThreshold, pxr::SdfValueTypeNames->Float).Set(0.0);
+
+  pxr::TfToken tokUseSpecularWorkflow("useSpecularWorkflow");
+  shader.CreateInput(tokUseSpecularWorkflow, pxr::SdfValueTypeNames->Int).Set(1);
+
   shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
 
   if (roughness != -1.0)
     shader.CreateInput(tokRoughness, pxr::SdfValueTypeNames->Float).Set(roughness);
   if (metallic != -1.0)
-    shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(metallic);
+    // from what I understand this is either 0 (dielectric) and 1 (metallic)
+    shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(/*metallic*/0.0);
 
   // trying to get the 2 transparent sphere's in Andy's file to show up
   // the file, some_common_material_cases.3dm, can be found here: https://mcneel.myjetbrains.com/youtrack/issue/RH-73726
-  if (opacity < 0.01)
+
+  // opacity IOR
+  //if (oior != -1.0)
+  //{
+  //  pxr::TfToken tokIor("ior");
+  //  shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(oior);
+  //}
+
+  // reflective IOR
+  if (rior != -1.0)
   {
-    pxr::TfToken tokClearcoat("clearcoat");
-    shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(1.0);
     pxr::TfToken tokIor("ior");
-    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(1.0);
+    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
   }
 
 
-  //billboard.GetPrim().ApplyAPI(UsdShade.MaterialBindingAPI)
-  //UsdShade.MaterialBindingAPI(billboard).Bind(material)
+  //if (alpha != -1.0)
+  //{
+  //  pxr::TfToken tokAlpha("?");
+  //  shader.CreateInput(tokAlpha, pxr::SdfValueTypeNames->Float).Set(alpha);
+  //}
+
+  if (clearcoat != -1.0)
+  {
+    pxr::TfToken tokClearcoat("clearcoat");
+    shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(clearcoat);
+  }
+
+  if (anisotropic != -1.0)
+  {
+    pxr::TfToken tokAnisotropic("?");
+    shader.CreateInput(tokAnisotropic, pxr::SdfValueTypeNames->Float).Set(anisotropic);
+  }
+
+  //if (sheen != -1.0)
+  //{
+  //  pxr::TfToken tokSheen("?");
+  //  shader.CreateInput(tokSheen, pxr::SdfValueTypeNames->Float).Set(sheen);
+  //}
+
+  //if (sheenTint != -1.0)
+  //{
+  //  pxr::TfToken tokSheenTint("?");
+  //  shader.CreateInput(tokSheenTint, pxr::SdfValueTypeNames->Float).Set(sheenTint);
+  //}
+
+  if (namePrefix == L"on_pbr_")
+  {
+    pxr::TfToken tokEmission("emissiveColor");
+    shader.CreateInput(tokEmission, pxr::SdfValueTypeNames->Color3f).Set(emission);
+  }
+
+  //if (specular != -1.0)
+  //{
+  //  pxr::TfToken tokSpecular("?");
+  //  shader.CreateInput(tokSpecular, pxr::SdfValueTypeNames->Float).Set(specular);
+  //}
+
+  //if (specularTint != -1.0)
+  //{
+  //  pxr::TfToken tokSpecularTint("?");
+  //  shader.CreateInput(tokSpecularTint, pxr::SdfValueTypeNames->Float).Set(specularTint);
+  //}
+
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
   pxr::UsdShadeMaterialBindingAPI(mesh).Bind(usdMaterial);
 }
@@ -95,7 +176,13 @@ void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std:
 
   float opacity(1.0 - material->Transparency());
 
-  __addAndBindMat(diffColor, opacity, -1.0, -1.0, layerNames, meshPath);
+  //float r(-1.0);
+  //float m(-1.0);
+
+  pxr::GfVec3f emission(-1.0, -1.0, -1.0);
+
+  ON_wString namePrefix(L"on_");
+  __addAndBindMat(namePrefix, diffColor, opacity, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, emission, -1.0, -1.0, layerNames, meshPath);
 }
 
 void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
@@ -105,12 +192,102 @@ void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pb
   float o(pbrMaterial->Opacity());
   float r(pbrMaterial->Roughness());
   float m(pbrMaterial->Metallic());
-  __addAndBindMat(diffColor, o, r, m, layerNames, meshPath);
+  float oior(pbrMaterial->OpacityIOR());
+  float rior(pbrMaterial->ReflectiveIOR());
+  float alpha(pbrMaterial->Alpha());
+  float clearcoat(pbrMaterial->Clearcoat());
+  float anisotropic(pbrMaterial->Anisotropic());
+  float sheen(pbrMaterial->Sheen());
+  float sheenTint(pbrMaterial->SheenTint());
+  ON_4fColor e(pbrMaterial->Emission());
+  pxr::GfVec3f emission(e.Red(), e.Green(), e.Blue());
+  float specular(pbrMaterial->Specular());
+  float specularTint(pbrMaterial->SpecularTint());
+  //pbrMaterial->FindTexture()
+  ON_wString namePrefix(L"on_pbr_");
+  __addAndBindMat(namePrefix, diffColor, o, r, m, oior, rior, alpha, clearcoat, anisotropic, sheen, sheenTint, emission, specular, specularTint, layerNames, meshPath);
+}
+
+void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames)
+{
+  ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
+
+  if (nullptr == nurbsCurve)
+    return;
+  
+  ON_NurbsCurve nc(*nurbsCurve);
+  ON_Helpers::RotateGeometryYUp(&nc);
+
+  ON_wString name;
+  name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
+  name = layerNamesPath + name;
+  std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
+
+  pxr::UsdGeomNurbsCurves usdNc = pxr::UsdGeomNurbsCurves::Define(stage, pxr::SdfPath(stdStrName));
+
+  int degree = nurbsCurve->Degree();
+  //pxr::VtValue order(degree + 1);
+  pxr::VtArray<int> order;
+  order.resize(1);
+  order[0] = degree + 1;
+  usdNc.CreateOrderAttr(pxr::VtValue(order));
+
+  int ctrlPtsCount = nurbsCurve->m_cv_count;
+  pxr::VtArray<pxr::GfVec3f> ctrlPts;
+  ctrlPts.resize(ctrlPtsCount);
+  for (int i = 0; i < ctrlPtsCount; i++)
+  {
+    ON_3dPoint cp;
+    if (nurbsCurve->GetCV(i, cp))
+    {
+      ctrlPts[i] = pxr::GfVec3f(cp.x, cp.y, cp.z);
+    }
+  }
+  usdNc.CreatePointsAttr(pxr::VtValue(ctrlPts));
+
+  pxr::VtArray<int> crvVertexCount;
+  crvVertexCount.resize(1);
+  crvVertexCount[0] = ctrlPtsCount;
+  usdNc.CreateCurveVertexCountsAttr(pxr::VtValue(crvVertexCount));
+
+  //pxr::VtArray<pxr::VtValue> knots;
+  pxr::VtArray<double> knots;
+  //std::vector<double> stdKnots;
+  int knotCount = nurbsCurve->KnotCount();
+  knots.resize(knotCount);
+  for (int i = 0; i < knotCount; i++)
+  {
+    double k = nurbsCurve->m_knot[i]; // nurbsCurve->Knot()[i];
+    knots[i] = k; // pxr::VtValue(k);
+    //stdKnots.push_back(k);
+  }
+  usdNc.CreateKnotsAttr(pxr::VtValue(knots));
+
+}
+
+void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames)
+{
+  //ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
+
+  //if (nullptr == nurbsSurface)
+  //  return;
+  //
+  //ON_NurbsSurface ns(*nurbsSurface);
+  //ON_Helpers::RotateGeometryYUp(&ns);
+
+  //ON_wString name;
+  //name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
+  //name = layerNamesPath + name;
+  //std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
+
+  //pxr::UsdGeomNurbsPatch usdNurbsSurface = pxr::UsdGeomNurbsPatch::Define(stage, pxr::SdfPath(stdStrName));
+
+  //// continue ...
 }
 
 bool UsdExportImport::AnythingToSave()
 {
-  return currentMeshIndex > 0 || currentMaterialIndex > 0;
+  return currentMeshIndex > 0 || currentMaterialIndex > 0 || currentNurbsCurveIndex > 0;
 }
 
 void UsdExportImport::Save(const ON_wString& fileName)

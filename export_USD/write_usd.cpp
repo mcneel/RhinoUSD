@@ -55,16 +55,50 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   UsdExportImport usdEI;
 
   ON_ClassArray<CRhinoObjectMesh> mesh_list;
-  ON_SimpleArray<const CRhinoObject*> object(256);
+  ON_SimpleArray<const CRhinoObject*> objects(256);
   CRhinoObjectIterator it(doc.RuntimeSerialNumber(), options);
   for (CRhinoObject* obj = it.First(); obj; obj = it.Next())
-    object.Append(obj);
-
-  CRhinoCommand::result rs = RhinoMeshObjects(object, mp, options.Transformation(), mesh_ui_style, mesh_list);
-  if (CRhinoCommand::success != rs)
   {
-    return 0;
+    objects.Append(obj);
+
+    ///////// Disable Nurbs for now - USD only partially supports nurbs curves and surfaces
+    //const ON_Geometry* geometry = obj->Geometry();
+    //if (nullptr == geometry)
+    //  continue;
+   
+    //std::vector<ON_wString> layerNames = GetLayerNames(obj, doc);
+
+    //const ON_NurbsCurve* nurbsCurve = ON_NurbsCurve::Cast(geometry);
+    //if (nurbsCurve)
+    //{
+    //  usdEI.AddNurbsCurve(nurbsCurve, layerNames);
+    //}
+
+    ////const CRhinoBrepObject* pBrep = CRhinoBrepObject::Cast(obj);
+    //// try casting from geometry
+    //const ON_Brep* brep = ON_Brep::Cast(geometry);
+    //if (brep)
+    //{
+    //  if (brep->IsManifold())
+    //  {
+    //    for (int i = 0; i < brep->m_S.Count(); i++)
+    //    {
+    //      ON_NurbsSurface* nurbsSurface = nullptr;
+    //      brep->m_S[i]->NurbsSurface(nurbsSurface);
+    //      if (nurbsSurface)
+    //      {
+    //        
+    //      }
+    //    }
+    //  }
+    //}
   }
+
+  CRhinoCommand::result rs = RhinoMeshObjects(objects, mp, options.Transformation(), mesh_ui_style, mesh_list);
+  //if (CRhinoCommand::success != rs)
+  //{
+  //  return 0;
+  //}
   if (CRhinoCommand::success == rs)
   {
     if (4 != mesh_ui_style)
@@ -101,9 +135,21 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
       {
         //Old skool 1981 material.
         usdEI.AddAndBindMaterial(&material, layerNames, meshPath);
-        //material.Diffuse();
-        //material.Transparency();
       }
+
+      //int tc = material.m_textures.Count();
+      //for (int i = 0; i < tc; i++)
+      //{
+      //  ON_Texture tx = material.m_textures[i];
+      //  ON_Texture::TYPE t = tx.m_type;
+      //  ON_wString fp = tx.m_image_file_reference.FullPath();
+      //  
+      //  RhinoApp().Print(L"texture type: %d\r\n", t);
+      //}
+      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::diffuse_texture);
+      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::bump_texture);
+      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::transparency_texture);
+      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::bitmap_texture);
     }
   }
 
