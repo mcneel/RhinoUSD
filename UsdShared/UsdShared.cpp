@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "UsdShared.h"
 #include "ON_Helpers.h"
-#include "iostream""
+#include "iostream"
 
 using namespace pxr;
 
@@ -65,7 +65,7 @@ void UsdExportImport::__addAndBindMat(
 
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
   ON_wString name;
-  name.Format(L"/%smaterial%d", namePrefix, currentMaterialIndex++);
+  name.Format(L"/%smaterial%d", namePrefix.Array(), currentMaterialIndex++);
   name = layerNamesPath + name;
   std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
   pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrName));
