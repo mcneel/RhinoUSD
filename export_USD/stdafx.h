@@ -108,4 +108,6 @@
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdShade/materialBindingAPI.h"
 #include "pxr/base/plug/registry.h"
+#include "pxr/usd/usdGeom/nurbsCurves.h"
+#include "pxr/usd/usdGeom/nurbsPatch.h"
 #pragma warning(pop)

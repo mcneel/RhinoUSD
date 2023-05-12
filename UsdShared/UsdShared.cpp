@@ -9,6 +9,7 @@ UsdExportImport::UsdExportImport() :
   currentMeshIndex(0),
   currentMaterialIndex(0),
   currentShaderIndex(0),
+  currentNurbsCurveIndex(0),
   tokPreviewSurface("UsdPreviewSurface"),
   tokSurface("surface"),
   tokDiffuseColor("diffuseColor"),
@@ -175,8 +176,8 @@ void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std:
 
   float opacity(1.0 - material->Transparency());
 
-  float r(-1.0);
-  float m(-1.0);
+  //float r(-1.0);
+  //float m(-1.0);
 
   pxr::GfVec3f emission(-1.0, -1.0, -1.0);
 
@@ -202,15 +203,91 @@ void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pb
   pxr::GfVec3f emission(e.Red(), e.Green(), e.Blue());
   float specular(pbrMaterial->Specular());
   float specularTint(pbrMaterial->SpecularTint());
-  pbrMaterial->FindTexture()
-  pbrMaterial->FindTexture()
+  //pbrMaterial->FindTexture()
   ON_wString namePrefix(L"on_pbr_");
   __addAndBindMat(namePrefix, diffColor, o, r, m, oior, rior, alpha, clearcoat, anisotropic, sheen, sheenTint, emission, specular, specularTint, layerNames, meshPath);
 }
 
+void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames)
+{
+  ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
+
+  if (nullptr == nurbsCurve)
+    return;
+  
+  ON_NurbsCurve nc(*nurbsCurve);
+  ON_Helpers::RotateGeometryYUp(&nc);
+
+  ON_wString name;
+  name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
+  name = layerNamesPath + name;
+  std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
+
+  pxr::UsdGeomNurbsCurves usdNc = pxr::UsdGeomNurbsCurves::Define(stage, pxr::SdfPath(stdStrName));
+
+  int degree = nurbsCurve->Degree();
+  //pxr::VtValue order(degree + 1);
+  pxr::VtArray<int> order;
+  order.resize(1);
+  order[0] = degree + 1;
+  usdNc.CreateOrderAttr(pxr::VtValue(order));
+
+  int ctrlPtsCount = nurbsCurve->m_cv_count;
+  pxr::VtArray<pxr::GfVec3f> ctrlPts;
+  ctrlPts.resize(ctrlPtsCount);
+  for (int i = 0; i < ctrlPtsCount; i++)
+  {
+    ON_3dPoint cp;
+    if (nurbsCurve->GetCV(i, cp))
+    {
+      ctrlPts[i] = pxr::GfVec3f(cp.x, cp.y, cp.z);
+    }
+  }
+  usdNc.CreatePointsAttr(pxr::VtValue(ctrlPts));
+
+  pxr::VtArray<int> crvVertexCount;
+  crvVertexCount.resize(1);
+  crvVertexCount[0] = ctrlPtsCount;
+  usdNc.CreateCurveVertexCountsAttr(pxr::VtValue(crvVertexCount));
+
+  //pxr::VtArray<pxr::VtValue> knots;
+  pxr::VtArray<double> knots;
+  //std::vector<double> stdKnots;
+  int knotCount = nurbsCurve->KnotCount();
+  knots.resize(knotCount);
+  for (int i = 0; i < knotCount; i++)
+  {
+    double k = nurbsCurve->m_knot[i]; // nurbsCurve->Knot()[i];
+    knots[i] = k; // pxr::VtValue(k);
+    //stdKnots.push_back(k);
+  }
+  usdNc.CreateKnotsAttr(pxr::VtValue(knots));
+
+}
+
+void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames)
+{
+  //ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
+
+  //if (nullptr == nurbsSurface)
+  //  return;
+  //
+  //ON_NurbsSurface ns(*nurbsSurface);
+  //ON_Helpers::RotateGeometryYUp(&ns);
+
+  //ON_wString name;
+  //name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
+  //name = layerNamesPath + name;
+  //std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
+
+  //pxr::UsdGeomNurbsPatch usdNurbsSurface = pxr::UsdGeomNurbsPatch::Define(stage, pxr::SdfPath(stdStrName));
+
+  //// continue ...
+}
+
 bool UsdExportImport::AnythingToSave()
 {
-  return currentMeshIndex > 0 || currentMaterialIndex > 0;
+  return currentMeshIndex > 0 || currentMaterialIndex > 0 || currentNurbsCurveIndex > 0;
 }
 
 void UsdExportImport::Save(const ON_wString& fileName)
