@@ -399,6 +399,34 @@ ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh,
     cattr.Set(colors);
   }
 
+  //// texture coordinates
+  //if (mesh->HasTextureCoordinates())
+  //{
+  //  //usdMesh.ApplyAPI<pxr::UsdGeomPrimvarsAPI>();
+  //  int tcCnt = mesh->m_TC.Count(); //not sure if m_S should be used instead.
+  //  for (int i = 0; i < tcCnt; i++)
+  //  {
+  //    ON_TextureCoordinates tc = mesh->m_TC[i];
+
+  //    auto primvar = usdMesh.GetPrimvar(pxr::TfToken("primvars:st"));
+  //    pxr::VtVec2fArray uvValues;
+  //    //pxr::VtArray<GfVec2f> uvArray;
+  //    if (primvar.Get<pxr::VtVec2fArray>(&uvValues))
+  //    {
+  //      //pxr::UsdGeomPrimvar pv = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+	//	    pxr::UsdGeomPrimvar pv = usdMesh.CreateAttribute(pxr::TfToken("primvars:st", pxr::TfToken::Immortal), pxr::SdfValueTypeNames->Float2Array);
+	//	    pv.Set(uvValues);
+	//	    pv.SetInterpolation(pxr::TfToken("vertex"));
+  //    }
+
+	//	  //pxr::UsdGeomPrimvar attr2 = usdMesh.CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+	//	  //attr = meshPrim.CreateAttribute(pxr::TfToken("primvars:st", pxr::TfToken::Immortal), pxr::SdfValueTypeNames->Float2Array);
+  //
+	//	  //attr2.Set(uvArray);
+	//	  //attr2.SetInterpolation(pxr::TfToken("vertex"));
+  //  }
+  //}
+
   VtVec3fArray extents(2);
   ON_BoundingBox bbox = mesh->BoundingBox();
   extents[0].Set((float)bbox.m_min.x, (float)bbox.m_min.y, (float)bbox.m_min.z);
