@@ -28,7 +28,7 @@ UsdExportImport::UsdExportImport() :
   };
 }
 
-ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, const ON_TextureCoordinates*>& tcs)
+ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<ON_wString, const ON_TextureCoordinates*>& tcs)
 {
   ON_Mesh meshCopy(*mesh);
   ON_Helpers::RotateYUp(&meshCopy);
@@ -330,7 +330,7 @@ ON_wString UsdShared::RhinoLayerNameToUsd(const ON_wString& rhLayerName)
   return rc;
 }
 
-ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<int, const ON_TextureCoordinates*>& tcs)
+ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<ON_wString, const ON_TextureCoordinates*>& tcs)
 {
   if (nullptr == mesh)
     return "";
@@ -431,12 +431,28 @@ ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh,
   // texture coordinates
   if (!tcs.empty())
   {
-     const ON_TextureCoordinates* firstTc = tcs.begin()->second;
+    ON_wString firstUuid = tcs.begin()->first;
+    const ON_TextureCoordinates* firstTc = tcs.begin()->second;
     //if (tcs.size() > 1)
     //  // todo: support multiple channels or report that some were skipped.
      ON_SimpleArray<ON_3fPoint> uvwPoints = firstTc->m_T;
     //pseudo: if uvwPoints.Any(p => p.W != 0) then report that 3rd dimension is ignored
     
+    //https://openusd.org/release/tut_simple_shading.html
+    pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
+    //texCoords.Set([(0, 0), (1, 0), (1,1), (0, 1)])
+    //texCoords.Set()
+
+      //stReader = pxr::UsdShade.Shader.Define(stage, '/TexModel/boardMat/stReader')
+      //stReader.CreateIdAttr('UsdPrimvarReader_float2')
+      //
+      //diffuseTextureSampler = UsdShade.Shader.Define(stage,'/TexModel/boardMat/diffuseTexture')
+      //diffuseTextureSampler.CreateIdAttr('UsdUVTexture')
+      //diffuseTextureSampler.CreateInput('file', Sdf.ValueTypeNames.Asset).Set("USDLogoLrg.png")
+      //diffuseTextureSampler.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(stReader.ConnectableAPI(), 'result')
+      //diffuseTextureSampler.CreateOutput('rgb', Sdf.ValueTypeNames.Float3)
+      //pbrShader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(diffuseTextureSampler.ConnectableAPI(), 'rgb')
+
     //pxr::UsdGeomPrimvar pv = pxr::UsdGeomPrimvarsAPI(usdMesh)::CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
 		//pxr::UsdGeomPrimvar attr2 = usdMesh.CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
   }

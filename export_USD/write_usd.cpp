@@ -35,8 +35,9 @@ static void SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm)
   //sm.insert(pr1);
 }
 
-static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoDoc& doc, std::map<int, const ON_TextureCoordinates*>& tcs)
+static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoDoc& doc, std::map<ON_wString, const ON_TextureCoordinates*>& tcs)
 {
+  // instead of int as the map key use ON_UUID as a string: ON_UuidToString() and ON_UuidFromString()
   const CRhinoObject* obj = meshObj.m_parent_object;
   ON_Mesh* pMesh = meshObj.m_mesh;
   const ON_MappingRef* pMR = obj->Attributes().m_rendering_attributes.MappingRef(ON_nil_uuid);
@@ -50,8 +51,11 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
     // surface parameter mapping cannot create a seam
     // in this case SetTextureCoordinates doesn't need to be called
     const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &ON_Xform::IdentityTransformation);
-    int idx = mapping.Index(); // zero?
-    auto pr = std::pair<int, const ON_TextureCoordinates*>(idx, pTCs);
+    //int idx = mapping.Index(); // zero? probably 1
+    //auto pr = std::pair<int, const ON_TextureCoordinates*>(idx, pTCs);
+    ON_wString uuidStr;
+    ON_UuidToString(mapping.Id(), uuidStr);
+    auto pr = std::pair<ON_wString, const ON_TextureCoordinates*>(uuidStr, pTCs);
     tcs.insert(pr);
   }
   else
@@ -82,7 +86,9 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
         const ON_TextureMapping& mapping = doc.m_texture_mapping_table[txMpIdx];
         const ON_Xform local_xform = mc.m_object_xform;
         const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &local_xform);
-        tcs[txMpIdx] = pTCs;
+        ON_wString uuidStr;
+        ON_UuidToString(/*mc.m_mapping_id*/mapping.Id(), uuidStr);
+        tcs[uuidStr] = pTCs;
       }
     }
   }
@@ -172,7 +178,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     if (nullptr == objectMesh.m_parent_object || nullptr == objectMesh.m_mesh)
       continue;
 
-    std::map<int, const ON_TextureCoordinates*> textureCoordinatesByMappingChannel;
+    std::map<ON_wString, const ON_TextureCoordinates*> textureCoordinatesByMappingChannel;
     // this has to be done first, before meshes vertices are read to be exported
     // because setting the texture coordinates can modify the mesh vertices
     SetTextureCoordinatesOnMesh(objectMesh, doc, textureCoordinatesByMappingChannel);
