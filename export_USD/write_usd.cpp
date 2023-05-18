@@ -29,6 +29,65 @@ static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhi
   return names;
 }
 
+static void SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm)
+{
+  auto pr1 = std::pair<const ON_UUID, const ON_wString>(ON_nil_uuid, L"Hello");
+  //sm.insert(pr1);
+}
+
+static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoDoc& doc, std::map<int, const ON_TextureCoordinates*>& tcs)
+{
+  const CRhinoObject* obj = meshObj.m_parent_object;
+  ON_Mesh* pMesh = meshObj.m_mesh;
+  const ON_MappingRef* pMR = obj->Attributes().m_rendering_attributes.MappingRef(ON_nil_uuid);
+  const int count = pMR->m_mapping_channels.Count();
+
+  if (count == 0)
+  {
+    ON_TextureMapping mapping;
+    mapping.SetSurfaceParameterMapping();
+    // in this case you don't need to do the seam check thing because
+    // surface parameter mapping cannot create a seam
+    // in this case SetTextureCoordinates doesn't need to be called
+    const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &ON_Xform::IdentityTransformation);
+    int idx = mapping.Index(); // zero?
+    auto pr = std::pair<int, const ON_TextureCoordinates*>(idx, pTCs);
+    tcs.insert(pr);
+  }
+  else
+  {
+    // SetTextureCoordinates is obsolete but still needs to be called 
+    // before calling SetCachedTextureCoordinatesEx 
+    // because it will create all the necessary vertices on the mesh
+    // that are needed to properly apply the texture coordinates.
+    for (int i = 0; i < count; i++)
+    {
+      const ON_MappingChannel& mc = pMR->m_mapping_channels[i];
+      // mapping_id is what we can use to find the 
+      int txMpIdx = doc.m_texture_mapping_table.FindTextureMapping(mc.m_mapping_id);
+      if (txMpIdx != -1)
+      {
+        const ON_TextureMapping& mapping = doc.m_texture_mapping_table[txMpIdx];
+        const ON_Xform local_xform = mc.m_object_xform;
+        //side effect: changes the mesh vertices
+        pMesh->SetTextureCoordinates(mapping, &local_xform);
+      }
+    }
+    for (int i = 0; i < count; i++)
+    {
+      const ON_MappingChannel& mc = pMR->m_mapping_channels[i];
+      int txMpIdx = doc.m_texture_mapping_table.FindTextureMapping(mc.m_mapping_id);
+      if (txMpIdx != -1)
+      {
+        const ON_TextureMapping& mapping = doc.m_texture_mapping_table[txMpIdx];
+        const ON_Xform local_xform = mc.m_object_xform;
+        const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &local_xform);
+        tcs[txMpIdx] = pTCs;
+      }
+    }
+  }
+}
+
 int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
 {
 #if defined(ON_RUNTIME_APPLE)
@@ -113,8 +172,14 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     if (nullptr == objectMesh.m_parent_object || nullptr == objectMesh.m_mesh)
       continue;
 
+    std::map<int, const ON_TextureCoordinates*> textureCoordinatesByMappingChannel;
+    // this has to be done first, before meshes vertices are read to be exported
+    // because setting the texture coordinates can modify the mesh vertices
+    SetTextureCoordinatesOnMesh(objectMesh, doc, textureCoordinatesByMappingChannel);
+
     std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc);
-    ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, layerNames);
+    //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
+    ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, layerNames, textureCoordinatesByMappingChannel);
 
     const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
     if (pMaterial)

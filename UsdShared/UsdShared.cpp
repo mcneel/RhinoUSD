@@ -28,14 +28,14 @@ UsdExportImport::UsdExportImport() :
   };
 }
 
-ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames)
+ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, const ON_TextureCoordinates*>& tcs)
 {
   ON_Mesh meshCopy(*mesh);
   ON_Helpers::RotateYUp(&meshCopy);
 
   UsdShared::SetUsdLayersAsXformable(layerNames, stage);
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
-  ON_wString meshPath = UsdShared::WriteUSDMesh(stage, &meshCopy, layerNamesPath, currentMeshIndex);
+  ON_wString meshPath = UsdShared::WriteUSDMesh(stage, &meshCopy, layerNamesPath, currentMeshIndex, tcs);
   currentMeshIndex++;
   return meshPath;
 }
@@ -330,7 +330,7 @@ ON_wString UsdShared::RhinoLayerNameToUsd(const ON_wString& rhLayerName)
   return rc;
 }
 
-ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index)
+ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<int, const ON_TextureCoordinates*>& tcs)
 {
   if (nullptr == mesh)
     return "";
@@ -399,7 +399,7 @@ ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh,
     cattr.Set(colors);
   }
 
-  //// texture coordinates
+  // texture coordinates
   //if (mesh->HasTextureCoordinates())
   //{
   //  //usdMesh.ApplyAPI<pxr::UsdGeomPrimvarsAPI>();
@@ -414,6 +414,7 @@ ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh,
   //    if (primvar.Get<pxr::VtVec2fArray>(&uvValues))
   //    {
   //      //pxr::UsdGeomPrimvar pv = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+	//	    //pxr::UsdGeomPrimvar pv = usdMesh.CreateAttribute(pxr::TfToken("primvars:st", pxr::TfToken::Immortal), pxr::SdfValueTypeNames->TexCoord2fArray);
 	//	    pxr::UsdGeomPrimvar pv = usdMesh.CreateAttribute(pxr::TfToken("primvars:st", pxr::TfToken::Immortal), pxr::SdfValueTypeNames->Float2Array);
 	//	    pv.Set(uvValues);
 	//	    pv.SetInterpolation(pxr::TfToken("vertex"));
@@ -426,6 +427,19 @@ ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh,
 	//	  //attr2.SetInterpolation(pxr::TfToken("vertex"));
   //  }
   //}
+
+  // texture coordinates
+  if (!tcs.empty())
+  {
+     const ON_TextureCoordinates* firstTc = tcs.begin()->second;
+    //if (tcs.size() > 1)
+    //  // todo: support multiple channels or report that some were skipped.
+     ON_SimpleArray<ON_3fPoint> uvwPoints = firstTc->m_T;
+    //pseudo: if uvwPoints.Any(p => p.W != 0) then report that 3rd dimension is ignored
+    
+    //pxr::UsdGeomPrimvar pv = pxr::UsdGeomPrimvarsAPI(usdMesh)::CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+		//pxr::UsdGeomPrimvar attr2 = usdMesh.CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+  }
 
   VtVec3fArray extents(2);
   ON_BoundingBox bbox = mesh->BoundingBox();
