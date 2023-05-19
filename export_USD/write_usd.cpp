@@ -76,7 +76,8 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
   const CRhinoObject* obj = meshObj.m_parent_object;
   ON_Mesh* pMesh = meshObj.m_mesh;
   const ON_MappingRef* pMR = obj->Attributes().m_rendering_attributes.MappingRef(ON_nil_uuid);
-  const int count = pMR->m_mapping_channels.Count();
+
+  const int count = pMR == nullptr ? 0 : pMR->m_mapping_channels.Count();
 
   if (count == 0)
   {
@@ -232,22 +233,24 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
       std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
       if (pbrMat)
       {
-        const int texture_count = pbrMat->Material().m_textures.Count();
-        for (int i = 0; i < texture_count; i++)
-        {
-          const ON_Texture& texture = pbrMat->Material().m_textures[i];
-          ON_Texture::TYPE type = texture.m_type;
-          ON_wString filename = texture.m_image_file_reference.FullPath();
-          const int mapping_channel_id = texture.m_mapping_channel_id;
-          auto it = textureCoordinatesByMappingChannel.find(mapping_channel_id);
-          if (it != textureCoordinatesByMappingChannel.end())
-          {
-            const ON_TextureCoordinates* pTc = textureCoordinatesByMappingChannel[mapping_channel_id];
+        //std::vector<const ON_Texture&> textures;
+        //const int texture_count = pbrMat->Material().m_textures.Count();
+        //for (int i = 0; i < texture_count; i++)
+        //{
+        //  const ON_Texture& texture = pbrMat->Material().m_textures[i];
+        //  //textures.push_back(texture);
+        //  //ON_Texture::TYPE type = texture.m_type;
+        //  //ON_wString filename = texture.m_image_file_reference.FullPath();
+        //  //const int mapping_channel_id = texture.m_mapping_channel_id;
+        //  //auto it = textureCoordinatesByMappingChannel.find(mapping_channel_id);
+        //  //if (it != textureCoordinatesByMappingChannel.end())
+        //  //{
+        //  //  const ON_TextureCoordinates* pTc = textureCoordinatesByMappingChannel[mapping_channel_id];
 
-          }
-        }
+        //  //}
+        //}
         ON_PhysicallyBasedMaterial& pbr = *pbrMat;
-        usdEI.AddAndBindPbrMaterial(&pbr, layerNames, meshPath);
+        usdEI.AddAndBindPbrMaterialAndTextures(&pbr, pbrMat->Material().m_textures, layerNames, meshPath);
         //auto color = pbr.BaseColor();
       }
 
