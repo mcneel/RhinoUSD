@@ -17,25 +17,6 @@ public:
   bool AnythingToSave();
   void Save(const ON_wString& fileName);
 private:
-  void __addAndBindMat(
-    const ON_wString& namePrefix,
-    const pxr::GfVec3f& diffuseColor,
-    float opacity,
-    float roughness,
-    float metallic,
-    float oior,
-    float rior,
-    float alpha,
-    float clearcoat,
-    float anisotropic,
-    float sheen,
-    float sheenTint,
-    pxr::GfVec3f emission,
-    float specular,
-    float specularTint,
-    const std::vector<ON_wString>& layerNames,
-    const ON_wString meshPath
-  );
   UsdStageRefPtr stage;
   int currentMeshIndex;
   int currentMaterialIndex;
