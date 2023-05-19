@@ -28,7 +28,7 @@ UsdExportImport::UsdExportImport() :
   };
 }
 
-ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<ON_wString, const ON_TextureCoordinates*>& tcs)
+ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, const ON_TextureCoordinates*>& tcs)
 {
   ON_Mesh meshCopy(*mesh);
   ON_Helpers::RotateYUp(&meshCopy);
@@ -64,9 +64,9 @@ void UsdExportImport::__addAndBindMat(
   pxr::UsdPrim mesh = stage->GetPrimAtPath(mp);
 
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
-  ON_wString name;
-  name.Format(L"/%smaterial%d", namePrefix.Array(), currentMaterialIndex++);
-  name = layerNamesPath + name;
+  ON_wString mesh_name;
+  mesh_name.Format(L"/%smaterial%d", namePrefix.Array(), currentMaterialIndex++);
+  ON_wString name = layerNamesPath + mesh_name;
   std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
   pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrName));
 
@@ -163,29 +163,47 @@ void UsdExportImport::__addAndBindMat(
   //  shader.CreateInput(tokSpecularTint, pxr::SdfValueTypeNames->Float).Set(specularTint);
   //}
 
+
+  ON_wString stReaderName;
+  stReaderName.Format(L"/stReader%d", currentMaterialIndex - 1);
+  stReaderName = layerNamesPath + stReaderName;
+  auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(stReaderName)));
+  stReader.CreateIdAttr(pxr::VtValue("UsdPrimvarReader_float2"));
+  
+  ON_wString textureName;
+  textureName.Format(L"/texture%d", currentMaterialIndex - 1);
+  textureName = layerNamesPath + textureName;
+  auto diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureName)));
+  diffuseTextureSampler.CreateIdAttr(pxr::VtValue("UsdUVTexture"));
+  diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set("balls.png");
+  diffuseTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+  diffuseTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
+  shader.CreateInput(TfToken("diffuseColor"), pxr::SdfValueTypeNames->Color3f).ConnectToSource(diffuseTextureSampler.ConnectableAPI(), TfToken("rgb"));
+
+
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
   pxr::UsdShadeMaterialBindingAPI(mesh).Bind(usdMaterial);
 }
 
-void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
-{
-  float r(material->Diffuse().FractionRed());
-  float b(material->Diffuse().FractionBlue());
-  float g(material->Diffuse().FractionGreen());
-  pxr::GfVec3f diffColor(r, b, g);
+//void UsdExportImport::AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
+//{
+//  float r(material->Diffuse().FractionRed());
+//  float b(material->Diffuse().FractionBlue());
+//  float g(material->Diffuse().FractionGreen());
+//  pxr::GfVec3f diffColor(r, b, g);
+//
+//  float opacity(1.0 - material->Transparency());
+//
+//  //float r(-1.0);
+//  //float m(-1.0);
+//
+//  pxr::GfVec3f emission(-1.0, -1.0, -1.0);
+//
+//  ON_wString namePrefix(L"on_");
+//  __addAndBindMat(namePrefix, diffColor, opacity, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, emission, -1.0, -1.0, layerNames, meshPath);
+//}
 
-  float opacity(1.0 - material->Transparency());
-
-  //float r(-1.0);
-  //float m(-1.0);
-
-  pxr::GfVec3f emission(-1.0, -1.0, -1.0);
-
-  ON_wString namePrefix(L"on_");
-  __addAndBindMat(namePrefix, diffColor, opacity, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, emission, -1.0, -1.0, layerNames, meshPath);
-}
-
-void UsdExportImport::AddAndBindPbrMaterial(const ON_PhysicallyBasedMaterial* pbrMaterial, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
+void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
 {
   ON_4fColor color = pbrMaterial->BaseColor();
   pxr::GfVec3f diffColor(color.Red(), color.Green(), color.Blue());
@@ -330,7 +348,7 @@ ON_wString UsdShared::RhinoLayerNameToUsd(const ON_wString& rhLayerName)
   return rc;
 }
 
-ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<ON_wString, const ON_TextureCoordinates*>& tcs)
+ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<int, const ON_TextureCoordinates*>& tcs)
 {
   if (nullptr == mesh)
     return "";
@@ -431,30 +449,26 @@ ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh,
   // texture coordinates
   if (!tcs.empty())
   {
-    ON_wString firstUuid = tcs.begin()->first;
+    // let's just use the 1st one in the array for now
+    int mc_id = tcs.begin()->first;
     const ON_TextureCoordinates* firstTc = tcs.begin()->second;
     //if (tcs.size() > 1)
     //  // todo: support multiple channels or report that some were skipped.
      ON_SimpleArray<ON_3fPoint> uvwPoints = firstTc->m_T;
+     int ayCnt = firstTc->m_T.Count();
     //pseudo: if uvwPoints.Any(p => p.W != 0) then report that 3rd dimension is ignored
-    
-    //https://openusd.org/release/tut_simple_shading.html
+    // i guess that W is always ignored
+
+		pxr::VtArray<pxr::GfVec2f> uvArray;
+		uvArray.resize(ayCnt); //todo: assert: ayCnt should be the same as the number of vertices on the mesh
+    for (int i = 0; i < ayCnt; i++)
+    {
+      uvArray[i] = pxr::GfVec2f(uvwPoints[i].x, uvwPoints[i].y);
+    }
+
     pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
-    //texCoords.Set([(0, 0), (1, 0), (1,1), (0, 1)])
-    //texCoords.Set()
-
-      //stReader = pxr::UsdShade.Shader.Define(stage, '/TexModel/boardMat/stReader')
-      //stReader.CreateIdAttr('UsdPrimvarReader_float2')
-      //
-      //diffuseTextureSampler = UsdShade.Shader.Define(stage,'/TexModel/boardMat/diffuseTexture')
-      //diffuseTextureSampler.CreateIdAttr('UsdUVTexture')
-      //diffuseTextureSampler.CreateInput('file', Sdf.ValueTypeNames.Asset).Set("USDLogoLrg.png")
-      //diffuseTextureSampler.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(stReader.ConnectableAPI(), 'result')
-      //diffuseTextureSampler.CreateOutput('rgb', Sdf.ValueTypeNames.Float3)
-      //pbrShader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(diffuseTextureSampler.ConnectableAPI(), 'rgb')
-
-    //pxr::UsdGeomPrimvar pv = pxr::UsdGeomPrimvarsAPI(usdMesh)::CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
-		//pxr::UsdGeomPrimvar attr2 = usdMesh.CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+		//texCoords.SetInterpolation(pxr::TfToken("vertex")); //already set in CreatePrimvar
+    texCoords.Set(uvArray);
   }
 
   VtVec3fArray extents(2);

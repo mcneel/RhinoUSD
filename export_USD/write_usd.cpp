@@ -35,13 +35,49 @@ static void SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm)
   //sm.insert(pr1);
 }
 
-static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoDoc& doc, std::map<ON_wString, const ON_TextureCoordinates*>& tcs)
+static void WorkoutTextureCoordinates(
+  const int mapping_channel_id,
+  const std::map<int, const ON_TextureCoordinates*>& mappingCoordinatesOnMesh,
+  std::vector<const ON_TextureCoordinates>& tcs
+)
+{
+  //auto dfltMc = static_cast<ON_Texture::MAPPING_CHANNEL>(mapping_channel_id);
+  //if (true /*is default*/)
+  //  if (dfltMc == ON_Texture::MAPPING_CHANNEL::tc_channel) // deprecated
+  //    dfltMc = ON_Texture::MAPPING_CHANNEL::default_channel;
+  if (ON_Texture::IsBuiltInMappingChannel(mapping_channel_id)) {
+    auto mc_type = ON_Texture::BuiltInMappingChannelFromUnsigned(mapping_channel_id);
+    ON_TextureMapping mapping;
+    switch (mc_type)
+    {
+      case ON_Texture::MAPPING_CHANNEL::tc_channel:
+      case ON_Texture::MAPPING_CHANNEL::default_channel: { mapping.SetSurfaceParameterMapping(); }
+      //case ON_Texture::MAPPING_CHANNEL::screen_based_channel: { mapping.setmapping}
+      //case ON_Texture::MAPPING_CHANNEL::wcs_channel: { return 2; }
+      //case ON_Texture::MAPPING_CHANNEL::wcs_box_channel: { return 3; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_box_channel: { return 4; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_light_probe_channel: { return 5; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_spherical_channel: { return 6; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_cube_map_channel: { return 7; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_vcross_cube_map_channel: { return 8; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_hcross_cube_map_channel: { return 9; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_hemispherical_channel: { return 10; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_emap_channel: { return 11; }
+      default: { ASSERT(false); mapping.SetSurfaceParameterMapping(); }
+    }
+    //auto a = mapping.GetTextureCoordinates()
+  }
+  // this function doesn't do anything yet.
+}
+
+static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoDoc& doc, std::map<int, const ON_TextureCoordinates*>& tcs)
 {
   // instead of int as the map key use ON_UUID as a string: ON_UuidToString() and ON_UuidFromString()
   const CRhinoObject* obj = meshObj.m_parent_object;
   ON_Mesh* pMesh = meshObj.m_mesh;
   const ON_MappingRef* pMR = obj->Attributes().m_rendering_attributes.MappingRef(ON_nil_uuid);
-  const int count = pMR->m_mapping_channels.Count();
+
+  const int count = pMR == nullptr ? 0 : pMR->m_mapping_channels.Count();
 
   if (count == 0)
   {
@@ -53,10 +89,11 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
     const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &ON_Xform::IdentityTransformation);
     //int idx = mapping.Index(); // zero? probably 1
     //auto pr = std::pair<int, const ON_TextureCoordinates*>(idx, pTCs);
-    ON_wString uuidStr;
-    ON_UuidToString(mapping.Id(), uuidStr);
-    auto pr = std::pair<ON_wString, const ON_TextureCoordinates*>(uuidStr, pTCs);
-    tcs.insert(pr);
+    //ON_wString uuidStr;
+    //ON_UuidToString(mapping.Id(), uuidStr);
+    //auto pr = std::pair<ON_wString, const ON_TextureCoordinates*>(uuidStr, pTCs);
+    //tcs.insert(pr);
+    tcs[1] = pTCs;
   }
   else
   {
@@ -86,9 +123,10 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
         const ON_TextureMapping& mapping = doc.m_texture_mapping_table[txMpIdx];
         const ON_Xform local_xform = mc.m_object_xform;
         const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &local_xform);
-        ON_wString uuidStr;
-        ON_UuidToString(/*mc.m_mapping_id*/mapping.Id(), uuidStr);
-        tcs[uuidStr] = pTCs;
+        //ON_wString uuidStr;
+        //ON_UuidToString(/*mc.m_mapping_id*/mapping.Id(), uuidStr);
+        //tcs[uuidStr] = pTCs;
+        tcs[mc.m_mapping_channel_id] = pTCs;
       }
     }
   }
@@ -178,7 +216,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     if (nullptr == objectMesh.m_parent_object || nullptr == objectMesh.m_mesh)
       continue;
 
-    std::map<ON_wString, const ON_TextureCoordinates*> textureCoordinatesByMappingChannel;
+    std::map<int, const ON_TextureCoordinates*> textureCoordinatesByMappingChannel;
     // this has to be done first, before meshes vertices are read to be exported
     // because setting the texture coordinates can modify the mesh vertices
     SetTextureCoordinatesOnMesh(objectMesh, doc, textureCoordinatesByMappingChannel);
@@ -190,24 +228,44 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
     if (pMaterial)
     {
-      const ON_Material& material = pMaterial->SimulatedMaterial();
-      if (material.IsPhysicallyBased())
+      ON_Material material = pMaterial->SimulatedMaterial();
+      material.ToPhysicallyBased();
+      std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
+      if (pbrMat)
       {
-        //Shiny new Pixar approved material.
-        std::shared_ptr <ON_PhysicallyBasedMaterial> ppbr = material.PhysicallyBased();
-        if (ppbr)
-        {
-          ON_PhysicallyBasedMaterial& pbr = *ppbr;
-          usdEI.AddAndBindPbrMaterial(&pbr, layerNames, meshPath);
-          //auto color = pbr.BaseColor();
-        }
-      }
-      else
-      {
-        //Old skool 1981 material.
-        usdEI.AddAndBindMaterial(&material, layerNames, meshPath);
+        //std::vector<const ON_Texture&> textures;
+        //const int texture_count = pbrMat->Material().m_textures.Count();
+        //for (int i = 0; i < texture_count; i++)
+        //{
+        //  const ON_Texture& texture = pbrMat->Material().m_textures[i];
+        //  //textures.push_back(texture);
+        //  //ON_Texture::TYPE type = texture.m_type;
+        //  //ON_wString filename = texture.m_image_file_reference.FullPath();
+        //  //const int mapping_channel_id = texture.m_mapping_channel_id;
+        //  //auto it = textureCoordinatesByMappingChannel.find(mapping_channel_id);
+        //  //if (it != textureCoordinatesByMappingChannel.end())
+        //  //{
+        //  //  const ON_TextureCoordinates* pTc = textureCoordinatesByMappingChannel[mapping_channel_id];
+
+        //  //}
+        //}
+        ON_PhysicallyBasedMaterial& pbr = *pbrMat;
+        usdEI.AddAndBindPbrMaterialAndTextures(&pbr, pbrMat->Material().m_textures, layerNames, meshPath);
+        //auto color = pbr.BaseColor();
       }
 
+      /*
+      
+ const int texture_count = pbr->Material().m_textures.Count();
+  for (int i = 0; i < texture_count; i++)
+  {
+    const ON_Texture& texture = pbr->Material().m_textures[i];
+    auto type = texture.m_type;
+    ON_wString filename = texture.m_image_file_reference.FullPath();
+    const int mapping_channel = texture.m_mapping_channel_id;
+    usd.SetTexture(usd_material, type, filename, mapping_channel);
+  }
+      */
       //int tc = material.m_textures.Count();
       //for (int i = 0; i < tc; i++)
       //{
