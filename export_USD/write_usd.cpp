@@ -155,7 +155,8 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
   ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
 
-  UsdExportImport usdEI;
+  const ON_wString fn(filename);
+  UsdExportImport usdEI(fn);
 
   ON_ClassArray<CRhinoObjectMesh> mesh_list;
   ON_SimpleArray<const CRhinoObject*> objects(256);
@@ -273,9 +274,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   if (!usdEI.AnythingToSave())
     return 0;
 
-  // use an ON_String to convert from unicode to mbcs which is what usd wants
-  ON_wString usdPath(filename);
-  usdEI.Save(usdPath);
+  usdEI.Save();
   return 1;
 }
 
