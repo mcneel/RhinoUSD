@@ -233,52 +233,9 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
       std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
       if (pbrMat)
       {
-        //std::vector<const ON_Texture&> textures;
-        //const int texture_count = pbrMat->Material().m_textures.Count();
-        //for (int i = 0; i < texture_count; i++)
-        //{
-        //  const ON_Texture& texture = pbrMat->Material().m_textures[i];
-        //  //textures.push_back(texture);
-        //  //ON_Texture::TYPE type = texture.m_type;
-        //  //ON_wString filename = texture.m_image_file_reference.FullPath();
-        //  //const int mapping_channel_id = texture.m_mapping_channel_id;
-        //  //auto it = textureCoordinatesByMappingChannel.find(mapping_channel_id);
-        //  //if (it != textureCoordinatesByMappingChannel.end())
-        //  //{
-        //  //  const ON_TextureCoordinates* pTc = textureCoordinatesByMappingChannel[mapping_channel_id];
-
-        //  //}
-        //}
         ON_PhysicallyBasedMaterial& pbr = *pbrMat;
         usdEI.AddAndBindPbrMaterialAndTextures(&pbr, pbrMat->Material().m_textures, layerNames, meshPath);
-        //auto color = pbr.BaseColor();
       }
-
-      /*
-      
- const int texture_count = pbr->Material().m_textures.Count();
-  for (int i = 0; i < texture_count; i++)
-  {
-    const ON_Texture& texture = pbr->Material().m_textures[i];
-    auto type = texture.m_type;
-    ON_wString filename = texture.m_image_file_reference.FullPath();
-    const int mapping_channel = texture.m_mapping_channel_id;
-    usd.SetTexture(usd_material, type, filename, mapping_channel);
-  }
-      */
-      //int tc = material.m_textures.Count();
-      //for (int i = 0; i < tc; i++)
-      //{
-      //  ON_Texture tx = material.m_textures[i];
-      //  ON_Texture::TYPE t = tx.m_type;
-      //  ON_wString fp = tx.m_image_file_reference.FullPath();
-      //  
-      //  RhinoApp().Print(L"texture type: %d\r\n", t);
-      //}
-      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::diffuse_texture);
-      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::bump_texture);
-      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::transparency_texture);
-      //int ti = material.FindTexture(nullptr, ON_Texture::TYPE::bitmap_texture);
     }
   }
 
