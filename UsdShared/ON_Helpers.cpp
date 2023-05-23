@@ -3,7 +3,7 @@
 
 std::string ON_Helpers::ON_wStringToStdString(const ON_wString& onwstr)
 {
-  // todo: problems with losing data
+  // todo: problems with potentially losing data
   std::wstring wstr(static_cast<const wchar_t*>(onwstr));
   std::string str(wstr.begin(), wstr.end());
   return str;

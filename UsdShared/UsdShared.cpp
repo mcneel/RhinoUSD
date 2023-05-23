@@ -2,10 +2,12 @@
 #include "UsdShared.h"
 #include "ON_Helpers.h"
 #include "iostream"
+#include <fstream>
 
 using namespace pxr;
 
-UsdExportImport::UsdExportImport() :
+UsdExportImport::UsdExportImport(const ON_wString& fn) :
+  usdFileName(ON_Helpers::ON_wStringToStdString(fn)),
   currentMeshIndex(0),
   currentMaterialIndex(0),
   currentShaderIndex(0),
@@ -203,14 +205,17 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
     ON_Texture t = textures[i];
     ON_Texture::TYPE tt = t.m_type;
     //todo: copy file to export directory
-    std::string filePath = ON_Helpers::ON_wStringToStdString(t.m_image_file_reference.FullPath());
+    std::string textureFullFileName = ON_Helpers::ON_wStringToStdString(t.m_image_file_reference.FullPath());
+    std::string copyToPath = UsdShared::PathFromFullFileName(usdFileName);
+    std::string textureFileName = UsdShared::FileNameFromFullFileName(textureFullFileName);
+    UsdShared::CopyFileTo(textureFullFileName, copyToPath);
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
     ON_wString textureName;
     textureName.Format(L"%s/texture_%d", mesh_name, tt);
     //todo: diffuseTextureSampler should be renamed to textureSampler
     pxr::UsdShadeShader diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureName)));
     diffuseTextureSampler.CreateIdAttr(pxr::VtValue("UsdUVTexture"));
-    diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(filePath);
+    diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(/*L"./" + */textureFileName);
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
     diffuseTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
@@ -305,11 +310,40 @@ bool UsdExportImport::AnythingToSave()
   return currentMeshIndex > 0 || currentMaterialIndex > 0 || currentNurbsCurveIndex > 0;
 }
 
-void UsdExportImport::Save(const ON_wString& fileName)
+void UsdExportImport::Save()
 {
-  std::string fn = ON_Helpers::ON_wStringToStdString(fileName);
-  stage->Export(fn);
-  //stage->Save(); paired with UsdStage::CreateNew(pathname)?
+  stage->Export(usdFileName);
+}
+
+//todo: I'm sure there's a copy file function that's already available somewhere
+void UsdShared::CopyFileTo(const std::string& fullFileName, const std::string& destination)
+{
+  //std::string path = UsdShared::PathFromFullFileName(fullFileName);
+  std::string fileName = UsdShared::FileNameFromFullFileName(fullFileName);
+  std::string destFullFileName = destination + fileName;
+  std::ifstream  src(fullFileName, std::ios::binary);
+  std::ofstream  dst(destFullFileName,   std::ios::binary);
+  dst << src.rdbuf();
+}
+
+std::string UsdShared::PathFromFullFileName(const std::string& fileName)
+{
+  //todo: redo this quick implementation
+  int idx = fileName.find_last_of('\\');
+  if (idx == -1)
+    idx = fileName.find_last_of('/');
+  std::string path = fileName.substr(0, idx + 1);
+  return path;
+}
+
+std::string UsdShared::FileNameFromFullFileName(const std::string& fileName)
+{
+  //todo: redo this quick implementation
+  int idx = fileName.find_last_of('\\');
+  if (idx == -1)
+    idx = fileName.find_last_of('/');
+  std::string fn = fileName.substr(idx);
+  return fn;
 }
 
 bool UsdShared::IsAcceptableUsdCharacter(wchar_t c)
