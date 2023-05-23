@@ -28,6 +28,42 @@ UsdExportImport::UsdExportImport() :
   };
 }
 
+pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type)
+{
+  switch (type)
+  {
+    //case ON_Texture::TYPE::bitmap_texture:
+    //case ON_Texture::TYPE::pbr_base_color_texture:
+    case ON_Texture::TYPE::diffuse_texture: { return tokDiffuseColor; break; }
+    case ON_Texture::TYPE::bump_texture: { return tokDiffuseColor; break; }
+    //case ON_Texture::TYPE::transparency_texture:
+    case ON_Texture::TYPE::opacity_texture: { return tokOpacity; break; }
+    case ON_Texture::TYPE::pbr_subsurface_texture: { return TfToken("pbr_subsurface_texture"); break; }
+    case ON_Texture::TYPE::pbr_subsurface_scattering_texture: { return TfToken("pbr_subsurface_scattering_texture"); break; }
+    case ON_Texture::TYPE::pbr_subsurface_scattering_radius_texture: { return TfToken("pbr_subsurface_scattering_radius_texture"); break; }
+    case ON_Texture::TYPE::pbr_metallic_texture: { return TfToken("metallic"); break; }
+    case ON_Texture::TYPE::pbr_specular_texture: { return TfToken("pbr_specular_texture"); break; }
+    case ON_Texture::TYPE::pbr_specular_tint_texture: { return TfToken("pbr_specular_tint_texture"); break; }
+    case ON_Texture::TYPE::pbr_roughness_texture: { return TfToken("pbr_roughness_texture"); break; }
+    case ON_Texture::TYPE::pbr_anisotropic_texture: { return TfToken("pbr_anisotropic_texture"); break; }
+    case ON_Texture::TYPE::pbr_anisotropic_rotation_texture: { return TfToken("pbr_anisotropic_rotation_texture"); break; }
+    case ON_Texture::TYPE::pbr_sheen_texture: { return TfToken("pbr_sheen_texture"); break; }
+    case ON_Texture::TYPE::pbr_sheen_tint_texture: { return TfToken("pbr_sheen_tint_texture"); break; }
+    case ON_Texture::TYPE::pbr_clearcoat_texture: { return TfToken("pbr_clearcoat_texture"); break; }
+    case ON_Texture::TYPE::pbr_clearcoat_roughness_texture: { return TfToken("pbr_clearcoat_roughness_texture"); break; }
+    case ON_Texture::TYPE::pbr_opacity_ior_texture: { return TfToken("pbr_opacity_ior_texture"); break; }
+    case ON_Texture::TYPE::pbr_opacity_roughness_texture: { return TfToken("pbr_opacity_roughness_texture"); break; }
+    case ON_Texture::TYPE::pbr_emission_texture: { return TfToken("pbr_emission_texture"); break; }
+    case ON_Texture::TYPE::pbr_ambient_occlusion_texture: { return TfToken("pbr_ambient_occlusion_texture"); break; }
+    //case ON_Texture::TYPE::pbr_smudge_texture: { return TfToken("pbr_smudge_texture"); break; }
+    case ON_Texture::TYPE::pbr_displacement_texture: { return TfToken("pbr_displacement_texture"); break; }
+    case ON_Texture::TYPE::pbr_clearcoat_bump_texture: { return TfToken("pbr_clearcoat_bump_texture"); break; }
+    case ON_Texture::TYPE::pbr_alpha_texture: { return TfToken("pbr_alpha_texture"); break; }
+    case ON_Texture::TYPE::emap_texture: { return TfToken("emap_texture"); break; }
+    default: {return tokDiffuseColor; break; }
+  }
+}
+
 ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, const ON_TextureCoordinates*>& tcs)
 {
   ON_Mesh meshCopy(*mesh);
@@ -49,14 +85,14 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
   ON_wString mesh_name;
   mesh_name.Format(L"/material%d", currentMaterialIndex++);
-  ON_wString name = layerNamesPath + mesh_name;
-  std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
-  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrName));
+  mesh_name = layerNamesPath + mesh_name;
+  std::string stdStrMeshName = ON_Helpers::ON_wStringToStdString(mesh_name);
+  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrMeshName));
 
 
   ON_wString shaderName;
-  shaderName.Format(L"/shader%d", currentShaderIndex++);
-  shaderName = layerNamesPath + shaderName;
+  shaderName.Format(L"%s/shader%d", mesh_name, currentShaderIndex++);
+  //shaderName = layerNamesPath + shaderName;
   std::string stdStrShaderName = ON_Helpers::ON_wStringToStdString(shaderName);
   pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
   shader.CreateIdAttr(pxr::VtValue(tokPreviewSurface));
@@ -151,20 +187,36 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
 
 
   ON_wString stReaderName;
-  stReaderName.Format(L"/stReader%d", currentMaterialIndex - 1);
-  stReaderName = layerNamesPath + stReaderName;
+  stReaderName.Format(L"%s/stReader%d", mesh_name, currentMaterialIndex - 1);
+  //stReaderName = layerNamesPath + stReaderName;
   auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(stReaderName)));
   stReader.CreateIdAttr(pxr::VtValue("UsdPrimvarReader_float2"));
+
+  pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken("frame:stPrimvarName"), SdfValueTypeNames->Token);
+  stInput.Set("st");
+
+  stReader.CreateInput(TfToken("varname"), SdfValueTypeNames->Token).ConnectToSource(stInput);
   
-  ON_wString textureName;
-  textureName.Format(L"/texture%d", currentMaterialIndex - 1);
-  textureName = layerNamesPath + textureName;
-  auto diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureName)));
-  diffuseTextureSampler.CreateIdAttr(pxr::VtValue("UsdUVTexture"));
-  diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set("balls.png");
-  diffuseTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
-  diffuseTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
-  shader.CreateInput(TfToken("diffuseColor"), pxr::SdfValueTypeNames->Color3f).ConnectToSource(diffuseTextureSampler.ConnectableAPI(), TfToken("rgb"));
+  const int texture_count = textures.Count();
+  for (int i = 0; i < texture_count; i++)
+  {
+    ON_Texture t = textures[i];
+    ON_Texture::TYPE tt = t.m_type;
+    //todo: copy file to export directory
+    std::string filePath = ON_Helpers::ON_wStringToStdString(t.m_image_file_reference.FullPath());
+    pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
+    ON_wString textureName;
+    textureName.Format(L"%s/texture_%d", mesh_name, tt);
+    //todo: diffuseTextureSampler should be renamed to textureSampler
+    pxr::UsdShadeShader diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureName)));
+    diffuseTextureSampler.CreateIdAttr(pxr::VtValue("UsdUVTexture"));
+    diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(filePath);
+    //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
+    diffuseTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+    //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
+    diffuseTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
+    shader.CreateInput(TfToken("diffuseColor"), pxr::SdfValueTypeNames->Color3f).ConnectToSource(diffuseTextureSampler.ConnectableAPI(), TfToken("rgb"));
+  }
 
 
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();

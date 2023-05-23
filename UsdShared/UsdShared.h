@@ -17,6 +17,7 @@ public:
   bool AnythingToSave();
   void Save(const ON_wString& fileName);
 private:
+  pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
   UsdStageRefPtr stage;
   int currentMeshIndex;
   int currentMaterialIndex;
