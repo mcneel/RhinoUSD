@@ -91,6 +91,11 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   std::string stdStrMeshName = ON_Helpers::ON_wStringToStdString(mesh_name);
   pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrMeshName));
 
+  // primvar for texture mapping coordinates
+  pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken("frame:stPrimvarName"), SdfValueTypeNames->Token);
+  stInput.Set("st");
+
+
 
   ON_wString shaderName;
   shaderName.Format(L"%s/shader%d", mesh_name, currentShaderIndex++);
@@ -98,7 +103,6 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   std::string stdStrShaderName = ON_Helpers::ON_wStringToStdString(shaderName);
   pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
   shader.CreateIdAttr(pxr::VtValue(tokPreviewSurface));
-  usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
 
   ON_4fColor color = pbrMaterial->BaseColor();
   pxr::GfVec3f diffuseColor(color.Red(), color.Green(), color.Blue());
@@ -188,14 +192,13 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   //}
 
 
+  usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
+
   ON_wString stReaderName;
   stReaderName.Format(L"%s/stReader%d", mesh_name, currentMaterialIndex - 1);
   //stReaderName = layerNamesPath + stReaderName;
   auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(stReaderName)));
-  stReader.CreateIdAttr(pxr::VtValue("UsdPrimvarReader_float2"));
-
-  pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken("frame:stPrimvarName"), SdfValueTypeNames->Token);
-  stInput.Set("st");
+  stReader.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdPrimvarReader_float2")));
 
   stReader.CreateInput(TfToken("varname"), SdfValueTypeNames->Token).ConnectToSource(stInput);
   
@@ -204,18 +207,18 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   {
     ON_Texture t = textures[i];
     ON_Texture::TYPE tt = t.m_type;
-    //todo: copy file to export directory
     std::string textureFullFileName = ON_Helpers::ON_wStringToStdString(t.m_image_file_reference.FullPath());
     std::string copyToPath = UsdShared::PathFromFullFileName(usdFileName);
     std::string textureFileName = UsdShared::FileNameFromFullFileName(textureFullFileName);
     UsdShared::CopyFileTo(textureFullFileName, copyToPath);
+
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
     ON_wString textureName;
     textureName.Format(L"%s/texture_%d", mesh_name, tt);
     //todo: diffuseTextureSampler should be renamed to textureSampler
     pxr::UsdShadeShader diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureName)));
     diffuseTextureSampler.CreateIdAttr(pxr::VtValue("UsdUVTexture"));
-    diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(/*L"./" + */textureFileName);
+    diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
     diffuseTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
@@ -225,7 +228,8 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
 
 
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
-  pxr::UsdShadeMaterialBindingAPI(mesh).Bind(usdMaterial);
+  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh(mesh);
+  pxr::UsdShadeMaterialBindingAPI(usdMesh).Bind(usdMaterial);
 }
 
 void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames)
@@ -342,7 +346,7 @@ std::string UsdShared::FileNameFromFullFileName(const std::string& fileName)
   int idx = fileName.find_last_of('\\');
   if (idx == -1)
     idx = fileName.find_last_of('/');
-  std::string fn = fileName.substr(idx);
+  std::string fn = fileName.substr(idx + 1);
   return fn;
 }
 
@@ -481,7 +485,7 @@ ON_wString UsdShared::WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh,
   if (!tcs.empty())
   {
     // let's just use the 1st one in the array for now
-    int mc_id = tcs.begin()->first;
+    //int mc_id = tcs.begin()->first;
     const ON_TextureCoordinates* firstTc = tcs.begin()->second;
     //if (tcs.size() > 1)
     //  // todo: support multiple channels or report that some were skipped.
