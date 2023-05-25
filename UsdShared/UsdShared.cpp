@@ -91,9 +91,6 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   std::string stdStrMeshName = ON_Helpers::ON_wStringToStdString(mesh_name);
   pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrMeshName));
 
-  // primvar for texture mapping coordinates
-  pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken("frame:stPrimvarName"), SdfValueTypeNames->Token);
-  stInput.Set("st");
 
 
 
@@ -200,7 +197,6 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(stReaderName)));
   stReader.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdPrimvarReader_float2")));
 
-  stReader.CreateInput(TfToken("varname"), SdfValueTypeNames->Token).ConnectToSource(stInput);
   
   const int texture_count = textures.Count();
   for (int i = 0; i < texture_count; i++)
@@ -213,17 +209,27 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
     UsdShared::CopyFileTo(textureFullFileName, copyToPath);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
+    ON_wString textureFullName;
+    textureFullName.Format(L"%s/texture_%d", mesh_name, tt);
     ON_wString textureName;
-    textureName.Format(L"%s/texture_%d", mesh_name, tt);
+    textureName.Format(L"texture_%d", tt);
+    std::string stdTextureName = ON_Helpers::ON_wStringToStdString(textureName);
+
     //todo: diffuseTextureSampler should be renamed to textureSampler
-    pxr::UsdShadeShader diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureName)));
-    diffuseTextureSampler.CreateIdAttr(pxr::VtValue("UsdUVTexture"));
+    pxr::UsdShadeShader diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureFullName)));
+    diffuseTextureSampler.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdUVTexture")));
     diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
     diffuseTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
     diffuseTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
     shader.CreateInput(TfToken("diffuseColor"), pxr::SdfValueTypeNames->Color3f).ConnectToSource(diffuseTextureSampler.ConnectableAPI(), TfToken("rgb"));
+
+    // primvar for texture mapping coordinates
+    //pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken("frame:stPrimvarName"), SdfValueTypeNames->Token);
+    pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken(stdTextureName), SdfValueTypeNames->String);
+    stInput.Set("st");
+    stReader.CreateInput(TfToken("varname"), SdfValueTypeNames->String).ConnectToSource(stInput);
   }
 
 
