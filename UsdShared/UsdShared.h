@@ -17,6 +17,7 @@ public:
   bool AnythingToSave();
   void Save(/*const ON_wString& fileName*/);
 private:
+  //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
   const std::string usdFileName;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
   UsdStageRefPtr stage;
@@ -26,10 +27,17 @@ private:
   int currentNurbsCurveIndex;
   pxr::TfToken tokPreviewSurface;
   pxr::TfToken tokSurface;
+
+  // pbr properties
   pxr::TfToken tokDiffuseColor;
   pxr::TfToken tokOpacity;
   pxr::TfToken tokRoughness;
   pxr::TfToken tokMetallic;
+  pxr::TfToken tokIor;
+  pxr::TfToken tokAlpha;
+  pxr::TfToken tokClearcoat;
+  pxr::TfToken tokEmissiveColor;
+
 };
 
 namespace UsdShared
