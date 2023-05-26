@@ -17,8 +17,22 @@ UsdExportImport::UsdExportImport(const ON_wString& fn) :
   tokDiffuseColor("diffuseColor"),
   tokOpacity("opacity"),
   tokRoughness("roughness"),
-  tokMetallic("metallic")
+  tokMetallic("metallic"),
+  tokIor("ior"),
+  tokAlpha("alpha"),
+  tokClearcoat("clearcoat"),
+  tokEmissiveColor("emmisiveColor")
 {
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("diffuseColor"), ON_Texture::TYPE::diffuse_texture, "BaseColor"));
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("opacity"), ON_Texture::TYPE::opacity_texture, "Opacity"));
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("roughness"), ON_Texture::TYPE::pbr_roughness_texture, "Roughness"));
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("metallic"), ON_Texture::TYPE::pbr_metallic_texture, "Metallic"));
+  //// what about ReflectiveIOR ?
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("ior"), ON_Texture::TYPE::pbr_opacity_ior_texture, "OpacityIOR"));
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("alpha"), ON_Texture::TYPE::pbr_alpha_texture, "Alpha"));
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("clearcoat"), ON_Texture::TYPE::pbr_clearcoat_texture, "Clearcoat"));
+  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("emissiveColor"), ON_Texture::TYPE::pbr_emission_texture, "Emission"));
+
   stage = UsdStage::CreateInMemory();
   //stage = UsdStage::CreateNew(<some path>);
 
@@ -40,28 +54,28 @@ pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYP
     case ON_Texture::TYPE::bump_texture: { return tokDiffuseColor; break; }
     //case ON_Texture::TYPE::transparency_texture:
     case ON_Texture::TYPE::opacity_texture: { return tokOpacity; break; }
-    case ON_Texture::TYPE::pbr_subsurface_texture: { return TfToken("pbr_subsurface_texture"); break; }
-    case ON_Texture::TYPE::pbr_subsurface_scattering_texture: { return TfToken("pbr_subsurface_scattering_texture"); break; }
-    case ON_Texture::TYPE::pbr_subsurface_scattering_radius_texture: { return TfToken("pbr_subsurface_scattering_radius_texture"); break; }
-    case ON_Texture::TYPE::pbr_metallic_texture: { return TfToken("metallic"); break; }
-    case ON_Texture::TYPE::pbr_specular_texture: { return TfToken("pbr_specular_texture"); break; }
-    case ON_Texture::TYPE::pbr_specular_tint_texture: { return TfToken("pbr_specular_tint_texture"); break; }
-    case ON_Texture::TYPE::pbr_roughness_texture: { return TfToken("pbr_roughness_texture"); break; }
-    case ON_Texture::TYPE::pbr_anisotropic_texture: { return TfToken("pbr_anisotropic_texture"); break; }
-    case ON_Texture::TYPE::pbr_anisotropic_rotation_texture: { return TfToken("pbr_anisotropic_rotation_texture"); break; }
-    case ON_Texture::TYPE::pbr_sheen_texture: { return TfToken("pbr_sheen_texture"); break; }
-    case ON_Texture::TYPE::pbr_sheen_tint_texture: { return TfToken("pbr_sheen_tint_texture"); break; }
-    case ON_Texture::TYPE::pbr_clearcoat_texture: { return TfToken("pbr_clearcoat_texture"); break; }
-    case ON_Texture::TYPE::pbr_clearcoat_roughness_texture: { return TfToken("pbr_clearcoat_roughness_texture"); break; }
-    case ON_Texture::TYPE::pbr_opacity_ior_texture: { return TfToken("pbr_opacity_ior_texture"); break; }
-    case ON_Texture::TYPE::pbr_opacity_roughness_texture: { return TfToken("pbr_opacity_roughness_texture"); break; }
-    case ON_Texture::TYPE::pbr_emission_texture: { return TfToken("pbr_emission_texture"); break; }
-    case ON_Texture::TYPE::pbr_ambient_occlusion_texture: { return TfToken("pbr_ambient_occlusion_texture"); break; }
+    //case ON_Texture::TYPE::pbr_subsurface_texture: { return TfToken("pbr_subsurface_texture"); break; }
+    //case ON_Texture::TYPE::pbr_subsurface_scattering_texture: { return TfToken("pbr_subsurface_scattering_texture"); break; }
+    //case ON_Texture::TYPE::pbr_subsurface_scattering_radius_texture: { return TfToken("pbr_subsurface_scattering_radius_texture"); break; }
+    case ON_Texture::TYPE::pbr_metallic_texture: { return tokMetallic; break; }
+    //case ON_Texture::TYPE::pbr_specular_texture: { return TfToken("pbr_specular_texture"); break; }
+    //case ON_Texture::TYPE::pbr_specular_tint_texture: { return TfToken("pbr_specular_tint_texture"); break; }
+    case ON_Texture::TYPE::pbr_roughness_texture: { return tokRoughness; break; }
+    //case ON_Texture::TYPE::pbr_anisotropic_texture: { return TfToken("pbr_anisotropic_texture"); break; }
+    //case ON_Texture::TYPE::pbr_anisotropic_rotation_texture: { return TfToken("pbr_anisotropic_rotation_texture"); break; }
+    //case ON_Texture::TYPE::pbr_sheen_texture: { return TfToken("pbr_sheen_texture"); break; }
+    //case ON_Texture::TYPE::pbr_sheen_tint_texture: { return TfToken("pbr_sheen_tint_texture"); break; }
+    case ON_Texture::TYPE::pbr_clearcoat_texture: { return tokClearcoat; break; }
+    //case ON_Texture::TYPE::pbr_clearcoat_roughness_texture: { return TfToken("pbr_clearcoat_roughness_texture"); break; }
+    case ON_Texture::TYPE::pbr_opacity_ior_texture: { return tokIor; break; }
+    //case ON_Texture::TYPE::pbr_opacity_roughness_texture: { return TfToken("pbr_opacity_roughness_texture"); break; }
+    case ON_Texture::TYPE::pbr_emission_texture: { return tokEmissiveColor; break; }
+    //case ON_Texture::TYPE::pbr_ambient_occlusion_texture: { return TfToken("pbr_ambient_occlusion_texture"); break; }
     //case ON_Texture::TYPE::pbr_smudge_texture: { return TfToken("pbr_smudge_texture"); break; }
-    case ON_Texture::TYPE::pbr_displacement_texture: { return TfToken("pbr_displacement_texture"); break; }
-    case ON_Texture::TYPE::pbr_clearcoat_bump_texture: { return TfToken("pbr_clearcoat_bump_texture"); break; }
-    case ON_Texture::TYPE::pbr_alpha_texture: { return TfToken("pbr_alpha_texture"); break; }
-    case ON_Texture::TYPE::emap_texture: { return TfToken("emap_texture"); break; }
+    //case ON_Texture::TYPE::pbr_displacement_texture: { return TfToken("pbr_displacement_texture"); break; }
+    //case ON_Texture::TYPE::pbr_clearcoat_bump_texture: { return TfToken("pbr_clearcoat_bump_texture"); break; }
+    case ON_Texture::TYPE::pbr_alpha_texture: { return tokAlpha; break; }
+    //case ON_Texture::TYPE::emap_texture: { return TfToken("emap_texture"); break; }
     default: {return tokDiffuseColor; break; }
   }
 }
@@ -130,7 +144,6 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   float rior(pbrMaterial->ReflectiveIOR());
   if (rior != -1.0)
   {
-    pxr::TfToken tokIor("ior");
     shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
   }
 
@@ -144,16 +157,15 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   float clearcoat(pbrMaterial->Clearcoat());
   if (clearcoat != -1.0)
   {
-    pxr::TfToken tokClearcoat("clearcoat");
     shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(clearcoat);
   }
 
-  float anisotropic(pbrMaterial->Anisotropic());
-  if (anisotropic != -1.0)
-  {
-    pxr::TfToken tokAnisotropic("?");
-    shader.CreateInput(tokAnisotropic, pxr::SdfValueTypeNames->Float).Set(anisotropic);
-  }
+  //float anisotropic(pbrMaterial->Anisotropic());
+  //if (anisotropic != -1.0)
+  //{
+  //  pxr::TfToken tokAnisotropic("?");
+  //  shader.CreateInput(tokAnisotropic, pxr::SdfValueTypeNames->Float).Set(anisotropic);
+  //}
 
   //float sheen(pbrMaterial->Sheen());
   //if (sheen != -1.0)
@@ -171,8 +183,7 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
 
   ON_4fColor e(pbrMaterial->Emission());
   pxr::GfVec3f emission(e.Red(), e.Green(), e.Blue());
-  pxr::TfToken tokEmission("emissiveColor");
-  shader.CreateInput(tokEmission, pxr::SdfValueTypeNames->Color3f).Set(emission);
+  shader.CreateInput(tokEmissiveColor, pxr::SdfValueTypeNames->Color3f).Set(emission);
 
   //float specular(pbrMaterial->Specular());
   //if (specular != -1.0)
@@ -210,20 +221,22 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
     ON_wString textureFullName;
+    //textureFullName.Format(L"%s/texture_%s", mesh_name, pbrParam.GetString());
     textureFullName.Format(L"%s/texture_%d", mesh_name, tt);
     ON_wString textureName;
+    //textureName.Format(L"texture_%s", pbrParam.GetString());
     textureName.Format(L"texture_%d", tt);
     std::string stdTextureName = ON_Helpers::ON_wStringToStdString(textureName);
 
-    //todo: diffuseTextureSampler should be renamed to textureSampler
-    pxr::UsdShadeShader diffuseTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureFullName)));
-    diffuseTextureSampler.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdUVTexture")));
-    diffuseTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
+    pxr::UsdShadeShader usdUVTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureFullName)));
+    usdUVTextureSampler.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdUVTexture")));
+    usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
-    diffuseTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+    usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
-    diffuseTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
-    shader.CreateInput(TfToken("diffuseColor"), pxr::SdfValueTypeNames->Color3f).ConnectToSource(diffuseTextureSampler.ConnectableAPI(), TfToken("rgb"));
+    usdUVTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
+    //todo: same here. typeNames->Color3f is correct for diffuseColor but not for most other pbrParam
+    shader.CreateInput(pbrParam, pxr::SdfValueTypeNames->Color3f).ConnectToSource(usdUVTextureSampler.ConnectableAPI(), TfToken("rgb"));
 
     // primvar for texture mapping coordinates
     //pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken("frame:stPrimvarName"), SdfValueTypeNames->Token);
