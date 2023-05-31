@@ -3,10 +3,54 @@
 
 std::string ON_Helpers::ON_wStringToStdString(const ON_wString& onwstr)
 {
-  // todo: problems with losing data
+  // todo: problems with potentially losing data
   std::wstring wstr(static_cast<const wchar_t*>(onwstr));
   std::string str(wstr.begin(), wstr.end());
   return str;
+}
+
+ON_wString ON_Helpers::ON_TextureTYPE_ToString(const ON_Texture::TYPE type)
+{
+  // there's probably an better way to convert an enum to string in C++
+
+  switch (type)
+  {
+    //case ON_Texture::TYPE::bitmap_texture: { return "bitmap_texture"; break; } // "standard" image texture.  // Deprecated.  Use Diffuse.
+    //case ON_Texture::TYPE::diffuse_texture: { return "diffuse_texture"; break; } // ideally albedo.
+    case ON_Texture::TYPE::bump_texture: { return "bump_texture"; break; } // bump map - see m_bump_scale comment
+    case ON_Texture::TYPE::transparency_texture: { return "transparency_texture"; break; } // value = alpha (see m_tranparancy_id)  Deprecated.  Use Opacity.  No change needed to functionality - transparency in Rhino has always meant opacity.
+    //case ON_Texture::TYPE::opacity_texture: { return "opacity_texture"; break; } // value = alpha.
+
+    // The following textures are only for PBR materials
+    // They are not supported by the basic ON_Material definition, and should only be used when
+    // rendering physically based (PBR) materials.
+    case ON_Texture::TYPE::pbr_base_color_texture: { return "pbr_base_color_texture"; break; }   //Reuse diffuse texture.
+    case ON_Texture::TYPE::pbr_subsurface_texture: { return "pbr_subsurface_texture"; break; }
+    case ON_Texture::TYPE::pbr_subsurface_scattering_texture: { return "pbr_subsurface_scattering_texture"; break; }
+    case ON_Texture::TYPE::pbr_subsurface_scattering_radius_texture: { return "pbr_subsurface_scattering_radius_texture"; break; }
+    case ON_Texture::TYPE::pbr_metallic_texture: { return "pbr_metallic_texture"; break; }
+    case ON_Texture::TYPE::pbr_specular_texture: { return "pbr_specular_texture"; break; }
+    case ON_Texture::TYPE::pbr_specular_tint_texture: { return "pbr_specular_tint_texture"; break; }
+    case ON_Texture::TYPE::pbr_roughness_texture: { return "pbr_roughness_texture"; break; }
+    case ON_Texture::TYPE::pbr_anisotropic_texture: { return "pbr_anisotropic_texture"; break; }
+    case ON_Texture::TYPE::pbr_anisotropic_rotation_texture: { return "pbr_anisotropic_rotation_texture"; break; }
+    case ON_Texture::TYPE::pbr_sheen_texture: { return "pbr_sheen_texture"; break; }
+    case ON_Texture::TYPE::pbr_sheen_tint_texture: { return "pbr_sheen_tint_texture"; break; }
+    case ON_Texture::TYPE::pbr_clearcoat_texture: { return "pbr_clearcoat_texture"; break; }
+    case ON_Texture::TYPE::pbr_clearcoat_roughness_texture: { return "pbr_clearcoat_roughness_texture"; break; }
+    case ON_Texture::TYPE::pbr_opacity_ior_texture: { return "pbr_opacity_ior_texture"; break; }
+    case ON_Texture::TYPE::pbr_opacity_roughness_texture: { return "pbr_opacity_roughness_texture"; break; }
+    case ON_Texture::TYPE::pbr_emission_texture: { return "pbr_emission_texture"; break; }
+    case ON_Texture::TYPE::pbr_ambient_occlusion_texture: { return "pbr_ambient_occlusion_texture"; break; }
+    //pbr_smudge_texture                 = 27U,
+    case ON_Texture::TYPE::pbr_displacement_texture: { return "pbr_displacement_texture"; break; }
+    case ON_Texture::TYPE::pbr_clearcoat_bump_texture: { return "pbr_clearcoat_bump_texture"; break; }
+    case ON_Texture::TYPE::pbr_alpha_texture: { return "pbr_alpha_texture"; break; }
+
+    // emap_texture is OBSOLETE - set m_mapping_channel_id = ON_MappingChannel::emap_mapping
+    case ON_Texture::TYPE::emap_texture: { return "emap_texture"; break; } // spherical environment mapping.
+    default: {return ""; break; }
+  }
 }
 
 ON_wString ON_Helpers::StringVectorToPath(const std::vector<ON_wString>& names)
