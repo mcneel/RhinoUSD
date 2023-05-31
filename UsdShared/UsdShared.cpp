@@ -116,7 +116,7 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
 
 
   ON_wString shaderName;
-  shaderName.Format(L"%s/shader%d", mesh_name, currentShaderIndex++);
+  shaderName.Format(L"%s/shader%d", mesh_name.Array(), currentShaderIndex++);
   //shaderName = layerNamesPath + shaderName;
   std::string stdStrShaderName = ON_Helpers::ON_wStringToStdString(shaderName);
   pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
@@ -176,7 +176,7 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
 
   ON_wString stReaderName;
-  stReaderName.Format(L"%s/stReader%d", mesh_name, currentMaterialIndex - 1);
+  stReaderName.Format(L"%s/stReader%d", mesh_name.Array(), currentMaterialIndex - 1);
   //stReaderName = layerNamesPath + stReaderName;
   auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(stReaderName)));
   stReader.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdPrimvarReader_float2")));
@@ -200,9 +200,9 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
     }
     ON_wString textureFullName;
     ON_wString ttStr(ON_Helpers::ON_TextureTYPE_ToString(tt));
-    textureFullName.Format(L"%s/texture_%s", mesh_name, ttStr);
+    textureFullName.Format(L"%s/texture_%s", mesh_name.Array(), ttStr.Array());
     ON_wString textureName;
-    textureName.Format(L"texture_%s", ttStr);
+    textureName.Format(L"texture_%s", ttStr.Array());
     std::string stdTextureName = ON_Helpers::ON_wStringToStdString(textureName);
 
     pxr::UsdShadeShader usdUVTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureFullName)));
