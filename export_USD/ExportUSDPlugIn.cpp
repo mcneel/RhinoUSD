@@ -60,9 +60,11 @@ void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, co
 {
 	CRhinoFileType ft;
 	ft.SetFileTypePlugInID(PlugInID());
-	ft.FileTypeDescription(L"USD (*.usd, *.usda)");
+	//ft.FileTypeDescription(L"USD (*.usd, *.usda, *usdz)");
+	ft.FileTypeDescription(L"USD (*.usda, *usdz)");
   //ft.AddFileTypeExtension(L"usd");
   ft.AddFileTypeExtension(L"usda");
+  ft.AddFileTypeExtension(L"usdz");
   extensions.Append(ft);
 }
 

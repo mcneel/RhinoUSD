@@ -18,6 +18,7 @@ public:
   void Save(/*const ON_wString& fileName*/);
 private:
   //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
+  std::vector<std::string> filesInExport;
   const std::string usdFileName;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
   UsdStageRefPtr stage;
@@ -28,23 +29,34 @@ private:
   pxr::TfToken tokPreviewSurface;
   pxr::TfToken tokSurface;
 
-  // pbr properties
+  // UsdPreviewSurfaceInputs
   pxr::TfToken tokDiffuseColor;
-  pxr::TfToken tokOpacity;
-  pxr::TfToken tokRoughness;
-  pxr::TfToken tokMetallic;
-  pxr::TfToken tokIor;
-  pxr::TfToken tokAlpha;
-  pxr::TfToken tokClearcoat;
   pxr::TfToken tokEmissiveColor;
+  pxr::TfToken tokUseSpecularWorkflow;
+  //pxr::TfToken tokSpecularColor;
+  pxr::TfToken tokMetallic;
+  pxr::TfToken tokRoughness;
+  pxr::TfToken tokClearcoat;
+  //pxr::TfToken tokClearcoatRoughness;
+  pxr::TfToken tokOpacity;
+  // Andy says to ignore opacity threshold
+  //pxr::TfToken tokOpacityThreshold;
+  pxr::TfToken tokIor;
 
+  // Andy: "This is related to bump. We might have to think carefully about this"
+  //pxr::TfToken tokNormal;
+
+  pxr::TfToken tokDisplacement;
+  pxr::TfToken tokOcclusion;
 };
 
 namespace UsdShared
 {
   std::string PathFromFullFileName(const std::string& fileName);
   std::string FileNameFromFullFileName(const std::string& fileName);
+  bool EndsWith(const std::string& str, const std::string& suffix);
   void CopyFileTo(const std::string& fullFileName, const std::string& destination);
+  void CreateUsdzFile(const std::string& fullFileNameNoExtension, const std::vector<std::string>& filesToInclude);
   bool IsAcceptableUsdCharacter(wchar_t c);
   ON_wString RhinoLayerNameToUsd(const ON_wString& rhLayerName);
   ON_wString WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<int, const ON_TextureCoordinates*>& tcs);

@@ -14,25 +14,19 @@ UsdExportImport::UsdExportImport(const ON_wString& fn) :
   currentNurbsCurveIndex(0),
   tokPreviewSurface("UsdPreviewSurface"),
   tokSurface("surface"),
-  tokDiffuseColor("diffuseColor"),
-  tokOpacity("opacity"),
-  tokRoughness("roughness"),
-  tokMetallic("metallic"),
-  tokIor("ior"),
-  tokAlpha("alpha"),
-  tokClearcoat("clearcoat"),
-  tokEmissiveColor("emmisiveColor")
-{
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("diffuseColor"), ON_Texture::TYPE::diffuse_texture, "BaseColor"));
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("opacity"), ON_Texture::TYPE::opacity_texture, "Opacity"));
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("roughness"), ON_Texture::TYPE::pbr_roughness_texture, "Roughness"));
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("metallic"), ON_Texture::TYPE::pbr_metallic_texture, "Metallic"));
-  //// what about ReflectiveIOR ?
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("ior"), ON_Texture::TYPE::pbr_opacity_ior_texture, "OpacityIOR"));
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("alpha"), ON_Texture::TYPE::pbr_alpha_texture, "Alpha"));
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("clearcoat"), ON_Texture::TYPE::pbr_clearcoat_texture, "Clearcoat"));
-  //usd_texture_pbr_mapping.push_back(std::make_tuple(pxr::TfToken("emissiveColor"), ON_Texture::TYPE::pbr_emission_texture, "Emission"));
 
+  // UsdPreviewSurface inputs
+  tokDiffuseColor("diffuseColor"),
+  tokEmissiveColor("emmisiveColor"),
+  tokUseSpecularWorkflow("useSpecularWorkflow"),
+  tokMetallic("metallic"),
+  tokRoughness("roughness"),
+  tokClearcoat("clearcoat"),
+  tokOpacity("opacity"),
+  tokIor("ior"),
+  tokDisplacement("displacement"),
+  tokOcclusion("occlusion")
+{
   stage = UsdStage::CreateInMemory();
   //stage = UsdStage::CreateNew(<some path>);
 
@@ -49,34 +43,47 @@ pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYP
   switch (type)
   {
     //case ON_Texture::TYPE::bitmap_texture:
-    //case ON_Texture::TYPE::pbr_base_color_texture:
-    case ON_Texture::TYPE::diffuse_texture: { return tokDiffuseColor; break; }
+    //case ON_Texture::TYPE::diffuse_texture:
+    case ON_Texture::TYPE::pbr_base_color_texture: { return tokDiffuseColor; break; }
+
+    case ON_Texture::TYPE::pbr_emission_texture: { return tokEmissiveColor; break; }
+
+    // Andy say "don't use either of these" which makes sense because Rhino will never support specular workflow.
+    //case ON_Texture::TYPE::pbr_specular_texture: { return TfToken("pbr_specular_texture"); break; }
+    //case ON_Texture::TYPE::pbr_specular_tint_texture: { return TfToken("pbr_specular_tint_texture"); break; }
+
+    case ON_Texture::TYPE::pbr_metallic_texture: { return tokMetallic; break; }
+
+    case ON_Texture::TYPE::pbr_roughness_texture: { return tokRoughness; break; }
+
+    case ON_Texture::TYPE::pbr_clearcoat_texture: { return tokClearcoat; break; }
+
+    //case ON_Texture::TYPE::opacity_texture:
+    case ON_Texture::TYPE::transparency_texture: { return tokOpacity; break; }
+
+    case ON_Texture::TYPE::pbr_opacity_ior_texture: { return tokIor; break; }
+
     case ON_Texture::TYPE::bump_texture: { return tokDiffuseColor; break; }
-    //case ON_Texture::TYPE::transparency_texture:
-    case ON_Texture::TYPE::opacity_texture: { return tokOpacity; break; }
+
+    case ON_Texture::TYPE::pbr_displacement_texture: { return tokDisplacement; break; }
+
+    case ON_Texture::TYPE::pbr_ambient_occlusion_texture: { return tokOcclusion; break; }
+
+    // don't know what to do with the rest of these.
     //case ON_Texture::TYPE::pbr_subsurface_texture: { return TfToken("pbr_subsurface_texture"); break; }
     //case ON_Texture::TYPE::pbr_subsurface_scattering_texture: { return TfToken("pbr_subsurface_scattering_texture"); break; }
     //case ON_Texture::TYPE::pbr_subsurface_scattering_radius_texture: { return TfToken("pbr_subsurface_scattering_radius_texture"); break; }
-    case ON_Texture::TYPE::pbr_metallic_texture: { return tokMetallic; break; }
-    //case ON_Texture::TYPE::pbr_specular_texture: { return TfToken("pbr_specular_texture"); break; }
-    //case ON_Texture::TYPE::pbr_specular_tint_texture: { return TfToken("pbr_specular_tint_texture"); break; }
-    case ON_Texture::TYPE::pbr_roughness_texture: { return tokRoughness; break; }
     //case ON_Texture::TYPE::pbr_anisotropic_texture: { return TfToken("pbr_anisotropic_texture"); break; }
     //case ON_Texture::TYPE::pbr_anisotropic_rotation_texture: { return TfToken("pbr_anisotropic_rotation_texture"); break; }
     //case ON_Texture::TYPE::pbr_sheen_texture: { return TfToken("pbr_sheen_texture"); break; }
     //case ON_Texture::TYPE::pbr_sheen_tint_texture: { return TfToken("pbr_sheen_tint_texture"); break; }
-    case ON_Texture::TYPE::pbr_clearcoat_texture: { return tokClearcoat; break; }
     //case ON_Texture::TYPE::pbr_clearcoat_roughness_texture: { return TfToken("pbr_clearcoat_roughness_texture"); break; }
-    case ON_Texture::TYPE::pbr_opacity_ior_texture: { return tokIor; break; }
     //case ON_Texture::TYPE::pbr_opacity_roughness_texture: { return TfToken("pbr_opacity_roughness_texture"); break; }
-    case ON_Texture::TYPE::pbr_emission_texture: { return tokEmissiveColor; break; }
-    //case ON_Texture::TYPE::pbr_ambient_occlusion_texture: { return TfToken("pbr_ambient_occlusion_texture"); break; }
     //case ON_Texture::TYPE::pbr_smudge_texture: { return TfToken("pbr_smudge_texture"); break; }
-    //case ON_Texture::TYPE::pbr_displacement_texture: { return TfToken("pbr_displacement_texture"); break; }
     //case ON_Texture::TYPE::pbr_clearcoat_bump_texture: { return TfToken("pbr_clearcoat_bump_texture"); break; }
-    case ON_Texture::TYPE::pbr_alpha_texture: { return tokAlpha; break; }
+    //case ON_Texture::TYPE::pbr_alpha_texture: { return tokAlpha; break; }
     //case ON_Texture::TYPE::emap_texture: { return TfToken("emap_texture"); break; }
-    default: {return tokDiffuseColor; break; }
+    default: {return pxr::TfToken(""); break; }
   }
 }
 
@@ -115,89 +122,55 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
   shader.CreateIdAttr(pxr::VtValue(tokPreviewSurface));
 
+
+  // UsdPreviewSurface inputs - BEGIN
+  // https://openusd.org/release/spec_usdpreviewsurface.html
+
   ON_4fColor color = pbrMaterial->BaseColor();
   pxr::GfVec3f diffuseColor(color.Red(), color.Green(), color.Blue());
   shader.CreateInput(tokDiffuseColor, pxr::SdfValueTypeNames->Color3f).Set(diffuseColor);
-  //if (opacity < 0.01)
-  //  opacity = 0.5;
-  
-  //pxr::TfToken tokOpacityThreshold("opacityThreshold");
-  //shader.CreateInput(tokOpacityThreshold, pxr::SdfValueTypeNames->Float).Set(0.0);
-
-  pxr::TfToken tokUseSpecularWorkflow("useSpecularWorkflow");
-  shader.CreateInput(tokUseSpecularWorkflow, pxr::SdfValueTypeNames->Int).Set(1);
-  
-  float opacity(pbrMaterial->Opacity());
-  shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
-
-  float roughness(pbrMaterial->Roughness());
-  if (roughness != -1.0)
-    shader.CreateInput(tokRoughness, pxr::SdfValueTypeNames->Float).Set(roughness);
-
-  float metallic(pbrMaterial->Metallic());
-  if (metallic != -1.0)
-    // from what I understand this is either 0 (dielectric) and 1 (metallic)
-    shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(/*metallic*/0.0);
-
-  // what about opacity IOR?
-  // reflective IOR
-  float rior(pbrMaterial->ReflectiveIOR());
-  if (rior != -1.0)
-  {
-    shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
-  }
-
-  //float alpha(pbrMaterial->Alpha());
-  //if (alpha != -1.0)
-  //{
-  //  pxr::TfToken tokAlpha("?");
-  //  shader.CreateInput(tokAlpha, pxr::SdfValueTypeNames->Float).Set(alpha);
-  //}
-
-  float clearcoat(pbrMaterial->Clearcoat());
-  if (clearcoat != -1.0)
-  {
-    shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(clearcoat);
-  }
-
-  //float anisotropic(pbrMaterial->Anisotropic());
-  //if (anisotropic != -1.0)
-  //{
-  //  pxr::TfToken tokAnisotropic("?");
-  //  shader.CreateInput(tokAnisotropic, pxr::SdfValueTypeNames->Float).Set(anisotropic);
-  //}
-
-  //float sheen(pbrMaterial->Sheen());
-  //if (sheen != -1.0)
-  //{
-  //  pxr::TfToken tokSheen("?");
-  //  shader.CreateInput(tokSheen, pxr::SdfValueTypeNames->Float).Set(sheen);
-  //}
-
-  //float sheenTint(pbrMaterial->SheenTint());
-  //if (sheenTint != -1.0)
-  //{
-  //  pxr::TfToken tokSheenTint("?");
-  //  shader.CreateInput(tokSheenTint, pxr::SdfValueTypeNames->Float).Set(sheenTint);
-  //}
 
   ON_4fColor e(pbrMaterial->Emission());
   pxr::GfVec3f emission(e.Red(), e.Green(), e.Blue());
   shader.CreateInput(tokEmissiveColor, pxr::SdfValueTypeNames->Color3f).Set(emission);
 
-  //float specular(pbrMaterial->Specular());
-  //if (specular != -1.0)
-  //{
-  //  pxr::TfToken tokSpecular("?");
-  //  shader.CreateInput(tokSpecular, pxr::SdfValueTypeNames->Float).Set(specular);
-  //}
+  // hard coded to 0. Andy: "speculay workflow will never be supported in Rhino"
+  shader.CreateInput(tokUseSpecularWorkflow, pxr::SdfValueTypeNames->Int).Set(0);
 
-  //float specularTint(pbrMaterial->SpecularTint());
-  //if (specularTint != -1.0)
-  //{
-  //  pxr::TfToken tokSpecularTint("?");
-  //  shader.CreateInput(tokSpecularTint, pxr::SdfValueTypeNames->Float).Set(specularTint);
-  //}
+  // "specularColor" would only be set if useSpecularWorkflow was 1 which 
+  // never occurs because it's hard coded to 0
+
+  // only set metallic if useSpecularWorkflow is 0 which it always is as it
+  // is hardcoded
+  float metallic(pbrMaterial->Metallic());
+  shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(metallic);
+
+  float roughness(pbrMaterial->Roughness());
+  shader.CreateInput(tokRoughness, pxr::SdfValueTypeNames->Float).Set(roughness);
+
+  float clearcoat(pbrMaterial->Clearcoat());
+  shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(clearcoat);
+
+  //@todo: "clearcoatRoughness"
+  
+  float opacity(pbrMaterial->Opacity());
+  shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
+
+  // "opacityThreshold" : Andy says to ignore
+
+  // there is also ReflectiveIOR() but Andy says that OpacityIOR is the correct one to use
+  float rior(pbrMaterial->OpacityIOR());
+  shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
+
+  //@todo: "normal" : Andy says: "This is related to bump. We might have to think carefully about this"
+
+  // even though there is no pbr input mapped to this yet there could be a texture: ON_Texture::TYPE::pbr_displacement_texture
+  //@todo: "displacement"
+
+  // even though there is no pbr input mapped to this yet there could be a texture: ON_Texture::TYPE::pbr_ambient_occlusion_texture
+  //@todo: "occlusion"
+
+  // UsdPreviewSurface inputs - END
 
 
   usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
@@ -216,16 +189,20 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
     ON_Texture::TYPE tt = t.m_type;
     std::string textureFullFileName = ON_Helpers::ON_wStringToStdString(t.m_image_file_reference.FullPath());
     std::string copyToPath = UsdShared::PathFromFullFileName(usdFileName);
-    std::string textureFileName = UsdShared::FileNameFromFullFileName(textureFullFileName);
+    std::string textureFileName = "./" + UsdShared::FileNameFromFullFileName(textureFullFileName);
     UsdShared::CopyFileTo(textureFullFileName, copyToPath);
+    filesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
+    if (pbrParam.IsEmpty()) {
+      // skip this texture
+      continue;
+    }
     ON_wString textureFullName;
-    //textureFullName.Format(L"%s/texture_%s", mesh_name, pbrParam.GetString());
-    textureFullName.Format(L"%s/texture_%d", mesh_name, tt);
+    ON_wString ttStr(ON_Helpers::ON_TextureTYPE_ToString(tt));
+    textureFullName.Format(L"%s/texture_%s", mesh_name, ttStr);
     ON_wString textureName;
-    //textureName.Format(L"texture_%s", pbrParam.GetString());
-    textureName.Format(L"texture_%d", tt);
+    textureName.Format(L"texture_%s", ttStr);
     std::string stdTextureName = ON_Helpers::ON_wStringToStdString(textureName);
 
     pxr::UsdShadeShader usdUVTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureFullName)));
@@ -335,7 +312,17 @@ bool UsdExportImport::AnythingToSave()
 
 void UsdExportImport::Save()
 {
-  stage->Export(usdFileName);
+  if (UsdShared::EndsWith(usdFileName, ".usdz"))
+  {
+    std::string fullFileNameWithoutExtension = usdFileName.substr(0, usdFileName.find_last_of('.'));
+    std::string usdaFileName = fullFileNameWithoutExtension + ".usda";
+    stage->Export(usdaFileName);
+    UsdShared::CreateUsdzFile(fullFileNameWithoutExtension, filesInExport);
+  }
+  else
+  {
+    stage->Export(usdFileName);
+  }
 }
 
 //todo: I'm sure there's a copy file function that's already available somewhere
@@ -347,6 +334,22 @@ void UsdShared::CopyFileTo(const std::string& fullFileName, const std::string& d
   std::ifstream  src(fullFileName, std::ios::binary);
   std::ofstream  dst(destFullFileName,   std::ios::binary);
   dst << src.rdbuf();
+}
+
+void UsdShared::CreateUsdzFile(const std::string& fullFileNameNoExtension, const std::vector<std::string>& filesToInclude)
+{
+  std::string usdaFullFileName = fullFileNameNoExtension + ".usda";
+  std::string usdaFileName = UsdShared::FileNameFromFullFileName(usdaFullFileName);
+  std::string usdzFullFileName = fullFileNameNoExtension + ".usdz";
+  UsdZipFileWriter writer = UsdZipFileWriter::CreateNew(usdzFullFileName);
+  // usda has to be added before textures
+  writer.AddFile(usdaFullFileName, usdaFileName);
+  for (std::string fullFileName : filesToInclude)
+  {
+    std::string fileName = UsdShared::FileNameFromFullFileName(fullFileName);
+    writer.AddFile(fullFileName, fileName);
+  }
+  writer.Save();
 }
 
 std::string UsdShared::PathFromFullFileName(const std::string& fileName)
@@ -367,6 +370,11 @@ std::string UsdShared::FileNameFromFullFileName(const std::string& fileName)
     idx = fileName.find_last_of('/');
   std::string fn = fileName.substr(idx + 1);
   return fn;
+}
+
+bool UsdShared::EndsWith(const std::string& str, const std::string& suffix)
+{
+  return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 bool UsdShared::IsAcceptableUsdCharacter(wchar_t c)
