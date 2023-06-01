@@ -188,9 +188,7 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
     ON_Texture t = textures[i];
     ON_Texture::TYPE tt = t.m_type;
     std::string textureFullFileName = ON_Helpers::ON_wStringToStdString(t.m_image_file_reference.FullPath());
-    std::string copyToPath = UsdShared::PathFromFullFileName(usdFileName);
     std::string textureFileName = "./" + UsdShared::FileNameFromFullFileName(textureFullFileName);
-    UsdShared::CopyFileTo(textureFullFileName, copyToPath);
     filesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
@@ -314,6 +312,7 @@ void UsdExportImport::Save()
 {
   if (UsdShared::EndsWith(usdFileName, ".usdz"))
   {
+    //todo: there's probably a robust function that does this
     std::string fullFileNameWithoutExtension = usdFileName.substr(0, usdFileName.find_last_of('.'));
     std::string usdaFileName = fullFileNameWithoutExtension + ".usda";
     stage->Export(usdaFileName);
@@ -322,6 +321,11 @@ void UsdExportImport::Save()
   else
   {
     stage->Export(usdFileName);
+    std::string copyToPath = UsdShared::PathFromFullFileName(usdFileName);
+    for (std::string fullFileName : filesInExport)
+    {
+      UsdShared::CopyFileTo(fullFileName, copyToPath);
+    }
   }
 }
 
