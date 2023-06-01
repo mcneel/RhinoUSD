@@ -7,7 +7,7 @@
 using namespace pxr;
 
 UsdExportImport::UsdExportImport(const ON_wString& fn) :
-  usdFileName(ON_Helpers::ON_wStringToStdString(fn)),
+  usdFullFileName(fn),
   currentMeshIndex(0),
   currentMaterialIndex(0),
   currentShaderIndex(0),
@@ -187,8 +187,7 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   {
     ON_Texture t = textures[i];
     ON_Texture::TYPE tt = t.m_type;
-    std::string textureFullFileName = ON_Helpers::ON_wStringToStdString(t.m_image_file_reference.FullPath());
-    std::string textureFileName = "./" + UsdShared::FileNameFromFullFileName(textureFullFileName);
+    ON_wString textureFullFileName = t.m_image_file_reference.FullPath();
     filesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
@@ -205,7 +204,10 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
 
     pxr::UsdShadeShader usdUVTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(textureFullName)));
     usdUVTextureSampler.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdUVTexture")));
+
+    std::string textureFileName = "./" + ON_Helpers::ON_wStringToStdString(ON_FileSystemPath::FileNameFromPath(textureFullFileName, true));
     usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
+
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
     usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
@@ -240,7 +242,6 @@ void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::
   name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
   name = layerNamesPath + name;
   std::string stdStrName = ON_Helpers::ON_wStringToStdString(name);
-
   pxr::UsdGeomNurbsCurves usdNc = pxr::UsdGeomNurbsCurves::Define(stage, pxr::SdfPath(stdStrName));
 
   int degree = nurbsCurve->Degree();
@@ -310,19 +311,20 @@ bool UsdExportImport::AnythingToSave()
 
 void UsdExportImport::Save()
 {
-  if (UsdShared::EndsWith(usdFileName, ".usdz"))
+  if (ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName) == L".usdz")
   {
-    //todo: there's probably a robust function that does this
-    std::string fullFileNameWithoutExtension = usdFileName.substr(0, usdFileName.find_last_of('.'));
-    std::string usdaFileName = fullFileNameWithoutExtension + ".usda";
-    stage->Export(usdaFileName);
+    ON_wString fullFileNameWithoutExtension = UsdShared::PathWithoutExtension(usdFullFileName);
+    ON_wString usdaFileName = fullFileNameWithoutExtension + ".usda";
+    stage->Export(ON_Helpers::ON_wStringToStdString(usdaFileName));
     UsdShared::CreateUsdzFile(fullFileNameWithoutExtension, filesInExport);
   }
   else
   {
-    stage->Export(usdFileName);
-    std::string copyToPath = UsdShared::PathFromFullFileName(usdFileName);
-    for (std::string fullFileName : filesInExport)
+    stage->Export(ON_Helpers::ON_wStringToStdString(usdFullFileName));
+    //ON_wString copyToPath = UsdShared::PathFromFullFileName(usdFileName);
+    ON_wString usdFileName = ON_FileSystemPath::FileNameFromPath(usdFullFileName, true);
+    ON_wString copyToPath = ON_FileSystemPath::RemoveFileName(usdFullFileName, &usdFileName);
+    for (ON_wString fullFileName : filesInExport)
     {
       UsdShared::CopyFileTo(fullFileName, copyToPath);
     }
@@ -330,55 +332,36 @@ void UsdExportImport::Save()
 }
 
 //todo: I'm sure there's a copy file function that's already available somewhere
-void UsdShared::CopyFileTo(const std::string& fullFileName, const std::string& destination)
+void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination)
 {
-  //std::string path = UsdShared::PathFromFullFileName(fullFileName);
-  std::string fileName = UsdShared::FileNameFromFullFileName(fullFileName);
-  std::string destFullFileName = destination + fileName;
-  std::ifstream  src(fullFileName, std::ios::binary);
-  std::ofstream  dst(destFullFileName,   std::ios::binary);
+  ON_wString fileName = ON_FileSystemPath::FileNameExtensionFromPath(fullFileName);
+  ON_wString destFullFileName = destination + fileName;
+  std::ifstream  src(ON_Helpers::ON_wStringToStdString(fullFileName), std::ios::binary);
+  std::ofstream  dst(ON_Helpers::ON_wStringToStdString(destFullFileName),   std::ios::binary);
   dst << src.rdbuf();
 }
 
-void UsdShared::CreateUsdzFile(const std::string& fullFileNameNoExtension, const std::vector<std::string>& filesToInclude)
+void UsdShared::CreateUsdzFile(const ON_wString& fullFileNameNoExtension, const std::vector<ON_wString>& filesToInclude)
 {
-  std::string usdaFullFileName = fullFileNameNoExtension + ".usda";
-  std::string usdaFileName = UsdShared::FileNameFromFullFileName(usdaFullFileName);
-  std::string usdzFullFileName = fullFileNameNoExtension + ".usdz";
-  UsdZipFileWriter writer = UsdZipFileWriter::CreateNew(usdzFullFileName);
+  ON_wString usdaFullFileName = fullFileNameNoExtension + ".usda";
+  ON_wString usdaFileName = ON_FileSystemPath::FileNameFromPath(usdaFullFileName, true);
+  ON_wString usdzFullFileName = fullFileNameNoExtension + ".usdz";
+  UsdZipFileWriter writer = UsdZipFileWriter::CreateNew(ON_Helpers::ON_wStringToStdString(usdzFullFileName));
   // usda has to be added before textures
-  writer.AddFile(usdaFullFileName, usdaFileName);
-  for (std::string fullFileName : filesToInclude)
+  writer.AddFile(ON_Helpers::ON_wStringToStdString(usdaFullFileName), ON_Helpers::ON_wStringToStdString(usdaFileName));
+  for (ON_wString fullFileName : filesToInclude)
   {
-    std::string fileName = UsdShared::FileNameFromFullFileName(fullFileName);
-    writer.AddFile(fullFileName, fileName);
+    ON_wString fileName = ON_FileSystemPath::FileNameFromPath(fullFileName, true);
+    writer.AddFile(ON_Helpers::ON_wStringToStdString(fullFileName), ON_Helpers::ON_wStringToStdString(fileName));
   }
   writer.Save();
 }
 
-std::string UsdShared::PathFromFullFileName(const std::string& fileName)
+ON_wString UsdShared::PathWithoutExtension(const ON_wString& fullFileName)
 {
-  //todo: redo this quick implementation
-  int idx = fileName.find_last_of('\\');
-  if (idx == -1)
-    idx = fileName.find_last_of('/');
-  std::string path = fileName.substr(0, idx + 1);
-  return path;
-}
-
-std::string UsdShared::FileNameFromFullFileName(const std::string& fileName)
-{
-  //todo: redo this quick implementation
-  int idx = fileName.find_last_of('\\');
-  if (idx == -1)
-    idx = fileName.find_last_of('/');
-  std::string fn = fileName.substr(idx + 1);
-  return fn;
-}
-
-bool UsdShared::EndsWith(const std::string& str, const std::string& suffix)
-{
-  return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+  // I didn't see an obvious ON_FileSystemPath way to do this.
+  //todo: add typical checks
+  return fullFileName.SubString(0, fullFileName.ReverseFind('.'));
 }
 
 bool UsdShared::IsAcceptableUsdCharacter(wchar_t c)
@@ -550,11 +533,11 @@ void UsdShared::SetUsdLayersAsXformable(const std::vector<ON_wString>& layerName
   ON_wString path;
   for (ON_wString name : layerNames)
   {
-    path = path + L"/" + name;
-    std::string stdStrPath = ON_Helpers::ON_wStringToStdString(path);
-
     // make sure the layer is activated
     pxr::UsdPrim existingPrim;
+
+    path = path + L"/" + name;
+    std::string stdStrPath = ON_Helpers::ON_wStringToStdString(path);
     existingPrim = stage->GetPrimAtPath(pxr::SdfPath(stdStrPath));
     if (existingPrim)
     {
