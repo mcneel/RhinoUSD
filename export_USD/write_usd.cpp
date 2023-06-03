@@ -229,7 +229,10 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
     if (pMaterial)
     {
+#pragma warning (push)
+#pragma warning (disable: 4996)
       ON_Material material = pMaterial->SimulatedMaterial();
+#pragma warning (pop)
       material.ToPhysicallyBased();
       std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
       if (pbrMat)
