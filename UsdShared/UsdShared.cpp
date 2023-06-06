@@ -317,6 +317,7 @@ void UsdExportImport::Save()
     ON_wString usdaFileName = fullFileNameWithoutExtension + ".usda";
     stage->Export(ON_Helpers::ON_wStringToStdString(usdaFileName));
     UsdShared::CreateUsdzFile(fullFileNameWithoutExtension, filesInExport);
+    ON_FileSystem::RemoveFile(usdaFileName.Array());
   }
   else
   {
