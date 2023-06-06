@@ -18,8 +18,8 @@ public:
   void Save(/*const ON_wString& fileName*/);
 private:
   //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
-  std::vector<std::string> filesInExport;
-  const std::string usdFileName;
+  std::vector<ON_wString> filesInExport;
+  const ON_wString usdFullFileName;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
   UsdStageRefPtr stage;
   int currentMeshIndex;
@@ -52,11 +52,9 @@ private:
 
 namespace UsdShared
 {
-  std::string PathFromFullFileName(const std::string& fileName);
-  std::string FileNameFromFullFileName(const std::string& fileName);
-  bool EndsWith(const std::string& str, const std::string& suffix);
-  void CopyFileTo(const std::string& fullFileName, const std::string& destination);
-  void CreateUsdzFile(const std::string& fullFileNameNoExtension, const std::vector<std::string>& filesToInclude);
+  ON_wString PathWithoutExtension(const ON_wString& fullFileName);
+  void CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination);
+  void CreateUsdzFile(const ON_wString& fullFileNameNoExtension, const std::vector<ON_wString>& filesToInclude);
   bool IsAcceptableUsdCharacter(wchar_t c);
   ON_wString RhinoLayerNameToUsd(const ON_wString& rhLayerName);
   ON_wString WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<int, const ON_TextureCoordinates*>& tcs);
