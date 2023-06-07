@@ -335,7 +335,7 @@ void UsdExportImport::Save()
 //todo: I'm sure there's a copy file function that's already available somewhere
 void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination)
 {
-  ON_wString fileName = ON_FileSystemPath::FileNameExtensionFromPath(fullFileName);
+  ON_wString fileName = ON_FileSystemPath::FileNameFromPath(fullFileName, true);
   ON_wString destFullFileName = destination + fileName;
   std::ifstream  src(ON_Helpers::ON_wStringToStdString(fullFileName), std::ios::binary);
   std::ofstream  dst(ON_Helpers::ON_wStringToStdString(destFullFileName),   std::ios::binary);
