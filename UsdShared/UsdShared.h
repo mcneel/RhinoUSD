@@ -11,7 +11,8 @@ public:
   UsdExportImport(const ON_wString& fileName);
   ON_wString AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, const ON_TextureCoordinates*>& tcs);
   //void AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
-  void AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
+  void AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures);
+  void BindPbrMaterialToMesh(const ON_UUID& matId,const ON_wString meshPath);
   void AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames);
   void AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames);
   bool AnythingToSave();
@@ -19,11 +20,13 @@ public:
 private:
   //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
   std::vector<ON_wString> filesInExport;
+  // ON_UUID cannot be used as the key to a std::map
+  std::map<std::string, ON_wString> materialsAddedToScene;
   const ON_wString usdFullFileName;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
   UsdStageRefPtr stage;
   int currentMeshIndex;
-  int currentMaterialIndex;
+  //int currentMaterialIndex;
   int currentShaderIndex;
   int currentNurbsCurveIndex;
   pxr::TfToken tokPreviewSurface;
