@@ -9,7 +9,7 @@ using namespace pxr;
 UsdExportImport::UsdExportImport(const ON_wString& fn) :
   usdFullFileName(fn),
   currentMeshIndex(0),
-  currentMaterialIndex(0),
+  //currentMaterialIndex(0),
   currentShaderIndex(0),
   currentNurbsCurveIndex(0),
   tokPreviewSurface("UsdPreviewSurface"),
@@ -99,25 +99,27 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   return meshPath;
 }
 
-void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures, const std::vector<ON_wString>& layerNames, const ON_wString meshPath)
+void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures)
 {
-  std::string strMeshPath = ON_Helpers::ON_wStringToStdString(meshPath);
-  pxr::SdfPath mp(strMeshPath);
-  pxr::UsdPrim mesh = stage->GetPrimAtPath(mp);
+  std::string matIdStr(ON_Helpers::ON_UUID_to_StdString(matId));
+  if (materialsAddedToScene.count(matIdStr) == 1)
+    return;
 
-  ON_wString layerNamesPath = ON_Helpers::StringVectorToPath(layerNames);
-  ON_wString mesh_name;
-  mesh_name.Format(L"/material%d", currentMaterialIndex++);
-  mesh_name = layerNamesPath + mesh_name;
-  std::string stdStrMeshName = ON_Helpers::ON_wStringToStdString(mesh_name);
-  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(stdStrMeshName));
+  ON_wString matIdOnStr = UsdShared::RhinoLayerNameToUsd(ON_Helpers::ON_UUID_to_ON_wString(matId));
 
+  ON_wString material_name;
+  material_name.Format(L"material_%s_%s", matName.Array(), matIdOnStr.Array());
+  material_name = UsdShared::RhinoLayerNameToUsd(material_name);
 
+  const ON_wString matPath = L"/Rhino/Materials";
+  ON_wString full_material_name;
+  full_material_name.Format(L"%s/%s", matPath.Array(), material_name.Array());
 
-
+  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(full_material_name)));
+  materialsAddedToScene[matIdStr] = full_material_name;
+  
   ON_wString shaderName;
-  shaderName.Format(L"%s/shader%d", mesh_name.Array(), currentShaderIndex++);
-  //shaderName = layerNamesPath + shaderName;
+  shaderName.Format(L"%sshader%d", full_material_name.Array(), currentShaderIndex++);
   std::string stdStrShaderName = ON_Helpers::ON_wStringToStdString(shaderName);
   pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
   shader.CreateIdAttr(pxr::VtValue(tokPreviewSurface));
@@ -176,8 +178,8 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
   usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
 
   ON_wString stReaderName;
-  stReaderName.Format(L"%s/stReader%d", mesh_name.Array(), currentMaterialIndex - 1);
-  //stReaderName = layerNamesPath + stReaderName;
+  //stReaderName.Format(L"%s/stReader%d", material_name.Array(), currentMaterialIndex - 1);
+  stReaderName.Format(L"%s/stReader%s", matPath.Array(), matIdOnStr.Array());
   auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(stReaderName)));
   stReader.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdPrimvarReader_float2")));
 
@@ -197,7 +199,7 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
     }
     ON_wString textureFullName;
     ON_wString ttStr(ON_Helpers::ON_TextureTYPE_ToString(tt));
-    textureFullName.Format(L"%s/texture_%s", mesh_name.Array(), ttStr.Array());
+    textureFullName.Format(L"%s/texture_%s", full_material_name.Array(), ttStr.Array());
     ON_wString textureName;
     textureName.Format(L"texture_%s", ttStr.Array());
     std::string stdTextureName = ON_Helpers::ON_wStringToStdString(textureName);
@@ -221,7 +223,17 @@ void UsdExportImport::AddAndBindPbrMaterialAndTextures(const ON_PhysicallyBasedM
     stInput.Set("st");
     stReader.CreateInput(TfToken("varname"), SdfValueTypeNames->String).ConnectToSource(stInput);
   }
+}
 
+void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wString meshPath)
+{
+  std::string strMeshPath = ON_Helpers::ON_wStringToStdString(meshPath);
+  pxr::SdfPath mp(strMeshPath);
+  pxr::UsdPrim mesh = stage->GetPrimAtPath(mp);
+
+  std::string matIdStr(ON_Helpers::ON_UUID_to_StdString(matId));
+  pxr::UsdPrim material = stage->GetPrimAtPath(pxr::SdfPath(ON_Helpers::ON_wStringToStdString(materialsAddedToScene.at(matIdStr))));
+  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial(material);
 
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh(mesh);
@@ -306,7 +318,7 @@ void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const
 
 bool UsdExportImport::AnythingToSave()
 {
-  return currentMeshIndex > 0 || currentMaterialIndex > 0 || currentNurbsCurveIndex > 0;
+  return currentMeshIndex > 0 || !materialsAddedToScene.empty() || currentNurbsCurveIndex > 0;
 }
 
 void UsdExportImport::Save()
@@ -335,7 +347,7 @@ void UsdExportImport::Save()
 //todo: I'm sure there's a copy file function that's already available somewhere
 void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination)
 {
-  ON_wString fileName = ON_FileSystemPath::FileNameExtensionFromPath(fullFileName);
+  ON_wString fileName = ON_FileSystemPath::FileNameFromPath(fullFileName, true);
   ON_wString destFullFileName = destination + fileName;
   std::ifstream  src(ON_Helpers::ON_wStringToStdString(fullFileName), std::ios::binary);
   std::ofstream  dst(ON_Helpers::ON_wStringToStdString(destFullFileName),   std::ios::binary);

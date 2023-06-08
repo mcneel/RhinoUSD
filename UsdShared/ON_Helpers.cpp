@@ -62,6 +62,19 @@ ON_wString ON_Helpers::StringVectorToPath(const std::vector<ON_wString>& names)
   return path;
 }
 
+ON_wString ON_Helpers::ON_UUID_to_ON_wString(const ON_UUID& uuid)
+{
+  // todo: there must be a function that already does this
+  ON_wString uuidStr;
+  uuidStr.Format(L"%X-%X-%X-%X", uuid.Data1, uuid.Data2, uuid.Data3, uuid.Data4);
+  return uuidStr;
+}
+
+std::string ON_Helpers::ON_UUID_to_StdString(const ON_UUID& uuid)
+{
+  return ON_wStringToStdString(ON_Helpers::ON_UUID_to_ON_wString(uuid));
+}
+
 void ON_Helpers::RotateYUp(ON_Mesh* mesh)
 {
   ON_Xform rotate_y_up;

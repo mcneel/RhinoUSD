@@ -229,6 +229,8 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
     if (pMaterial)
     {
+      ON_UUID matId = pMaterial->InstanceId();
+      ON_wString matName = pMaterial->InstanceName();
 #pragma warning (push)
 #pragma warning (disable: 4996)
       ON_Material material = pMaterial->SimulatedMaterial();
@@ -238,7 +240,8 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
       if (pbrMat)
       {
         ON_PhysicallyBasedMaterial& pbr = *pbrMat;
-        usdEI.AddAndBindPbrMaterialAndTextures(&pbr, pbrMat->Material().m_textures, layerNames, meshPath);
+        usdEI.AddMaterialWithTexturesIfNotAlreadyAdded(matId, matName, &pbr, pbrMat->Material().m_textures);
+        usdEI.BindPbrMaterialToMesh(matId, meshPath);
       }
     }
   }
