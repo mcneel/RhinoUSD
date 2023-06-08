@@ -105,15 +105,21 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
   if (materialsAddedToScene.count(matIdStr) == 1)
     return;
 
+  ON_wString matIdOnStr = UsdShared::RhinoLayerNameToUsd(ON_Helpers::ON_UUID_to_ON_wString(matId));
+
   ON_wString material_name;
-  const ON_wString matPath = L"Rhino/Materials";
-  material_name.Format(L"%s/material-%s-%s", matPath, matName, ON_Helpers::ON_UUID_to_ON_wString(matId));
-  ON_wString clean_material_name = UsdShared::RhinoLayerNameToUsd(material_name);
-  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(clean_material_name)));
-  materialsAddedToScene[matIdStr] = clean_material_name;
+  material_name.Format(L"material_%s_%s", matName, matIdOnStr);
+  material_name = UsdShared::RhinoLayerNameToUsd(material_name);
+
+  const ON_wString matPath = L"/Rhino/Materials";
+  ON_wString full_material_name;
+  full_material_name.Format(L"%s/%s", matPath, material_name);
+
+  pxr::UsdShadeMaterial usdMaterial = pxr::UsdShadeMaterial::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(full_material_name)));
+  materialsAddedToScene[matIdStr] = full_material_name;
   
   ON_wString shaderName;
-  shaderName.Format(L"%sshader%d", clean_material_name, currentShaderIndex++);
+  shaderName.Format(L"%sshader%d", full_material_name, currentShaderIndex++);
   std::string stdStrShaderName = ON_Helpers::ON_wStringToStdString(shaderName);
   pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
   shader.CreateIdAttr(pxr::VtValue(tokPreviewSurface));
@@ -173,7 +179,7 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
 
   ON_wString stReaderName;
   //stReaderName.Format(L"%s/stReader%d", material_name.Array(), currentMaterialIndex - 1);
-  stReaderName.Format(L"%s/stReader%s", matPath, matIdStr);
+  stReaderName.Format(L"%s/stReader%s", matPath, matIdOnStr);
   auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wStringToStdString(stReaderName)));
   stReader.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdPrimvarReader_float2")));
 
@@ -193,7 +199,7 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
     }
     ON_wString textureFullName;
     ON_wString ttStr(ON_Helpers::ON_TextureTYPE_ToString(tt));
-    textureFullName.Format(L"%s/texture_%s", clean_material_name, ttStr.Array());
+    textureFullName.Format(L"%s/texture_%s", full_material_name, ttStr.Array());
     ON_wString textureName;
     textureName.Format(L"texture_%s", ttStr.Array());
     std::string stdTextureName = ON_Helpers::ON_wStringToStdString(textureName);
