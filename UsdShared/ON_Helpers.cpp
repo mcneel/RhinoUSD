@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ON_Helpers.h"
 
-std::string ON_Helpers::ON_wStringToStdString(const ON_wString& onwstr)
+std::string ON_Helpers::ON_wString_to_StdString(const ON_wString& onwstr)
 {
   // todo: problems with potentially losing data
   std::wstring wstr(static_cast<const wchar_t*>(onwstr));
@@ -9,7 +9,7 @@ std::string ON_Helpers::ON_wStringToStdString(const ON_wString& onwstr)
   return str;
 }
 
-ON_wString ON_Helpers::ON_TextureTYPE_ToString(const ON_Texture::TYPE type)
+ON_wString ON_Helpers::ON_TextureTYPE_to_ON_wString(const ON_Texture::TYPE type)
 {
   // there's probably an better way to convert an enum to string in C++
 
@@ -53,7 +53,7 @@ ON_wString ON_Helpers::ON_TextureTYPE_ToString(const ON_Texture::TYPE type)
   }
 }
 
-ON_wString ON_Helpers::StringVectorToPath(const std::vector<ON_wString>& names)
+ON_wString ON_Helpers::ON_wString_vector_to_ON_wString_path(const std::vector<ON_wString>& names)
 {
   ON_wString path;
   for (ON_wString name : names) {
@@ -72,7 +72,7 @@ ON_wString ON_Helpers::ON_UUID_to_ON_wString(const ON_UUID& uuid)
 
 std::string ON_Helpers::ON_UUID_to_StdString(const ON_UUID& uuid)
 {
-  return ON_wStringToStdString(ON_Helpers::ON_UUID_to_ON_wString(uuid));
+  return ON_wString_to_StdString(ON_Helpers::ON_UUID_to_ON_wString(uuid));
 }
 
 void ON_Helpers::RotateYUp(ON_Mesh* mesh)
