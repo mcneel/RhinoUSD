@@ -60,6 +60,5 @@ namespace UsdShared
   void CreateUsdzFile(const ON_wString& fullFileNameNoExtension, const std::vector<ON_wString>& filesToInclude);
   bool IsAcceptableUsdCharacter(wchar_t c);
   ON_wString RhinoLayerNameToUsd(const ON_wString& rhLayerName);
-  ON_wString WriteUSDMesh(UsdStageRefPtr usdModel, const ON_Mesh* mesh, ON_wString& path, int index, const std::map<int, const ON_TextureCoordinates*>& tcs);
   void SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage);
 }
