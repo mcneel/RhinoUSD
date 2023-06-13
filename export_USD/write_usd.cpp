@@ -156,7 +156,8 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
 
   const ON_wString fn(filename);
-  UsdExportImport usdEI(fn);
+  double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
+  UsdExportImport usdEI(fn, metersPerUnit);
 
   ON_ClassArray<CRhinoObjectMesh> mesh_list;
   ON_SimpleArray<const CRhinoObject*> objects(256);

@@ -6,8 +6,9 @@
 
 using namespace pxr;
 
-UsdExportImport::UsdExportImport(const ON_wString& fn) :
+UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit) :
   usdFullFileName(fn),
+  metersPerUnit(metersPerUnit),
   currentMeshIndex(0),
   //currentMaterialIndex(0),
   currentShaderIndex(0),
@@ -34,8 +35,13 @@ UsdExportImport::UsdExportImport(const ON_wString& fn) :
   pxr::TfToken upAxis = pxr::UsdGeomTokens->y; // z;
   if (!pxr::UsdGeomSetStageUpAxis(stage, upAxis))
   {
-    std::cout << "nope";
+    std::cout << "could not set StageUpAxis";
   };
+
+  if (!pxr::UsdGeomSetStageMetersPerUnit(stage, metersPerUnit))
+  {
+    std::cout << "could not set StageMetersPerUnit";
+  }
 }
 
 pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type)

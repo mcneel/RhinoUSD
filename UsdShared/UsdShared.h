@@ -8,7 +8,7 @@ using namespace pxr;
 class UsdExportImport
 {
 public:
-  UsdExportImport(const ON_wString& fileName);
+  UsdExportImport(const ON_wString& fileName, double metersPerUnit);
   ON_wString AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, const ON_TextureCoordinates*>& tcs);
   //void AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
   void AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures);
@@ -23,6 +23,7 @@ private:
   // ON_UUID cannot be used as the key to a std::map
   std::map<std::string, ON_wString> materialsAddedToScene;
   const ON_wString usdFullFileName;
+  double metersPerUnit;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
   UsdStageRefPtr stage;
   int currentMeshIndex;
