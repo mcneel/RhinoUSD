@@ -343,8 +343,11 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
     ON_Xform txform = t.m_uvw;
     double scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz;
     ON_Helpers::DeconstructXform(txform, scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz);
-    usdUVTextureSampler.CreateInput(TfToken("scale"), pxr::SdfValueTypeNames->Float4).Set((float(1.0/scalex), float(1.0/scaley), float(1.0/scalez), 1.0));
+    //usdUVTextureSampler.CreateInput(TfToken("scale"), pxr::SdfValueTypeNames->Float4).Set((float(1.0/scalex), float(1.0/scaley), float(1.0/scalez), 1.0));
+    usdUVTextureSampler.CreateInput(TfToken("scale"), pxr::SdfValueTypeNames->Float4).Set((float(scalex), float(scaley), float(scalez), 1.0));
     usdUVTextureSampler.CreateInput(TfToken("bias"), pxr::SdfValueTypeNames->Float4).Set((float(transx), float(transy), float(transz), 1.0));
+    usdUVTextureSampler.CreateInput(TfToken("wrapS"), pxr::SdfValueTypeNames->String).Set("repeat");
+    usdUVTextureSampler.CreateInput(TfToken("wrapT"), pxr::SdfValueTypeNames->String).Set("repeat");
 
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
     usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
