@@ -339,6 +339,13 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
     std::string textureFileName = "./" + ON_Helpers::ON_wString_to_StdString(ON_FileSystemPath::FileNameFromPath(textureFullFileName, true));
     usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
 
+    // texture S T like U V
+    ON_Xform txform = t.m_uvw;
+    double scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz;
+    ON_Helpers::DeconstructXform(txform, scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz);
+    usdUVTextureSampler.CreateInput(TfToken("scale"), pxr::SdfValueTypeNames->Float4).Set((float(1.0/scalex), float(1.0/scaley), float(1.0/scalez), 1.0));
+    usdUVTextureSampler.CreateInput(TfToken("bias"), pxr::SdfValueTypeNames->Float4).Set((float(transx), float(transy), float(transz), 1.0));
+
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
     usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
