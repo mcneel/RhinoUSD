@@ -343,29 +343,23 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
     ON_Xform txform = t.m_uvw;
     double scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz;
     ON_Helpers::DeconstructXform(txform, scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz);
-    //pxr::GfVec4f scaleVec(float(scalex), float(scaley), float(scalez), float(1.0));
-    //usdUVTextureSampler.CreateInput(TfToken("scale"), pxr::SdfValueTypeNames->Float4).Set((float(1.0/scalex), float(1.0/scaley), float(1.0/scalez), 1.0));
-    //usdUVTextureSampler.CreateInput(TfToken("scale"), pxr::SdfValueTypeNames->Float4).Set(scaleVec);
-    //pxr::GfVec4f biasVec(float(transx), float(transy), float(transz), float(1.0));
-    //usdUVTextureSampler.CreateInput(TfToken("bias"), pxr::SdfValueTypeNames->Float4).Set(biasVec);
-    //usdUVTextureSampler.CreateInput(TfToken("wrapS"), pxr::SdfValueTypeNames->String).Set("repeat");
-    //usdUVTextureSampler.CreateInput(TfToken("wrapT"), pxr::SdfValueTypeNames->String).Set("repeat");
-
-    ON_wString transformFullName;
-    transformFullName.Format(L"%s/transform2d", textureFullName.Array());
-    pxr::UsdShadeShader transform2d = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(transformFullName)));
-    transform2d.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdTransform2d")));
-    transform2d.CreateInput(TfToken("in"), SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
-    //transform2d.CreateInput("rotation", Sdf.ValueTypeNames.Float)
-    //pxr::GfVec2f scaleVec(float(scalex), float(scaley));
-    pxr::GfVec2f scaleVec(scalex, scaley);
-    pxr::UsdShadeInput scaleInput = transform2d.CreateInput(TfToken("scale"), SdfValueTypeNames->Float2);
-    scaleInput.Set(scaleVec);
-    //transform2d.CreateInput(TfToken("translation"), SdfValueTypeNames->Float2);
+    if (scaley != 1.0 || scalez != 1.0) {
+      ON_wString transformFullName;
+      transformFullName.Format(L"%s/transform2d", textureFullName.Array());
+      pxr::UsdShadeShader transform2d = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(transformFullName)));
+      transform2d.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdTransform2d")));
+      transform2d.CreateInput(TfToken("in"), SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+      pxr::GfVec2f scaleVec(scalex, scaley);
+      pxr::UsdShadeInput scaleInput = transform2d.CreateInput(TfToken("scale"), SdfValueTypeNames->Float2);
+      scaleInput.Set(scaleVec);
+      usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(transform2d.ConnectableAPI(), TfToken("result"));
+    }
+    else
+    {
+      usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+    }
 
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
-    //usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
-    usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(transform2d.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
     usdUVTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
     //todo: same here. typeNames->Color3f is correct for diffuseColor but not for most other pbrParam
