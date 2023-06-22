@@ -69,7 +69,7 @@ pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYP
 
     case ON_Texture::TYPE::pbr_opacity_ior_texture: { return tokIor; break; }
 
-    case ON_Texture::TYPE::bump_texture: { return tokDiffuseColor; break; }
+    //case ON_Texture::TYPE::bump_texture: { return tokDiffuseColor; break; }
 
     case ON_Texture::TYPE::pbr_displacement_texture: { return tokDisplacement; break; }
 
