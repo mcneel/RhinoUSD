@@ -241,7 +241,8 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
       if (pbrMat)
       {
         ON_PhysicallyBasedMaterial& pbr = *pbrMat;
-        usdEI.AddMaterialWithTexturesIfNotAlreadyAdded(matId, matName, &pbr, pbrMat->Material().m_textures);
+        unsigned int docSerNo = doc.RuntimeSerialNumber();
+        usdEI.AddMaterialWithTexturesIfNotAlreadyAdded(docSerNo, matId, matName, &pbr, pbrMat->Material().m_textures);
         usdEI.BindPbrMaterialToMesh(matId, meshPath);
       }
     }

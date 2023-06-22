@@ -228,7 +228,7 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   return meshPath;
 }
 
-void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures)
+void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docSerNo, const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures)
 {
   std::string matIdStr(ON_Helpers::ON_UUID_to_StdString(matId));
   if (materialsAddedToScene.count(matIdStr) == 1)
@@ -319,6 +319,8 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
     ON_Texture t = textures[i];
     ON_Texture::TYPE tt = t.m_type;
     ON_wString textureFullFileName = t.m_image_file_reference.FullPath();
+    const wchar_t* tffnPtr = textureFullFileName.Array();
+    bool b = CRhinoFileUtilities::FindFile(docSerNo, tffnPtr, textureFullFileName);
     filesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
@@ -339,8 +341,27 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
     std::string textureFileName = "./" + ON_Helpers::ON_wString_to_StdString(ON_FileSystemPath::FileNameFromPath(textureFullFileName, true));
     usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
 
+    // texture S T like U V
+    ON_Xform txform = t.m_uvw;
+    double scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz;
+    ON_Helpers::DeconstructXform(txform, scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz);
+    if (scaley != 1.0 || scalez != 1.0) {
+      ON_wString transformFullName;
+      transformFullName.Format(L"%s/transform2d", textureFullName.Array());
+      pxr::UsdShadeShader transform2d = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(transformFullName)));
+      transform2d.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdTransform2d")));
+      transform2d.CreateInput(TfToken("in"), SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+      pxr::GfVec2f scaleVec(scalex, scaley);
+      pxr::UsdShadeInput scaleInput = transform2d.CreateInput(TfToken("scale"), SdfValueTypeNames->Float2);
+      scaleInput.Set(scaleVec);
+      usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(transform2d.ConnectableAPI(), TfToken("result"));
+    }
+    else
+    {
+      usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+    }
+
     //todo: if (t.m_mapping_channel_id <> 1 /*or 0*/) append id to "st"
-    usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
     //todo: "rgb" is probably only for colors like diffuseColor. What should it be for other props?
     usdUVTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
     //todo: same here. typeNames->Color3f is correct for diffuseColor but not for most other pbrParam
