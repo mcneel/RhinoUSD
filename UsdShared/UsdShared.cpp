@@ -228,7 +228,7 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   return meshPath;
 }
 
-void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures)
+void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docSerNo, const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures)
 {
   std::string matIdStr(ON_Helpers::ON_UUID_to_StdString(matId));
   if (materialsAddedToScene.count(matIdStr) == 1)
@@ -319,6 +319,8 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(const ON_UUID& ma
     ON_Texture t = textures[i];
     ON_Texture::TYPE tt = t.m_type;
     ON_wString textureFullFileName = t.m_image_file_reference.FullPath();
+    const wchar_t* tffnPtr = textureFullFileName.Array();
+    bool b = CRhinoFileUtilities::FindFile(docSerNo, tffnPtr, textureFullFileName);
     filesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
