@@ -107,6 +107,10 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(meshPath);
   UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, SdfPath(stdStrName));
 
+  if (!mesh->IsClosed()) {
+    usdMesh.CreateDoubleSidedAttr(pxr::VtValue(true), true);
+  }
+
   pxr::VtArray<pxr::GfVec3f> points;
   for (int i = 0; i < meshCopy.m_V.Count(); i++)
   {
