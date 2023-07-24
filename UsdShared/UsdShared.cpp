@@ -345,11 +345,11 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     std::string textureFileName = "./" + ON_Helpers::ON_wString_to_StdString(ON_FileSystemPath::FileNameFromPath(textureFullFileName, true));
     usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
 
-    // texture S T like U V
-    ON_Xform txform = t.m_uvw;
-    double scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz;
-    ON_Helpers::DeconstructXform(txform, scalex, scaley, scalez, anglex, angley, anglez, transx, transy, transz);
-    if (scaley != 1.0 || scalez != 1.0) {
+    ON_2dVector v = t.Repeat();
+    double scalex = v.x;
+    double scaley = v.y;
+
+    if (scalex != 1.0 || scaley != 1.0) {
       ON_wString transformFullName;
       transformFullName.Format(L"%s/transform2d", textureFullName.Array());
       pxr::UsdShadeShader transform2d = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(transformFullName)));
