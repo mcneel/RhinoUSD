@@ -212,6 +212,9 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   }
   doc.Redraw(); // clean up display after interactive meshing.
 
+  // debug hack
+  bool meshes_only = fn.Contains(L"_MESHES_ONLY_");
+
   for (int i = 0; i < mesh_list.Count(); i++)
   {
     CRhinoObjectMesh& objectMesh = mesh_list[i];
@@ -226,6 +229,8 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc);
     //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
     ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, layerNames, textureCoordinatesByMappingChannel);
+
+    if (meshes_only) continue;
 
     const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
     if (pMaterial)
