@@ -206,21 +206,24 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
     const ON_TextureCoordinates* firstTc = tcs.begin()->second;
     //if (tcs.size() > 1)
     //  // todo: support multiple channels or report that some were skipped.
-     ON_SimpleArray<ON_3fPoint> uvwPoints = firstTc->m_T;
-     int ayCnt = firstTc->m_T.Count();
-    //pseudo: if uvwPoints.Any(p => p.W != 0) then report that 3rd dimension is ignored
-    // i guess that W is always ignored
-
-		pxr::VtArray<pxr::GfVec2f> uvArray;
-		uvArray.resize(ayCnt); //todo: assert: ayCnt should be the same as the number of vertices on the mesh
-    for (int i = 0; i < ayCnt; i++)
+    if (firstTc != nullptr)
     {
-      uvArray[i] = pxr::GfVec2f(uvwPoints[i].x, uvwPoints[i].y);
-    }
+      ON_SimpleArray<ON_3fPoint> uvwPoints = firstTc->m_T;
+      int ayCnt = firstTc->m_T.Count();
+      //pseudo: if uvwPoints.Any(p => p.W != 0) then report that 3rd dimension is ignored
+      // i guess that W is always ignored
 
-    pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
-		//texCoords.SetInterpolation(pxr::TfToken("vertex")); //already set in CreatePrimvar
-    texCoords.Set(uvArray);
+      pxr::VtArray<pxr::GfVec2f> uvArray;
+      uvArray.resize(ayCnt); //todo: assert: ayCnt should be the same as the number of vertices on the mesh
+      for (int i = 0; i < ayCnt; i++)
+      {
+        uvArray[i] = pxr::GfVec2f(uvwPoints[i].x, uvwPoints[i].y);
+      }
+
+      pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
+      //texCoords.SetInterpolation(pxr::TfToken("vertex")); //already set in CreatePrimvar
+      texCoords.Set(uvArray);
+    }
   }
 
   VtVec3fArray extents(2);
