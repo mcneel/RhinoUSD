@@ -207,7 +207,6 @@
 			name = Debug;
 		};
 		220221EE29D22A31005357DE /* Release */ = {
-			MACOSX_DEPLOYMENT_TARGET = 12.4;
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 223BC31029D22B6E0090D5E8 /* PluginRelease.xcconfig */;
 			buildSettings = {
@@ -224,7 +223,6 @@
 			name = Release;
 		};
 		220221F029D22A31005357DE /* Debug */ = {
-			MACOSX_DEPLOYMENT_TARGET = 12.4;
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
