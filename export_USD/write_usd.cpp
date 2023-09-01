@@ -75,7 +75,8 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
   // instead of int as the map key use ON_UUID as a string: ON_UuidToString() and ON_UuidFromString()
   const CRhinoObject* obj = meshObj.m_parent_object;
   ON_Mesh* pMesh = meshObj.m_mesh;
-  const ON_MappingRef* pMR = obj->Attributes().m_rendering_attributes.MappingRef(ON_nil_uuid);
+  // Jussi: Pass int the default renderer guid
+  const ON_MappingRef* pMR = obj->Attributes().m_rendering_attributes.MappingRef(RhinoApp().GetDefaultRenderApp());
 
   const int count = pMR == nullptr ? 0 : pMR->m_mapping_channels.Count();
 
@@ -122,7 +123,9 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
       {
         const ON_TextureMapping& mapping = doc.m_texture_mapping_table[txMpIdx];
         const ON_Xform local_xform = mc.m_object_xform;
-        const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &local_xform);
+        // Jussi: No lazy evaluaion: previously cached values might be out-of-date
+        const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &local_xform, false, true);
+        ASSERT(pTCs != nullptr && pTCs->m_T.Count() == pMesh->VertexCount());
         //ON_wString uuidStr;
         //ON_UuidToString(/*mc.m_mapping_id*/mapping.Id(), uuidStr);
         //tcs[uuidStr] = pTCs;
