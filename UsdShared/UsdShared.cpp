@@ -351,13 +351,16 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     ON_2dVector v = t.Repeat();
     double scalex = v.x;
     double scaley = v.y;
+    double rotation = t.Rotation();
 
-    if (scalex != 1.0 || scaley != 1.0) {
+    if (scalex != 1.0 || scaley != 1.0 || rotation != 0.0) {
       ON_wString transformFullName;
       transformFullName.Format(L"%s/transform2d", textureFullName.Array());
       pxr::UsdShadeShader transform2d = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(transformFullName)));
       transform2d.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdTransform2d")));
       transform2d.CreateInput(TfToken("in"), SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
+      pxr::UsdShadeInput rotationInput = transform2d.CreateInput(TfToken("rotation"), SdfValueTypeNames->Float);
+      rotationInput.Set((float)rotation);
       pxr::GfVec2f scaleVec(scalex, scaley);
       pxr::UsdShadeInput scaleInput = transform2d.CreateInput(TfToken("scale"), SdfValueTypeNames->Float2);
       scaleInput.Set(scaleVec);
