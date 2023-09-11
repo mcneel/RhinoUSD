@@ -70,7 +70,7 @@ static void WorkoutTextureCoordinates(
   // this function doesn't do anything yet.
 }
 
-static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoDoc& doc, std::map<int, const ON_TextureCoordinates*>& tcs)
+static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoDoc& doc, std::map<int, ON_TextureCoordinates>& tcs)
 {
   // instead of int as the map key use ON_UUID as a string: ON_UuidToString() and ON_UuidFromString()
   const CRhinoObject* obj = meshObj.m_parent_object;
@@ -94,7 +94,9 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
     //ON_UuidToString(mapping.Id(), uuidStr);
     //auto pr = std::pair<ON_wString, const ON_TextureCoordinates*>(uuidStr, pTCs);
     //tcs.insert(pr);
-    tcs[1] = pTCs;
+    // Store a copy of the cached texture coordinate set. Original set gets destroyed if ON_Mesh::m_TC array needs to be reallocated.
+    if (nullptr != pTCs)
+      tcs[1] = *pTCs;
   }
   else
   {
@@ -129,7 +131,9 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
         //ON_wString uuidStr;
         //ON_UuidToString(/*mc.m_mapping_id*/mapping.Id(), uuidStr);
         //tcs[uuidStr] = pTCs;
-        tcs[mc.m_mapping_channel_id] = pTCs;
+        // Store a copy of the cached texture coordinate set. Original set gets destroyed if ON_Mesh::m_TC array needs to be reallocated.
+        if (nullptr != pTCs)
+          tcs[mc.m_mapping_channel_id] = *pTCs;
       }
     }
   }
@@ -224,7 +228,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     if (nullptr == objectMesh.m_parent_object || nullptr == objectMesh.m_mesh)
       continue;
 
-    std::map<int, const ON_TextureCoordinates*> textureCoordinatesByMappingChannel;
+    std::map<int, ON_TextureCoordinates> textureCoordinatesByMappingChannel;
     // this has to be done first, before meshes vertices are read to be exported
     // because setting the texture coordinates can modify the mesh vertices
     SetTextureCoordinatesOnMesh(objectMesh, doc, textureCoordinatesByMappingChannel);

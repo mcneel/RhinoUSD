@@ -93,7 +93,7 @@ pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYP
   }
 }
 
-ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, const ON_TextureCoordinates*>& tcs)
+ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs)
 {
   ON_Mesh meshCopy(*mesh);
   ON_Helpers::RotateYUp(&meshCopy);
@@ -203,7 +203,7 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   {
     // let's just use the 1st one in the array for now
     //int mc_id = tcs.begin()->first;
-    const ON_TextureCoordinates* firstTc = tcs.begin()->second;
+    const ON_TextureCoordinates* firstTc = &tcs.begin()->second;
     //if (tcs.size() > 1)
     //  // todo: support multiple channels or report that some were skipped.
     if (firstTc != nullptr)
