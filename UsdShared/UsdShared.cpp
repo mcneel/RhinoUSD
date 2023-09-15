@@ -199,11 +199,11 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   //}
 
   // texture coordinates
-  if (!tcs.empty())
+  for (auto& tc : tcs)
   {
     // let's just use the 1st one in the array for now
-    //int mc_id = tcs.begin()->first;
-    const ON_TextureCoordinates* firstTc = &tcs.begin()->second;
+    int mc_id = tc.first;
+    const ON_TextureCoordinates* firstTc = &tc.second;
     //if (tcs.size() > 1)
     //  // todo: support multiple channels or report that some were skipped.
     if (firstTc != nullptr)
@@ -220,7 +220,10 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
         uvArray[i] = pxr::GfVec2f(uvwPoints[i].x, uvwPoints[i].y);
       }
 
-      pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
+      ON_String sTokenName;
+      sTokenName.Format("st%u", mc_id);
+      const char* tokenName = sTokenName;
+      pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken(tokenName), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
       //texCoords.SetInterpolation(pxr::TfToken("vertex")); //already set in CreatePrimvar
       texCoords.Set(uvArray);
     }
@@ -255,7 +258,7 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
   materialsAddedToScene[matIdStr] = full_material_name;
   
   ON_wString shaderName;
-  shaderName.Format(L"%sshader%d", full_material_name.Array(), currentShaderIndex++);
+  shaderName.Format(L"%s/shader%d", full_material_name.Array(), currentShaderIndex++);
   std::string stdStrShaderName = ON_Helpers::ON_wString_to_StdString(shaderName);
   pxr::UsdShadeShader shader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(stdStrShaderName));
   shader.CreateIdAttr(pxr::VtValue(tokPreviewSurface));
@@ -313,13 +316,8 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
 
   usdMaterial.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), tokSurface);
 
-  ON_wString stReaderName;
-  //stReaderName.Format(L"%s/stReader%d", material_name.Array(), currentMaterialIndex - 1);
-  stReaderName.Format(L"%s/stReader%s", matPath.Array(), matIdOnStr.Array());
-  auto stReader = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(stReaderName)));
-  stReader.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdPrimvarReader_float2")));
+  std::map<int, pxr::UsdShadeShader> stReaders;
 
-  
   const int texture_count = textures.Count();
   for (int i = 0; i < texture_count; i++)
   {
@@ -347,6 +345,20 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
 
     std::string textureFileName = "./" + ON_Helpers::ON_wString_to_StdString(ON_FileSystemPath::FileNameFromPath(textureFullFileName, true));
     usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
+
+    // Mapping channel is always strictly positive (zero is sometimes used as the default but it should be one).
+    const int mappingChannel = t.m_mapping_channel_id < 1 ? 1 : t.m_mapping_channel_id;
+    // Get primvar reader for the mapping channel
+    auto strIt = stReaders.find(t.m_mapping_channel_id);
+    if (strIt == stReaders.end())
+    {
+      ON_wString stReaderName;
+      stReaderName.Format(L"%s/stReader%u", full_material_name.Array(), mappingChannel);
+      stReaders[mappingChannel] = pxr::UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(stReaderName)));
+      stReaders[mappingChannel].CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdPrimvarReader_float2")));
+      strIt = stReaders.find(mappingChannel);
+    }
+    pxr::UsdShadeShader& stReader = strIt->second;
 
     ON_2dVector v = t.Repeat();
     double scalex = v.x;
@@ -376,12 +388,18 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     usdUVTextureSampler.CreateOutput(TfToken("rgb"), pxr::SdfValueTypeNames->Float3);
     //todo: same here. typeNames->Color3f is correct for diffuseColor but not for most other pbrParam
     shader.CreateInput(pbrParam, pxr::SdfValueTypeNames->Color3f).ConnectToSource(usdUVTextureSampler.ConnectableAPI(), TfToken("rgb"));
+  }
 
-    // primvar for texture mapping coordinates
-    //pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken("frame:stPrimvarName"), SdfValueTypeNames->Token);
-    pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken(stdTextureName), SdfValueTypeNames->String);
-    stInput.Set("st");
-    stReader.CreateInput(TfToken("varname"), SdfValueTypeNames->String).ConnectToSource(stInput);
+  // primvar for texture mapping coordinates
+  for (auto& stReaderIt : stReaders)
+  {
+    ON_String strInputName;
+    strInputName.Format("stPrimvarName%u", stReaderIt.first);
+    pxr::UsdShadeInput stInput = usdMaterial.CreateInput(TfToken(strInputName), SdfValueTypeNames->String);
+    ON_String strPrimVarname;
+    strPrimVarname.Format("st%u", stReaderIt.first);
+    stInput.Set((const char*)strPrimVarname);
+    stReaderIt.second.CreateInput(TfToken("varname"), SdfValueTypeNames->String).ConnectToSource(stInput);
   }
 }
 
