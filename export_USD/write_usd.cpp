@@ -173,18 +173,17 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   {
     objects.Append(obj);
 
-    ///////// Disable Nurbs for now - USD only partially supports nurbs curves and surfaces
-    //const ON_Geometry* geometry = obj->Geometry();
-    //if (nullptr == geometry)
-    //  continue;
+    const ON_Geometry* geometry = obj->Geometry();
+    if (nullptr == geometry)
+      continue;
    
-    //std::vector<ON_wString> layerNames = GetLayerNames(obj, doc);
+    std::vector<ON_wString> layerNames = GetLayerNames(obj, doc);
 
-    //const ON_NurbsCurve* nurbsCurve = ON_NurbsCurve::Cast(geometry);
-    //if (nurbsCurve)
-    //{
-    //  usdEI.AddNurbsCurve(nurbsCurve, layerNames);
-    //}
+    const ON_NurbsCurve* nurbsCurve = ON_NurbsCurve::Cast(geometry);
+    if (nurbsCurve)
+    {
+      usdEI.AddNurbsCurve(nurbsCurve, layerNames);
+    }
 
     ////const CRhinoBrepObject* pBrep = CRhinoBrepObject::Cast(obj);
     //// try casting from geometry
