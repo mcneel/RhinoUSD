@@ -459,19 +459,22 @@ void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::
   crvVertexCount[0] = ctrlPtsCount;
   usdNc.CreateCurveVertexCountsAttr(pxr::VtValue(crvVertexCount));
 
-  //pxr::VtArray<pxr::VtValue> knots;
-  pxr::VtArray<double> knots;
-  //std::vector<double> stdKnots;
+  std::vector<double> stdKnots;
   int knotCount = nurbsCurve->KnotCount();
-  knots.resize(knotCount);
   for (int i = 0; i < knotCount; i++)
   {
-    double k = nurbsCurve->m_knot[i]; // nurbsCurve->Knot()[i];
-    knots[i] = k; // pxr::VtValue(k);
-    //stdKnots.push_back(k);
-  }
-  usdNc.CreateKnotsAttr(pxr::VtValue(knots));
+    double k = nurbsCurve->m_knot[i];
+    stdKnots.push_back(k);
 
+    // add 2 superfluous knots, one at each extremity as almost every 3rd party format requires it
+    if (i == 0 || i == knotCount - 1)
+      stdKnots.push_back(k);
+  }
+  pxr::VtArray<double> knots;
+  knots.resize(stdKnots.size());
+  for (int i = 0; i < stdKnots.size(); i++)
+    knots[i] = stdKnots[i];
+  usdNc.CreateKnotsAttr(pxr::VtValue(knots));
 }
 
 void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames)
