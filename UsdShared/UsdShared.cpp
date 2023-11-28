@@ -283,24 +283,24 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
 
   // only set metallic if useSpecularWorkflow is 0 which it always is as it
   // is hardcoded
-  float metallic(pbrMaterial->Metallic());
+  float metallic = (float)(pbrMaterial->Metallic());
   shader.CreateInput(tokMetallic, pxr::SdfValueTypeNames->Float).Set(metallic);
 
-  float roughness(pbrMaterial->Roughness());
+  float roughness = (float)(pbrMaterial->Roughness());
   shader.CreateInput(tokRoughness, pxr::SdfValueTypeNames->Float).Set(roughness);
 
-  float clearcoat(pbrMaterial->Clearcoat());
+  float clearcoat = (float)(pbrMaterial->Clearcoat());
   shader.CreateInput(tokClearcoat, pxr::SdfValueTypeNames->Float).Set(clearcoat);
 
   //@todo: "clearcoatRoughness"
   
-  float opacity(pbrMaterial->Opacity());
+  float opacity = (float)(pbrMaterial->Opacity());
   shader.CreateInput(tokOpacity, pxr::SdfValueTypeNames->Float).Set(opacity);
 
   // "opacityThreshold" : Andy says to ignore
 
   // there is also ReflectiveIOR() but Andy says that OpacityIOR is the correct one to use
-  float rior(pbrMaterial->OpacityIOR());
+  float rior = (float)(pbrMaterial->OpacityIOR());
   shader.CreateInput(tokIor, pxr::SdfValueTypeNames->Float).Set(rior);
 
   //@todo: "normal" : Andy says: "This is related to bump. We might have to think carefully about this"
@@ -325,7 +325,7 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     ON_Texture::TYPE tt = t.m_type;
     ON_wString textureFullFileName = t.m_image_file_reference.FullPath();
     const wchar_t* tffnPtr = textureFullFileName.Array();
-    bool b = CRhinoFileUtilities::FindFile(docSerNo, tffnPtr, textureFullFileName);
+    CRhinoFileUtilities::FindFile(docSerNo, tffnPtr, textureFullFileName);
     filesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
@@ -373,7 +373,7 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
       transform2d.CreateInput(TfToken("in"), SdfValueTypeNames->Float2).ConnectToSource(stReader.ConnectableAPI(), TfToken("result"));
       pxr::UsdShadeInput rotationInput = transform2d.CreateInput(TfToken("rotation"), SdfValueTypeNames->Float);
       rotationInput.Set((float)rotation);
-      pxr::GfVec2f scaleVec(scalex, scaley);
+      pxr::GfVec2f scaleVec((float)scalex, (float)scaley);
       pxr::UsdShadeInput scaleInput = transform2d.CreateInput(TfToken("scale"), SdfValueTypeNames->Float2);
       scaleInput.Set(scaleVec);
       usdUVTextureSampler.CreateInput(TfToken("st"), pxr::SdfValueTypeNames->Float2).ConnectToSource(transform2d.ConnectableAPI(), TfToken("result"));
@@ -449,7 +449,7 @@ void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::
     ON_3dPoint cp;
     if (nurbsCurve->GetCV(i, cp))
     {
-      ctrlPts[i] = pxr::GfVec3f(cp.x, cp.y, cp.z);
+      ctrlPts[i] = pxr::GfVec3f((float)cp.x, (float)cp.y, (float)cp.z);
     }
   }
   usdNc.CreatePointsAttr(pxr::VtValue(ctrlPts));

@@ -1,5 +1,10 @@
 #include "stdafx.h"
+#if defined( CORE_BUILD )
+#include "../../../SDK/inc/rhinoSdkPlugInDeclare.h"
+#else
 #include "rhinoSdkPlugInDeclare.h"
+#endif
+
 #include "import_USDPlugIn.h"
 #include "Resource.h"
 
@@ -26,13 +31,6 @@ RHINO_PLUG_IN_DESCRIPTION(L"Import USD and USDA file formats");
 RHINO_PLUG_IN_ICON_RESOURCE_ID(IDI_ICON);
 
 
-RHINO_PLUG_IN_DEVELOPER_ORGANIZATION(L"Robert McNeel & Associates");
-RHINO_PLUG_IN_DEVELOPER_ADDRESS(L"3670 Woodland Park Avenue North\015\012Seattle WA 98103");
-RHINO_PLUG_IN_DEVELOPER_COUNTRY(L"United States");
-RHINO_PLUG_IN_DEVELOPER_PHONE(L"206-545-6877");
-RHINO_PLUG_IN_DEVELOPER_FAX(L"206-545-7321");
-RHINO_PLUG_IN_DEVELOPER_EMAIL(L"tech@mcneel.com");
-RHINO_PLUG_IN_DEVELOPER_WEBSITE(L"http://www.rhino3d.com");
 RHINO_PLUG_IN_UPDATE_URL(L"http://www2.rhino3d.com/sr/plugin.asp?id=7C5D9A51-4AF7-4CE1-8661-30FE69473C6E");
 
 // The one and only Cimport_USDPlugIn object

@@ -1,3 +1,7 @@
+// stdafx.h : include file for standard system include files,
+// or project specific include files that are used frequently, but
+// are changed infrequently
+
 #pragma once
 
 #ifndef VC_EXTRALEAN
@@ -6,6 +10,13 @@
 
 // This plug-in is Rhino 6 ready
 #define RHINO_V6_READY
+
+// If you want to use Rhino's MFC UI classes, then
+// uncomment the #define RHINO_SDK_MFC statement below. 
+// Note, doing so will requrie that your plug-in is
+// built with the same version of Visual Studio as was
+// used to build Rhino.
+#define RHINO_SDK_MFC
 
 // Plug-ins must use the release version of MFC used by Rhino.
 // Plug-ins that require debugging information need to be built with
@@ -16,11 +27,47 @@
 #error Do not define _DEBUG - use RHINO_DEBUG_PLUGIN instead
 #endif
 
+#if defined(MACOS) || defined(TARGET_OS_MAC)
+#define CORE_BUILD
+//#define ARRAYSIZE(array) sizeof(array)/sizeof(array[0])
+#endif
+
 // Rhino SDK Preamble
+#if defined( CORE_BUILD )
+#include "../../../RhinoCorePlugInStdAfx.h"
+#include "../../../rhino3SystemPlugIn.h"
+
+#include "../../RDK/RDK/RhRdkHeaders.h"
+#pragma comment(lib, "\"" RHINO_PLUGIN_DIR "/" "rdk.lib" "\"")
+
+#else
+
 #include "RhinoSdkStdafxPreamble.h"
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS       // some CString constructors will be explicit
+
 #include <afxwin.h>                              // MFC core and standard components
+#include <afxext.h>                              // MFC extensions
+
+#ifndef _AFX_NO_OLE_SUPPORT
+#include <afxole.h>                              // MFC OLE classes
+#include <afxodlgs.h>                            // MFC OLE dialog classes
+#include <afxdisp.h>                             // MFC Automation classes
+#endif // _AFX_NO_OLE_SUPPORT
+
+#ifndef _AFX_NO_DB_SUPPORT
+#include <afxdb.h>                               // MFC ODBC database classes
+#endif // _AFX_NO_DB_SUPPORT
+
+#ifndef _AFX_NO_DAO_SUPPORT
+#include <afxdao.h>                              // MFC DAO database classes
+#endif // _AFX_NO_DAO_SUPPORT
+
+#include <afxdtctl.h>                            // MFC support for Internet Explorer 4 Common Controls
+#ifndef _AFX_NO_AFXCMN_SUPPORT
+#include <afxcmn.h>                              // MFC support for Windows Common Controls
+#endif // _AFX_NO_AFXCMN_SUPPORT
+
 
 #if defined(_M_X64) && defined(WIN32) && defined(WIN64)
 //  The afxwin.h includes afx.h, which includes afxver_.h, 
@@ -34,18 +81,14 @@
 
 // Rhino SDK classes
 #include "RhinoSdk.h" 
+
 // Rhino Render Development Kit (RDK) classes
 #include "RhRdkHeaders.h" 
 
-//#if defined(RHINO_DEBUG_PLUGIN)
-// Now that all the system headers are read, we can
-// safely define _DEBUG so the developers can test
-// for _DEBUG in their code.
-//#define _DEBUG
-//#endif
-
 // Rhino SDK linking pragmas
 #include "rhinoSdkPlugInLinkingPragmas.h"
+
+#endif
 
 // Disable warnings that we have no control over. The USD library
 // has a number of double to float warnings
@@ -61,4 +104,12 @@
 #include "pxr/usd/usdGeom/mesh.h"
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdGeom/sphere.h"
+#include "pxr/usd/usdGeom/metrics.h"
+#include "pxr/usd/usdShade/material.h"
+#include "pxr/usd/usdShade/materialBindingAPI.h"
+#include "pxr/base/plug/registry.h"
+#include "pxr/usd/usdGeom/nurbsCurves.h"
+#include "pxr/usd/usdGeom/nurbsPatch.h"
+#include "pxr/usd/usdGeom/primvarsAPI.h"
+#include "pxr/usd/usd/zipFile.h"
 #pragma warning(pop)
