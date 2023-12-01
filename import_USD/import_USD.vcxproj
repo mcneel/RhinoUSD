@@ -24,13 +24,13 @@
     <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
     <ClCompile Include="import_USDApp.cpp" />
     <ClCompile Include="import_USDPlugIn.cpp" />
-    <ClCompile Include="read_usd.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='CoreDebug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='CoreRelease|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="read_usd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\UsdShared\UsdShared.h" />
@@ -155,14 +155,6 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\usd\win_release\*.dll" "$(OutDir)"
-xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Copy USD DLLs to output</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CoreDebug|x64'">
     <ClCompile>
@@ -186,14 +178,6 @@ xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\usd\win_debug\*.dll" "$(OutDir)"
-xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Copy USD DLLs to output</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
