@@ -203,14 +203,6 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\usd\win_release\*.dll" "$(OutDir)"
-xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Copy USD DLLs to output</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CoreRelease|x64'">
     <ClCompile>
@@ -236,14 +228,6 @@ xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\usd\win_release\*.dll" "$(OutDir)"
-xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Copy USD DLLs to output</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
