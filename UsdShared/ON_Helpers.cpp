@@ -83,6 +83,14 @@ void ON_Helpers::RotateYUp(ON_Mesh* mesh)
   mesh->Transform(rotate_y_up);
 }
 
+void ON_Helpers::RotateZUp(ON_Mesh* mesh)
+{
+  ON_Xform rotate_z_up;
+  double ninetyDegrees = ON_PI / -2.0;
+  rotate_z_up.Rotation(-ninetyDegrees, ON_3dVector::XAxis, ON_3dPoint::Origin);
+  mesh->Transform(rotate_z_up);
+}
+
 void ON_Helpers::RotateGeometryYUp(ON_Geometry* geom)
 {
   ON_Xform rotate_y_up;

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../UsdShared/ON_Helpers.h"
 
 using namespace pxrInternal_v0_23__pxrReserved__;
 
@@ -38,32 +39,52 @@ bool ReadUSDFile(const wchar_t* filename, CRhinoDoc& doc, const CRhinoFileReadOp
     usdMesh.GetPointsAttr().Get(&points);
     //usdMesh.GetNormalsAttr().Get(&normals);
     
-    if (points.size() == 0)
-      return false; //invalid mesh
-    
-    ON_Mesh mesh(faceVertexCounts.size(), points.size(), false, false);
+    int ptsSz = points.size();
+    int vtxCountsSz = faceVertexCounts.size();
+    int vtxIdxsSz = faceVertexIndices.size();
 
-    for (int i = 0; i < points.size(); i++)
+    if (ptsSz == 0)
+      return false; //invalid mesh
+
+    // assert sum of faceVertexCounts == faceVertexIndex.size()
+    int totalCounts = std::accumulate(faceVertexCounts.begin(), faceVertexCounts.end(), 0);
+    if (totalCounts != faceVertexIndices.size())
+      return false;
+    
+    ON_Mesh mesh(faceVertexCounts.size(), ptsSz, false, false);
+
+    for (int i = 0; i < ptsSz; i++)
     {
       GfVec3f& usd_pt = points[i];
       const ON_3dPoint on_pt(usd_pt[0], usd_pt[1], usd_pt[2]);
       mesh.SetVertex(i, on_pt);
     }
 
-    if (faceVertexCounts.size() != faceVertexIndices.size())
-      return false; //invalid mesh;
-
-    for (int i = 0; i < faceVertexCounts.size(); i++)
+    double vi = 0;
+    for (int i = 0; i < vtxCountsSz; i++)
     {
-      VtArray<int>& a = faceVertexCounts;
-      if (a.size() == 3)
-        mesh.SetTriangle(i, a[0], a[1], a[2]);
-      else if (a.size() == 4)
-        mesh.SetQuad(i, a[0], a[1], a[2], a[3]);
-      else
-        return false; // invalid mesh
+      int vc = faceVertexCounts[i];
+      if (vc < 3 || vc > 4)
+        return false;
+      int idx1 = vi++;
+      int idx2 = vi++;
+      int idx3 = vi++;
+      if (vc == 3)
+        mesh.SetTriangle(i, faceVertexIndices[idx1], faceVertexIndices[idx2], faceVertexIndices[idx3]);
+      else if (vc == 4)
+      {
+        int idx4 = vi++;
+        mesh.SetQuad(i, faceVertexIndices[idx1], faceVertexIndices[idx2], faceVertexIndices[idx3], faceVertexIndices[idx4]);
+      }
+    }
+
+    if (mesh.IsValid())
+    {
+      ON_Helpers::RotateZUp(&mesh);
+      if (!mesh.HasVertexNormals())
+        mesh.ComputeVertexNormals();
+      doc.AddMeshObject(mesh);
     }
   }
-
-  return false;
+  return true;
 }

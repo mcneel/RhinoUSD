@@ -13,6 +13,7 @@ namespace ON_Helpers
   ON_wString ON_UUID_to_ON_wString(const ON_UUID& uuid);
   std::string ON_UUID_to_StdString(const ON_UUID& uuid);
   void RotateYUp(ON_Mesh* mesh);
+  void RotateZUp(ON_Mesh* mesh);
   void RotateGeometryYUp(ON_Geometry* geom);
   template <class TYPE> TYPE DegreesToRadians(TYPE deg) { return deg * ON_PI / 180.0; }
   template <class TYPE> TYPE RadiansToDegrees(TYPE rad) { return rad / ON_PI * 180.0; }
