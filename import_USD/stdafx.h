@@ -112,4 +112,7 @@
 #include "pxr/usd/usdGeom/nurbsPatch.h"
 #include "pxr/usd/usdGeom/primvarsAPI.h"
 #include "pxr/usd/usd/zipFile.h"
+#include "pxr/usd/usd/primRange.h"
+//#include "pxr/usd/usdGeom/pointsAPI.h"
+#include "pxr/usd/usdGeom/points.h"
 #pragma warning(pop)
