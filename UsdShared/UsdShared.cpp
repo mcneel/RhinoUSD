@@ -102,10 +102,10 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const ON_wString meshNa
   ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
 
   ON_wString meshPath;
-  meshPath.Format(L"/%smesh%d", 
-    meshName.IsEmpty() ? L"" : meshName + L"_",
-    currentMeshIndex++
-  );
+  if (meshName.IsEmpty())
+    meshPath.Format(L"/mesh%d", currentMeshIndex++);
+  else
+    meshPath.Format(L"/%s_mesh%d", meshName.Array(), currentMeshIndex++);
   meshPath = layerNamesPath + meshPath;
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(meshPath);
   UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, SdfPath(stdStrName));
