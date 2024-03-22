@@ -93,7 +93,7 @@ pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYP
   }
 }
 
-ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs)
+ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const ON_wString meshName, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs)
 {
   ON_Mesh meshCopy(*mesh);
   ON_Helpers::RotateYUp(&meshCopy);
@@ -102,7 +102,10 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const std::vector<ON_wS
   ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
 
   ON_wString meshPath;
-  meshPath.Format(L"/mesh%d", currentMeshIndex++);
+  meshPath.Format(L"/%smesh%d", 
+    meshName.IsEmpty() ? L"" : meshName + L"_",
+    currentMeshIndex++
+  );
   meshPath = layerNamesPath + meshPath;
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(meshPath);
   UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, SdfPath(stdStrName));

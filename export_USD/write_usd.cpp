@@ -234,7 +234,8 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
 
     std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc);
     //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
-    ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, layerNames, textureCoordinatesByMappingChannel);
+    const ON_wString meshName = objectMesh.m_mesh_attributes.Name();
+    ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, meshName, layerNames, textureCoordinatesByMappingChannel);
 
     if (meshes_only) continue;
 
