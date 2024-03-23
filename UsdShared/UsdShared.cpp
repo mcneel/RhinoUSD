@@ -105,7 +105,11 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const ON_wString meshNa
   if (meshName.IsEmpty())
     meshPath.Format(L"/mesh%d", currentMeshIndex++);
   else
-    meshPath.Format(L"/%s_mesh%d", meshName.Array(), currentMeshIndex++);
+  {
+      // RhinoLayerNameToUsd function should be renamed to something like On_wStringToValidUsd[Name|String|Path] ...
+      ON_wString validMeshName = UsdShared::RhinoLayerNameToUsd(meshName);
+      meshPath.Format(L"/%s_mesh%d", validMeshName.Array(), currentMeshIndex++);
+  }
   meshPath = layerNamesPath + meshPath;
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(meshPath);
   UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, SdfPath(stdStrName));
