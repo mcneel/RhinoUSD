@@ -139,6 +139,13 @@ static void SetTextureCoordinatesOnMesh(CRhinoObjectMesh& meshObj, const CRhinoD
   }
 }
 
+static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict, ON_MeshParameters& params)
+{
+  ON_MeshParameters mp;
+  if (dict.TryGetMeshParameters(L"MeshingParameters", mp))
+    params = mp;
+}
+
 int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
 {
 #if defined(ON_RUNTIME_APPLE)
@@ -203,6 +210,14 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     //    }
     //  }
     //}
+  }
+
+  const bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
+  if (useOptionsDictionary)
+  {
+    mesh_ui_style = 4; // no UI
+    const ON_ArchivableDictionary& dict = options.OptionsDictionary();
+    GetMeshParametersFromDictionary(dict, mp);
   }
 
   CRhinoCommand::result rs = RhinoMeshObjects(objects, mp, options.Transformation(), mesh_ui_style, mesh_list);
