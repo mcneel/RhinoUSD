@@ -203,6 +203,23 @@
 					"$(inherited)",
 					../../../MacOS/Frameworks,
 				);
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-Wpartial-availability",
+					"-Wno-nonportable-include-path",
+					"-Wno-deprecated-register",
+					"-Wno-pch-date-time",
+					"-Wno-deprecated-declarations",
+					"-Wno-documentation-deprecated-sync",
+					"-Wno-ignored-attributes",
+					"-Wno-undefined-bool-conversion",
+					"-Wno-dynamic-class-memaccess",
+					"-Wno-defaulted-function-deleted",
+					"-Wno-#pragma-messages",
+					"-Wno-deprecated-builtins",
+					"-fno-operator-names",
+					"-DGL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED",
+				);
 			};
 			name = Debug;
 		};
@@ -218,6 +235,23 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../../../MacOS/Frameworks,
+				);
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-Wpartial-availability",
+					"-Wno-nonportable-include-path",
+					"-Wno-deprecated-register",
+					"-Wno-pch-date-time",
+					"-Wno-deprecated-declarations",
+					"-Wno-documentation-deprecated-sync",
+					"-Wno-ignored-attributes",
+					"-Wno-undefined-bool-conversion",
+					"-Wno-dynamic-class-memaccess",
+					"-Wno-defaulted-function-deleted",
+					"-Wno-#pragma-messages",
+					"-Wno-deprecated-builtins",
+					"-fno-operator-names",
+					"-DGL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED",
 				);
 			};
 			name = Release;
@@ -254,6 +288,23 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../../../MacOS/Frameworks,
+				);
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-Wpartial-availability",
+					"-Wno-nonportable-include-path",
+					"-Wno-deprecated-register",
+					"-Wno-pch-date-time",
+					"-Wno-deprecated-declarations",
+					"-Wno-documentation-deprecated-sync",
+					"-Wno-ignored-attributes",
+					"-Wno-undefined-bool-conversion",
+					"-Wno-dynamic-class-memaccess",
+					"-Wno-defaulted-function-deleted",
+					"-Wno-#pragma-messages",
+					"-Wno-deprecated-builtins",
+					"-fno-operator-names",
+					"-DGL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED",
 				);
 			};
 			name = Distribution;
