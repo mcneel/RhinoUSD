@@ -1567,7 +1567,14 @@ void concurrent_hash_map<Key,T,HashCompare,A>::internal_copy( const concurrent_h
         bucket *dst = 0, *src = 0;
         bool rehash_required = false;
         for( hashcode_t k = 0; k <= mask; k++ ) {
+#if defined(ON_RUNTIME_APPLE)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomma"
+#endif
             if( k & (k-2) ) ++dst,src++; // not the beginning of a segment
+#if defined(ON_RUNTIME_APPLE)
+#pragma clang diagnostic pop
+#endif
             else { dst = get_bucket( k ); src = source.get_bucket( k ); }
             __TBB_ASSERT( dst->node_list != internal::rehash_req, "Invalid bucket in destination table");
             node *n = static_cast<node*>( src->node_list );
