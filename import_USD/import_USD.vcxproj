@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\devinfo.cpp" />
     <ClCompile Include="..\UsdShared\UsdShared.cpp" />
     <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
+    <ClCompile Include="convert_mesh.cpp" />
     <ClCompile Include="import_USDApp.cpp" />
     <ClCompile Include="import_USDPlugIn.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -35,6 +36,7 @@
   <ItemGroup>
     <ClInclude Include="..\UsdShared\UsdShared.h" />
     <ClInclude Include="..\UsdShared\ON_Helpers.h" />
+    <ClInclude Include="convert_mesh.h" />
     <ClInclude Include="import_USDApp.h" />
     <ClInclude Include="import_USDPlugIn.h" />
     <ClInclude Include="Resource.h" />
@@ -133,12 +135,10 @@
     <IncludePath>$(ProjectDir);$(ProjectDir)..\usd\include\boost-1_78;$(ProjectDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)..\usd\win_release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
-
-  <PropertyGroup> 
+  <PropertyGroup>
     <RealSolutionDirectory>$([System.IO.Directory]::GetParent($(SolutionDir)))</RealSolutionDirectory>
     <SolutionParentDirectory>$([System.IO.Path]::GetDirectoryName($(RealSolutionDirectory)))</SolutionParentDirectory>
   </PropertyGroup>
-
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
