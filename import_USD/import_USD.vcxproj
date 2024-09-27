@@ -133,6 +133,12 @@
     <IncludePath>$(ProjectDir);$(ProjectDir)..\usd\include\boost-1_78;$(ProjectDir)..\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)..\usd\win_release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+
+  <PropertyGroup> 
+    <RealSolutionDirectory>$([System.IO.Directory]::GetParent($(SolutionDir)))</RealSolutionDirectory>
+    <SolutionParentDirectory>$([System.IO.Path]::GetDirectoryName($(RealSolutionDirectory)))</SolutionParentDirectory>
+  </PropertyGroup>
+
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
