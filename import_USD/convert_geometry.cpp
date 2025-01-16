@@ -1,6 +1,5 @@
 #include "stdafx.h"
-#include "convert_mesh.h"
-#include "pxr/usd/usd/primRange.h"
+#include "convert_geometry.h"
 
 ON_Mesh* TryGetMeshFromPrim(UsdPrim& prim)
 {
@@ -64,4 +63,3 @@ ON_Mesh* TryGetMeshFromPrim(UsdPrim& prim)
 
   return nullptr;
 }
-

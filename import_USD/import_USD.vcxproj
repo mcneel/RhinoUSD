@@ -22,7 +22,8 @@
     <ClCompile Include="..\..\devinfo.cpp" />
     <ClCompile Include="..\UsdShared\UsdShared.cpp" />
     <ClCompile Include="..\UsdShared\ON_Helpers.cpp" />
-    <ClCompile Include="convert_mesh.cpp" />
+    <ClCompile Include="convert_geometry.cpp" />
+    <ClCompile Include="convert_metadata.cpp" />
     <ClCompile Include="import_USDApp.cpp" />
     <ClCompile Include="import_USDPlugIn.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -36,7 +37,8 @@
   <ItemGroup>
     <ClInclude Include="..\UsdShared\UsdShared.h" />
     <ClInclude Include="..\UsdShared\ON_Helpers.h" />
-    <ClInclude Include="convert_mesh.h" />
+    <ClInclude Include="convert_geometry.h" />
+    <ClInclude Include="convert_metadata.h" />
     <ClInclude Include="import_USDApp.h" />
     <ClInclude Include="import_USDPlugIn.h" />
     <ClInclude Include="Resource.h" />
