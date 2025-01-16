@@ -36,7 +36,10 @@
     <ClCompile Include="..\UsdShared\ON_Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="convert_mesh.cpp">
+    <ClCompile Include="convert_geometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="convert_metadata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,7 +65,10 @@
     <ClInclude Include="..\UsdShared\ON_Helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="convert_mesh.h">
+    <ClInclude Include="convert_geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="convert_metadata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
