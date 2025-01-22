@@ -9,39 +9,6 @@ ON_Plane* TryGetPlane(UsdPrim& prim)
   return nullptr;
 }
 
-ON_Geometry* TryGetPrimGeometry(UsdPrim& prim)
-{
-  UsdGeomGprim geom = UsdGeomGprim(prim);
-  if (&geom == nullptr) return nullptr;
-
-  if (!geom.TransformMightBeTimeVarying())
-  {
-    auto transform = geom.ComputeLocalToWorldTransform(UsdTimeCode::Default());
-  }
-  else
-  {
-    // TODO : What to do if the Geometry is a Time Varying Transform? I'd assume get the first?
-              // Maybe settings could specify a time frame?
-  }
-
-  // bool visible = geom.GetVisibilityAttr()
-
-  // TODO : This feels. Slow.
-  if (ON_Mesh* mesh = GetCapsule(prim)) return mesh;
-  if (ON_RevSurface* cone = GetCone(prim)) return cone;
-  if (ON_Brep* box = GetBox(prim)) return box;
-  if (ON_RevSurface* cylinder = GetCylinder(prim)) return cylinder;
-  if (ON_Curve* curve = GetCurves(prim)) return curve;
-  if (ON_NurbsCurve* nurbscurve = GetNurbs(prim)) return nurbscurve;
-  if (ON_BezierCurve* beziercurve = GetHermite(prim)) return beziercurve;
-  if (ON_Mesh* mesh = GetMesh(prim)) return mesh;
-  if (ON_NurbsSurface* nurbssurface = GetNurbsPatch(prim)) return nurbssurface;
-  if (ON_PointCloud* pointcloud = GetPoints(prim)) return pointcloud;
-  if (ON_Mesh* mesh = GetTetrahedralMesh(prim)) return mesh;
-  if (ON_RevSurface* sphere = GetSphere(prim)) return sphere;
-
-  return nullptr;
-}
 
 // TODO : Capsule vs Capsule_1?
 ON_Mesh* GetCapsule(UsdPrim& prim)
@@ -107,7 +74,8 @@ ON_NurbsCurve* GetNurbs(UsdPrim& prim)
   return nullptr;
 } // UsdGeomNurbsCurves
 
-ON_BezierCurve* GetHermite(UsdPrim& prim) { return nullptr; } // UsdGeomHermiteCurves
+// ON_BezierCurve
+ON_Curve* GetHermite(UsdPrim& prim) { return nullptr; } // UsdGeomHermiteCurves
 
 ON_Mesh* GetMesh(UsdPrim& prim)
 {
@@ -197,7 +165,7 @@ ON_RevSurface* GetSphere(UsdPrim& prim)
       radiusAttrib.Get(&radiusValue);
       double radius = radiusValue.Get<double>();
       const ON_3dPoint* point = new ON_3dPoint(0, 0, 0);
-      auto sphere = new ON_Sphere(point, radius);
+      auto sphere = new ON_Sphere(*point, radius);
       return sphere->RevSurfaceForm(false);
     }
   }
@@ -214,4 +182,26 @@ ON_Matrix* TryGetTransform(UsdGeomGprim& gPrim)
   auto matrix = new ON_Matrix(4, 4, *m, true);
 
   return matrix;
+}
+
+ON_Geometry* TryGetPrimGeometry(UsdPrim& prim)
+{
+  UsdGeomGprim geom = UsdGeomGprim(prim);
+  if (&geom == nullptr) return nullptr;
+
+  // TODO : This feels. Slow.
+  if (ON_Mesh* mesh = GetCapsule(prim)) return mesh;
+  if (ON_RevSurface* cone = GetCone(prim)) return cone;
+  if (ON_Brep* box = GetBox(prim)) return box;
+  if (ON_RevSurface* cylinder = GetCylinder(prim)) return cylinder;
+  if (ON_Curve* curve = GetCurves(prim)) return curve;
+  if (ON_NurbsCurve* nurbscurve = GetNurbs(prim)) return nurbscurve;
+  if (ON_Curve* beziercurve = GetHermite(prim)) return beziercurve;
+  if (ON_Mesh* mesh = GetMesh(prim)) return mesh;
+  if (ON_NurbsSurface* nurbssurface = GetNurbsPatch(prim)) return nurbssurface;
+  if (ON_PointCloud* pointcloud = GetPoints(prim)) return pointcloud;
+  if (ON_Mesh* mesh = GetTetrahedralMesh(prim)) return mesh;
+  if (ON_RevSurface* sphere = GetSphere(prim)) return sphere;
+
+  return nullptr;
 }

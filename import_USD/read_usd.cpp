@@ -32,6 +32,53 @@ public:
 
 };
 
+bool AddPrimDataToDoc(CRhinoDoc& doc, PrimDataCollection& data)
+{
+  if (data.geometry == nullptr) return false;
+
+  auto attribs = new ON_3dmObjectAttributes();
+  attribs->SetVisible(data.isVisible);
+
+  const ON_Matrix matrix = *data.transform;
+  ON_Xform xform(matrix);
+  data.geometry->Transform(xform);
+
+  if (auto revSurface = ON_RevSurface::Cast(data.geometry))
+  {
+    auto surfObj = new CRhinoSurfaceObject(*attribs);
+    surfObj->SetSurface(revSurface);
+    doc.AddObject(surfObj);
+    
+    delete revSurface;
+  }
+  else if (auto brep = ON_Brep::Cast(data.geometry))
+  {
+    doc.AddBrepObject(*brep, attribs);
+  }
+  else if (auto mesh = ON_Mesh::Cast(data.geometry))
+  {
+    doc.AddMeshObject(*mesh, attribs);
+  }
+  else if (auto curve = ON_Curve::Cast(data.geometry))
+  {
+    doc.AddCurveObject(*curve, attribs);
+  }
+  else if (auto surface = ON_NurbsSurface::Cast(data.geometry))
+  {
+    doc.AddSurfaceObject(*surface, attribs);
+  }
+  else if (auto pointCloud = ON_PointCloud::Cast(data.geometry))
+  { 
+    doc.AddPointCloudObject(pointCloud->PointCount(), pointCloud->m_P, attribs);
+  }
+  else
+  {
+    return false;
+  }
+
+  return true;
+}
+
 ON_wString GetOnFromOldString(std::string string)
 {
   std::wstring wstring(string.begin(), string.end());
