@@ -19,6 +19,7 @@ class PrimDataCollection
 public:
   ON_Layer* layer = nullptr;
   ON_Geometry* geometry = nullptr;
+  ON_Matrix* transform = nullptr;
   // This will cause the object to be hidden if true
   bool isVisible = true;
   // Metadata I don't know what else to do with
@@ -51,19 +52,21 @@ static void TraversePrimTree(UsdPrim& root, CRhinoDoc& doc, PrimDataCollection& 
 
     // It's Geometry!
     // Are classes that inherit this going to return true?
-    if (UsdGeomGprim geom = UsdGeomGprim(prim))
+    if (ON_Geometry* onGeom = TryGetPrimGeometry(prim))
     {
-      // bool visible = geom.GetVisibilityAttr()
-      
-      if (!geom.TransformMightBeTimeVarying())
+      collection.geometry = onGeom;
+      if (UsdGeomGprim geom = UsdGeomGprim(prim))
       {
-        auto transform = geom.ComputeLocalToWorldTransform(UsdTimeCode::Default());
-      }
-      else
-      {
+        auto visibleAttribute = geom.GetVisibilityAttr();
+        bool visible = GetValueFromAttribute<bool>(visibleAttribute);
+        collection.isVisible = visible;
+
         // TODO : What to do if the Geometry is a Time Varying Transform? I'd assume get the first?
-                  // Maybe settings could specify a time frame?
-      } 
+        //        Maybe settings could specify a time frame?
+        auto usdTransform = geom.ComputeLocalToWorldTransform(UsdTimeCode::Default());
+        auto onTransform = TryGetTransform(geom);
+        collection.transform = onTransform;
+      }
     }
 
     for (std::pair<TfToken, VtValue> metaData : prim.GetAllMetadata())
@@ -99,13 +102,10 @@ bool ReadUSDFile(const wchar_t* filename, CRhinoDoc& doc, const CRhinoFileReadOp
   // use an ON_String to convert from unicode to mbcs which is what usd wants
   ON_String usdPath(filename);
   UsdStageRefPtr usdModel = UsdStage::Open(usdPath.Array());
+  
+  // TODO : Layers
   auto layerStack = usdModel->GetLayerStack();
   size_t st = layerStack.size();
-  for (auto layer : layerStack)
-  {
-    ;
-    int i = 2;
-  }
 
   // TODO : Use Stage Direction to set Rhino WorldXY
 

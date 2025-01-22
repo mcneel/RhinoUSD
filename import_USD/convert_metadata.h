@@ -6,3 +6,6 @@ using namespace pxr;
 ON_3dmObjectAttributes* TryGetAttributesFromPrim(UsdPrim& prim);
 
 ON_Layer* TryGetLayerFromPrim(UsdPrim& prim);
+
+template <typename T>
+T GetValueFromAttribute(UsdAttribute& attribute);

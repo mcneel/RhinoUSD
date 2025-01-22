@@ -1,3 +1,4 @@
+#include <iostream>
 #include "stdafx.h"
 #include "convert_metadata.h"
 
@@ -39,6 +40,9 @@ ON_Layer* TryGetLayerFromPrim(UsdPrim& prim)
   return onLayer;
 }
 
-// void TryGetLayersFromStage
-
-
+template <typename T>
+T GetValueFromAttribute(UsdAttribute& attribute)
+{
+  VtValue attributeValue = attribute->Get();
+  return attributeValue.Get<T>();
+}
