@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="USDs">
+      <UniqueIdentifier>{1e77ea22-3fbc-4463-b2fb-a93c3b2401aa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="import_USDApp.cpp">
@@ -75,6 +78,9 @@
   <ItemGroup>
     <None Include="res\import_USD.rc2">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="USDs\box.usda">
+      <Filter>USDs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

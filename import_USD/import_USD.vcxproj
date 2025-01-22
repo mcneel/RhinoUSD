@@ -47,6 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\import_USD.rc2" />
+    <None Include="USDs\box.usda">
+      <FileType>Document</FileType>
+    </None>
     <ResourceCompile Include="res\ImportUSD-Version.rc" />
   </ItemGroup>
   <ItemGroup>
