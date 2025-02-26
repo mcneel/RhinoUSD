@@ -145,6 +145,55 @@ static void TraversePrimTree(UsdPrim& root, CRhinoDoc& doc, PrimDataCollection& 
 
 }
 
+bool TryAddToDocument(CRhinoDoc& doc, ON_Geometry* geom, ON_3dmObjectAttributes* attribs)
+{
+  if (ON_Mesh* mesh = ON_Mesh::Cast(geom))
+  {
+    doc.AddMeshObject(*mesh, attribs);
+    return true;
+  }
+
+  if (ON_RevSurface* surface = ON_RevSurface::Cast(geom))
+  {
+    doc.AddSurfaceObject(*surface, attribs);
+    return true;
+  }
+
+  if (ON_Brep* brep = ON_Brep::Cast(geom))
+  {
+    doc.AddBrepObject(*brep, attribs);
+    return true;
+  }
+
+  if (ON_Curve* curve = ON_Curve::Cast(geom))
+  {
+    doc.AddCurveObject(*curve, attribs);
+    return true;
+  }
+
+  // TODO : Will above prevent this?
+  if (ON_NurbsCurve* nurbscurve = ON_NurbsCurve::Cast(geom))
+  {
+    doc.AddCurveObject(*nurbscurve, attribs);
+    return true;
+  }
+
+  if (ON_NurbsSurface* nurbssurface = ON_NurbsSurface::Cast(geom))
+  {
+    doc.AddSurfaceObject(*nurbssurface, attribs);
+    return true;
+  }
+
+  if (ON_PointCloud* pointcloud = ON_PointCloud::Cast(geom))
+  {
+    // TODO : More Complex than above
+    // doc.AddPointCloudObject(*pointcloud, attribs);
+    return true;
+  }
+
+  return false;
+}
+
 bool ReadUSDFile(const wchar_t* filename, CRhinoDoc& doc, const CRhinoFileReadOptions& options)
 {
   // use an ON_String to convert from unicode to mbcs which is what usd wants
@@ -196,11 +245,11 @@ bool ReadUSDFile(const wchar_t* filename, CRhinoDoc& doc, const CRhinoFileReadOp
       int t = 7;
     }
 
-    //if (ON_Mesh* mesh = TryGetMeshFromPrim(prim))
-    //{
-    //  auto attribs = TryGetAttributesFromPrim(prim);
-    //  doc.AddMeshObject(*mesh, attribs);
-    //}
+    if (ON_Geometry* geom = TryGetPrimGeometry(prim))
+    {
+      ON_3dmObjectAttributes* attribs = TryGetAttributesFromPrim(prim);
+      TryAddToDocument(doc, geom, attribs);
+    }
 
   }
 
