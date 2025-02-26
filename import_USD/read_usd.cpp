@@ -214,14 +214,14 @@ bool ReadUSDFile(const wchar_t* filename, CRhinoDoc& doc, const CRhinoFileReadOp
   UsdPrimRange primRange = usdModel->Traverse(); // Use TraverseAll if it feels like we're missing something
   // usdModel->Flatten(); // <- Hmm
   UsdPrim root = usdModel->GetDefaultPrim();
-  TraversePrimTree(root, doc, PrimDataCollection());
+  // TraversePrimTree(root, doc, PrimDataCollection());
 
   ON_Layer* previousLayer = new ON_Layer();
   for (UsdPrim prim : primRange)
   {
     // TODO : This also checks for ancestors
     if (prim.IsAbstract()) continue;
-    if (prim.IsValid()) continue;
+    if (!prim.IsValid()) continue;
 
     bool hidden = prim.IsHidden();
 
