@@ -43,12 +43,11 @@ ON_NurbsCurve* GetNurbs(UsdPrim& prim)
 {
   if (UsdGeomNurbsCurves nurbs = UsdGeomNurbsCurves(prim))
   {
-    auto onNurbs = new ON_NurbsCurve();
-    /*
     auto knots = GetValueFromAttribute<VtArray<double>>(nurbs.GetKnotsAttr());
     auto orders = GetValueFromAttribute<VtArray<int>>(nurbs.GetOrderAttr());
     auto points = GetValueFromAttribute<VtArray<GfVec3f>>(nurbs.GetPointsAttr());
 
+    auto onNurbs = new ON_NurbsCurve();
     for (int i = 0; i < points.capacity(); i++)
     {
       auto point = points[i];
@@ -68,7 +67,6 @@ ON_NurbsCurve* GetNurbs(UsdPrim& prim)
 
       onNurbs->SetKnot(order, knot);
     }
-    */
 
     return onNurbs;
   }

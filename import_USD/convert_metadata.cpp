@@ -39,10 +39,3 @@ ON_Layer* TryGetLayerFromPrim(UsdPrim& prim)
 
   return onLayer;
 }
-
-template <typename T>
-T GetValueFromAttribute(UsdAttribute& attribute)
-{
-  VtValue attributeValue = attribute->Get();
-  return attributeValue.Get<T>();
-}

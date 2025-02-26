@@ -196,13 +196,11 @@ bool ReadUSDFile(const wchar_t* filename, CRhinoDoc& doc, const CRhinoFileReadOp
       int t = 7;
     }
 
-    /*
-    if (ON_Mesh* mesh = TryGetMeshFromPrim(prim))
-    {
-      auto attribs = TryGetAttributesFromPrim(prim);
-      doc.AddMeshObject(*mesh, attribs);
-    }
-    */
+    //if (ON_Mesh* mesh = TryGetMeshFromPrim(prim))
+    //{
+    //  auto attribs = TryGetAttributesFromPrim(prim);
+    //  doc.AddMeshObject(*mesh, attribs);
+    //}
 
   }
 
