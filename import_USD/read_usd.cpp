@@ -105,7 +105,8 @@ static void TraversePrimTree(UsdPrim& root, CRhinoDoc& doc, PrimDataCollection& 
       if (UsdGeomGprim geom = UsdGeomGprim(prim))
       {
         auto visibleAttribute = geom.GetVisibilityAttr();
-        bool visible = GetValueFromAttribute<bool>(visibleAttribute);
+        // bool visible = GetValueFromAttribute<bool>(visibleAttribute);
+        bool visible = false;
         collection.isVisible = visible;
 
         // TODO : What to do if the Geometry is a Time Varying Transform? I'd assume get the first?
@@ -195,11 +196,13 @@ bool ReadUSDFile(const wchar_t* filename, CRhinoDoc& doc, const CRhinoFileReadOp
       int t = 7;
     }
 
+    /*
     if (ON_Mesh* mesh = TryGetMeshFromPrim(prim))
     {
       auto attribs = TryGetAttributesFromPrim(prim);
       doc.AddMeshObject(*mesh, attribs);
     }
+    */
 
   }
 
