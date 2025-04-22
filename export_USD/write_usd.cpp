@@ -2,6 +2,7 @@
 #include "ExportUSDPlugIn.h"
 #include "../UsdShared/ON_Helpers.h"
 #include "../UsdShared/UsdShared.h"
+#include "UsdExportOptions.h"
 
 static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhinoDoc& doc)
 {
@@ -146,7 +147,12 @@ static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict,
     params = mp;
 }
 
-int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
+int WriteUSDFile(const wchar_t* filename,
+                  bool usda,
+                  CRhinoDoc& doc,
+                  const CRhinoFileWriteOptions& options,
+                  bool scripting,
+                  UsdExportOptions& usdOptions)
 {
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
@@ -215,11 +221,16 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   const bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
   if (useOptionsDictionary)
   {
-    mesh_ui_style = 4; // no UI
+    mesh_ui_style = 4; // no UI // Is 2 not correct?
     const ON_ArchivableDictionary& dict = options.OptionsDictionary();
     GetMeshParametersFromDictionary(dict, mp);
   }
+  if (scripting)
+  {
+    mesh_ui_style = 4;
+  }
 
+  // TODO : Needs to be scriptable
   CRhinoCommand::result rs = RhinoMeshObjects(objects, mp, options.Transformation(), mesh_ui_style, mesh_list);
   //if (CRhinoCommand::success != rs)
   //{

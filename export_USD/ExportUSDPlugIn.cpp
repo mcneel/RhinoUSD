@@ -7,7 +7,7 @@
 
 #include "ExportUSDPlugIn.h"
 #include "Resource.h""
-#include <UsdExportOptions.h>
+#include "UsdExportOptions.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -80,20 +80,20 @@ void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc
   bool forceMeshesValue = Options.DefaultForceMeshes;
   bool includeUserStringsValue = Options.DefaultIncludeUserStrings;
 
-  pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, Options.DefaultBlocks);
-  Options.Blocks = (BlockHandling)(blocksValue);
+  if (pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, Options.DefaultBlocks))
+    Options.Blocks = (BlockHandling)(blocksValue);
 
-  pc.LoadProfileString(lpszSection, L"default-layer", defaultLayerValue, Options.DefaultDefaultLayer);
-  Options.DefaultLayer = defaultLayerValue;
+  if (pc.LoadProfileString(lpszSection, L"default-layer", defaultLayerValue, Options.DefaultDefaultLayer))
+    Options.DefaultLayer = defaultLayerValue;
 
-  pc.LoadProfileString(lpszSection, L"model-name", modelNameValue, Options.DefaultModelName);
-  Options.ModelName = modelNameValue;
+  if (pc.LoadProfileString(lpszSection, L"model-name", modelNameValue, Options.DefaultModelName))
+    Options.ModelName = modelNameValue;
 
-  pc.LoadProfileBool(lpszSection, L"force-meshes", &forceMeshesValue, Options.DefaultForceMeshes);
-  Options.ForceMeshes = forceMeshesValue;
+  if (pc.LoadProfileBool(lpszSection, L"force-meshes", &forceMeshesValue, Options.DefaultForceMeshes))
+    Options.ForceMeshes = forceMeshesValue;
 
-  pc.LoadProfileBool(lpszSection, L"include-user-strings", &includeUserStringsValue, Options.DefaultIncludeUserStrings);
-  Options.IncludeUserStrings = includeUserStringsValue;
+  if (pc.LoadProfileBool(lpszSection, L"include-user-strings", &includeUserStringsValue, Options.DefaultIncludeUserStrings))
+    Options.IncludeUserStrings = includeUserStringsValue;
 }
 
 void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
@@ -108,50 +108,11 @@ void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc
 void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
 {
   CRhParameterDictionary args;
-  args.SetBool(L"headless", RhinoApp().IsHeadless());
   args.SetUuid(L"plugin-id", PlugInID());
   args.SetWindowHandle(L"hwnd", parent);
 
-  // Plugin Settings
-  args.SetInt(L"blocks", Options.Blocks);
-  args.SetString(L"default-layer", Options.DefaultLayer);
-  args.SetString(L"model-name", Options.ModelName);
-  args.SetBool(L"force-meshes", Options.ForceMeshes);
-  args.SetBool(L"include-user-strings", Options.IncludeUserStrings);
-
-  if (!RhExecuteNamedCallback(L"ShowExportUsdDialog", args)) return;
-
-  int blocksValue;
-  ON_wString defaultLayerValue;
-  ON_wString modelNameValue;
-  bool forceMeshesValue;
-  bool includeUserStringsValue;
-
-  if (args.GetInt(L"blocks", blocksValue))
-  {
-    Options.Blocks = (BlockHandling)blocksValue;
-  }
-
-  if (args.GetString(L"default-layer", defaultLayerValue))
-  {
-    Options.DefaultLayer = defaultLayerValue;
-  }
-
-  if (args.GetString(L"model-name", modelNameValue))
-  {
-    Options.ModelName = modelNameValue;
-  }
-
-  if (args.GetBool(L"force-meshes", forceMeshesValue))
-  {
-    Options.ForceMeshes = forceMeshesValue;
-  }
-
-  if (args.GetBool(L"include-user-strings", includeUserStringsValue))
-  {
-    Options.IncludeUserStrings = includeUserStringsValue;
-  }
-
+  bool scripting = RhinoApp().IsHeadless();
+  HandleUserInput(scripting, args, Options);
 }
 
 CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
@@ -161,5 +122,53 @@ CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
 
 int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
 {
-  return WriteUSDFile(filename, 1 == index, doc, options);
+  bool scripting = RhinoApp().IsHeadless() || options.UseBatchMode();
+
+  auto opts = options.OptionsDictionary();
+  bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
+
+  // Scripting
+  if (useOptionsDictionary)
+  {
+    PushFileWriteOptionsToUsdOptions(options);
+  }
+  else
+  {
+    // Headed/headless/batch mode
+    CRhParameterDictionary args;
+    args.SetUuid(L"plugin-id", PlugInID());
+    args.SetInt(L"doc", doc.RuntimeSerialNumber());
+    args.SetBool(L"scripting", scripting);
+
+    if (!HandleUserInput(scripting, args, Options)) return -1;
+  }
+
+  return WriteUSDFile(filename, 1 == index, doc, options, scripting, Options);
+}
+
+void CExportUSDPlugIn::PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& options)
+{
+  const ON_ArchivableDictionary dictionary = options.OptionsDictionary();
+
+  int blocksValue;
+  ON_wString defaultLayerValue;
+  ON_wString modelNameValue;
+  bool forceMeshesValue;
+  bool includeUserStringsValue;
+
+  if (dictionary.TryGetInt32(L"blocks", blocksValue))
+    Options.Blocks = (BlockHandling)blocksValue;
+
+  if (dictionary.TryGetString(L"default-layer", defaultLayerValue))
+    Options.DefaultLayer = defaultLayerValue;
+
+  if (dictionary.TryGetString(L"model-name", modelNameValue))
+    Options.ModelName = modelNameValue;
+
+  if (dictionary.TryGetBool(L"force-meshes", forceMeshesValue))
+    Options.ForceMeshes = forceMeshesValue;
+
+  if (dictionary.TryGetBool(L"include-user-strings", includeUserStringsValue))
+    Options.IncludeUserStrings = includeUserStringsValue;
+
 }

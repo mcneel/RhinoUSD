@@ -1,4 +1,6 @@
 #pragma once
+#include "stdafx.h"
+#include "UsdExportOptions.h"
 
 class CExportUSDPlugIn : public CRhinoFileExportSystemPlugIn
 {
@@ -22,6 +24,8 @@ public:
 
   void DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType) override;
 
+  void PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& options);
+
 private:
   ON_wString m_plugin_version;
 
@@ -30,4 +34,9 @@ public:
   ON_MeshParameters m_saved_mp;
 };
 
-int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& options);
+int WriteUSDFile(const wchar_t* filename,
+                  bool usda,
+                  CRhinoDoc& doc,
+                  const CRhinoFileWriteOptions& options,
+                  bool scripting,
+                  UsdExportOptions& usdOptions);

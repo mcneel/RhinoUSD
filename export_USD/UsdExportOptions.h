@@ -31,3 +31,5 @@ public:
   bool DefaultIncludeUserStrings = true;
 
 };
+
+bool HandleUserInput(bool scripting, CRhParameterDictionary args, UsdExportOptions& options);
