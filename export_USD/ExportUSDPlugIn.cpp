@@ -6,7 +6,8 @@
 #endif
 
 #include "ExportUSDPlugIn.h"
-#include "Resource.h"
+#include "Resource.h""
+#include <UsdExportOptions.h>
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -69,8 +70,11 @@ void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, co
   extensions.Append(ft);
 }
 
+UsdExportOptions Options;
+
 void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
 {
+  
   int i = 0;
   i = i;
 }
@@ -83,10 +87,18 @@ void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc
 
 void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
 {
-  int i = 0;
-  i = i;
-
   CRhParameterDictionary args;
+  args.SetBool(L"headless", RhinoApp().IsHeadless());
+  args.SetUuid(L"plugin-id", PlugInID());
+  args.SetWindowHandle(L"hwnd", parent);
+
+  // Plugin Settings
+  args.SetInt(L"blocks", Options.Blocks);
+  args.SetString(L"default-layer", Options.DefaultLayer);
+  args.SetString(L"model-name", Options.ModelName);
+  args.SetBool(L"force-meshes", Options.ForceMeshes);
+  args.SetBool(L"include-user-strings", Options.IncludeUserStrings);
+
   RhExecuteNamedCallback(L"ShowExportUsdDialog", args);
 }
 
