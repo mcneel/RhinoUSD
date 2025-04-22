@@ -99,7 +99,39 @@ void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& f
   args.SetBool(L"force-meshes", Options.ForceMeshes);
   args.SetBool(L"include-user-strings", Options.IncludeUserStrings);
 
-  RhExecuteNamedCallback(L"ShowExportUsdDialog", args);
+  if (!RhExecuteNamedCallback(L"ShowExportUsdDialog", args)) return;
+
+  int blocksValue;
+  ON_wString defaultLayerValue;
+  ON_wString modelNameValue;
+  bool forceMeshesValue;
+  bool includeUserStringsValue;
+
+  if (args.GetInt(L"blocks", blocksValue))
+  {
+    Options.Blocks = (BlockHandling)blocksValue;
+  }
+
+  if (args.GetString(L"default-layer", defaultLayerValue))
+  {
+    Options.DefaultLayer = defaultLayerValue;
+  }
+
+  if (args.GetString(L"model-name", modelNameValue))
+  {
+    Options.ModelName = modelNameValue;
+  }
+
+  if (args.GetBool(L"force-meshes", forceMeshesValue))
+  {
+    Options.ForceMeshes = forceMeshesValue;
+  }
+
+  if (args.GetBool(L"include-user-strings", includeUserStringsValue))
+  {
+    Options.IncludeUserStrings = includeUserStringsValue;
+  }
+
 }
 
 CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
