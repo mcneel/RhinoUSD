@@ -58,13 +58,36 @@ GUID CExportUSDPlugIn::PlugInID() const
 
 void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileWriteOptions& options)
 {
-	CRhinoFileType ft;
-	ft.SetFileTypePlugInID(PlugInID());
-	ft.FileTypeDescription(L"USD (*.usdz, *.usda, *.usd)");
+  CRhinoFileType ft;
+  ft.SetFileTypePlugInID(PlugInID());
+  ft.FileTypeDescription(L"USD (*.usdz, *.usda, *.usd)");
   ft.AddFileTypeExtension(L"usdz");
   ft.AddFileTypeExtension(L"usda");
   ft.AddFileTypeExtension(L"usd");
+  ft.SetDisplayOptionsDialog(true);
+
   extensions.Append(ft);
+}
+
+void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
+{
+  int i = 0;
+  i = i;
+}
+
+void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
+{
+  int i = 0;
+  i = i;
+}
+
+void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
+{
+  int i = 0;
+  i = i;
+
+  CRhParameterDictionary args;
+  RhExecuteNamedCallback(L"ShowExportUsdDialog", args);
 }
 
 CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
