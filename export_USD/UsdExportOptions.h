@@ -9,17 +9,25 @@ class UsdExportOptions
 {
 public:
   // If Model Name is empty that layer/prim isn't included
-  ON_wString ModelName = L"";
+  ON_wString ModelName;
   
   // Default is L"World"
-  ON_wString DefaultLayer = L"World";
+  ON_wString DefaultLayer;
   
   // How should blocks be handled?
   BlockHandling Blocks;
   
   // Make all Geometry Meshes
-  bool ForceMeshes = false;
+  bool ForceMeshes;
   
   // Include User Strings
-  bool IncludeUserStrings = true;
+  bool IncludeUserStrings;
+
+
+  ON_wString DefaultModelName = L"";
+  ON_wString DefaultDefaultLayer = L"World";
+  BlockHandling DefaultBlocks = (BlockHandling)0;
+  bool DefaultForceMeshes = false;
+  bool DefaultIncludeUserStrings = true;
+
 };

@@ -74,15 +74,35 @@ UsdExportOptions Options;
 
 void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
 {
-  
-  int i = 0;
-  i = i;
+   int blocksValue = Options.DefaultBlocks;
+  ON_wString defaultLayerValue = Options.DefaultDefaultLayer;
+  ON_wString modelNameValue = Options.DefaultModelName;
+  bool forceMeshesValue = Options.DefaultForceMeshes;
+  bool includeUserStringsValue = Options.DefaultIncludeUserStrings;
+
+  pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, Options.DefaultBlocks);
+  Options.Blocks = (BlockHandling)(blocksValue);
+
+  pc.LoadProfileString(lpszSection, L"default-layer", defaultLayerValue, Options.DefaultDefaultLayer);
+  Options.DefaultLayer = defaultLayerValue;
+
+  pc.LoadProfileString(lpszSection, L"model-name", modelNameValue, Options.DefaultModelName);
+  Options.ModelName = modelNameValue;
+
+  pc.LoadProfileBool(lpszSection, L"force-meshes", &forceMeshesValue, Options.DefaultForceMeshes);
+  Options.ForceMeshes = forceMeshesValue;
+
+  pc.LoadProfileBool(lpszSection, L"include-user-strings", &includeUserStringsValue, Options.DefaultIncludeUserStrings);
+  Options.IncludeUserStrings = includeUserStringsValue;
 }
 
 void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
 {
-  int i = 0;
-  i = i;
+  pc.SaveProfileString(lpszSection, L"model-name", Options.ModelName);
+  pc.SaveProfileString(lpszSection, L"default-layer", Options.DefaultLayer);
+  pc.SaveProfileInt(lpszSection, L"blocks", Options.Blocks);
+  pc.SaveProfileBool(lpszSection, L"force-meshes", Options.ForceMeshes);
+  pc.SaveProfileBool(lpszSection, L"user-strings", Options.IncludeUserStrings);
 }
 
 void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
