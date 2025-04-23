@@ -74,13 +74,13 @@ UsdExportOptions Options;
 
 void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
 {
-   int blocksValue = Options.DefaultBlocks;
+   int blocksValue = (int)Options.DefaultBlocks;
   ON_wString defaultLayerValue = Options.DefaultDefaultLayer;
   ON_wString modelNameValue = Options.DefaultModelName;
   bool forceMeshesValue = Options.DefaultForceMeshes;
   bool includeUserStringsValue = Options.DefaultIncludeUserStrings;
 
-  if (pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, Options.DefaultBlocks))
+  if (pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, (int)Options.DefaultBlocks))
     Options.Blocks = (BlockHandling)(blocksValue);
 
   if (pc.LoadProfileString(lpszSection, L"default-layer", defaultLayerValue, Options.DefaultDefaultLayer))
@@ -100,7 +100,7 @@ void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc
 {
   pc.SaveProfileString(lpszSection, L"model-name", Options.ModelName);
   pc.SaveProfileString(lpszSection, L"default-layer", Options.DefaultLayer);
-  pc.SaveProfileInt(lpszSection, L"blocks", Options.Blocks);
+  pc.SaveProfileInt(lpszSection, L"blocks", (int)Options.Blocks);
   pc.SaveProfileBool(lpszSection, L"force-meshes", Options.ForceMeshes);
   pc.SaveProfileBool(lpszSection, L"user-strings", Options.IncludeUserStrings);
 }
@@ -132,7 +132,7 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& d
   {
     PushFileWriteOptionsToUsdOptions(options);
   }
-  else
+  else if (scripting)
   {
     // Headed/headless/batch mode
     CRhParameterDictionary args;
@@ -140,7 +140,7 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& d
     args.SetInt(L"doc", doc.RuntimeSerialNumber());
     args.SetBool(L"scripting", scripting);
 
-    if (!HandleUserInput(scripting, args, Options)) return -1;
+    HandleUserInput(scripting, args, Options);
   }
 
   return WriteUSDFile(filename, 1 == index, doc, options, scripting, Options);

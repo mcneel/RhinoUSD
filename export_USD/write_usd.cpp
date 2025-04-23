@@ -4,7 +4,7 @@
 #include "../UsdShared/UsdShared.h"
 #include "UsdExportOptions.h"
 
-static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhinoDoc& doc)
+static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhinoDoc& doc, UsdExportOptions& usdOptions)
 {
   std::vector<ON_wString> names;
   const CRhinoObjectAttributes& attributes = obj->Attributes();
@@ -26,7 +26,12 @@ static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhi
     pid = id;
   }
   names.insert(names.begin(), L"Geometry");
-  names.insert(names.begin(), L"Rhino"); // or "World"
+  if (!usdOptions.ModelName.IsEmpty())
+  {
+    names.insert(names.begin(), usdOptions.ModelName);
+  }
+
+  names.insert(names.begin(), usdOptions.DefaultLayer);
   return names;
 }
 
@@ -190,7 +195,7 @@ int WriteUSDFile(const wchar_t* filename,
     if (nullptr == geometry)
       continue;
    
-    std::vector<ON_wString> layerNames = GetLayerNames(obj, doc);
+    std::vector<ON_wString> layerNames = GetLayerNames(obj, doc, usdOptions);
 
     const ON_NurbsCurve* nurbsCurve = ON_NurbsCurve::Cast(geometry);
     if (nurbsCurve)
@@ -258,7 +263,7 @@ int WriteUSDFile(const wchar_t* filename,
     // because setting the texture coordinates can modify the mesh vertices
     SetTextureCoordinatesOnMesh(objectMesh, doc, textureCoordinatesByMappingChannel);
 
-    std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc);
+    std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc, usdOptions);
     //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
     const ON_wString meshName = objectMesh.m_mesh_attributes.Name();
     ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, meshName, layerNames, textureCoordinatesByMappingChannel);

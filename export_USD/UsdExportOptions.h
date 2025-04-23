@@ -3,7 +3,7 @@
 
 using namespace std;
 
-enum BlockHandling { SeparateFiles = 0, Ignore = 1, InsideFile = 2 };
+enum class BlockHandling : int { SeparateFiles = 0, Ignore = 1, InsideFile = 2 };
 
 class UsdExportOptions
 {
@@ -32,4 +32,4 @@ public:
 
 };
 
-bool HandleUserInput(bool scripting, CRhParameterDictionary args, UsdExportOptions& options);
+bool HandleUserInput(bool scripting, CRhParameterDictionary& args, UsdExportOptions& options);
