@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "UsdExportOptions.h"
+#include "UsdExportPacket.h"
 
 class CExportUSDPlugIn : public CRhinoFileExportSystemPlugIn
 {
@@ -41,4 +42,11 @@ int WriteUSDFile(const wchar_t* filename,
                   bool scripting,
                   UsdExportOptions& usdOptions);
 
+int WriteUSDFile(const wchar_t* filename,
+									CRhinoDoc& doc,
+									ON_ClassArray<UsdPacket>& packets,
+									UsdExportOptions& usdOptions);
+
 static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict, ON_MeshParameters& params);
+
+static ON::object_type GetTypeFromObject(const CRhinoObject* obj);

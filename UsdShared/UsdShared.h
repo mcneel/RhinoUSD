@@ -12,18 +12,20 @@ class UsdExportImport
 {
 public:
   UsdExportImport(const ON_wString& fileName, double metersPerUnit);
-  void WriteObject(const UsdPacket& packet, const UsdExportOptions& usdOptions);
+  void WriteObject(UsdPacket& packet, const UsdExportOptions& usdOptions);
   //void AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
   void AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docSerNo, const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures);
   void BindPbrMaterialToMesh(const ON_UUID& matId,const ON_wString meshPath);
   
   void AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames);
-  void AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim& prim);
+  void AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim* prim);
+
   bool AnythingToSave();
   void Save(/*const ON_wString& fileName*/);
 
-  bool AddMesh(const UsdPacket& packet, const UsdExportOptions& usdOptions, pxr::UsdPrim& prim);
-  bool AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions, pxr::UsdPrim& prim);
+  bool AddMesh(UsdPacket& packet, const UsdExportOptions& usdOptions);
+  bool AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions);
+	bool AddBlock(const UsdPacket& packet, const UsdExportOptions& usdOptions);
 
 private:
   //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
@@ -61,8 +63,6 @@ private:
   pxr::TfToken tokDisplacement;
   pxr::TfToken tokOcclusion;
 
-  ON_wString AddMeshInternal(const ON_Mesh* mesh, const ON_wString meshName, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs, UsdPrim& prim);
-  void AddNurbsCurveInternal(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames, UsdPrim& prim);
   std::vector<ON_wString> GetLayerNames(const UsdPacket& packet, const UsdExportOptions& usdOptions);
 };
 
@@ -76,5 +76,5 @@ namespace UsdShared
   void SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage);
   void SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm);
   void WorkoutTextureCoordinates(const int mapping_channel_id, const std::map<int, const ON_TextureCoordinates*>& mappingCoordinatesOnMesh, std::vector<const ON_TextureCoordinates>& tcs);
-  void SetTextureCoordinatesOnMesh(const CRhinoObject* obj, ON_Mesh* pMesh, const CRhinoDoc* doc, std::map<int, ON_TextureCoordinates>& tcs);
+  void SetTextureCoordinatesOnMesh(const CRhinoObject& obj, ON_Mesh* pMesh, const CRhinoDoc* doc, std::map<int, ON_TextureCoordinates>& tcs);
 }

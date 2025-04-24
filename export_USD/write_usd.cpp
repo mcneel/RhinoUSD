@@ -27,13 +27,9 @@ int WriteUSDFile(const wchar_t* filename,
   int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
   ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
 
-  const ON_wString fn(filename);
-  double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
-  UsdExportImport usdEI(fn, metersPerUnit);
-
-  ON_SimpleArray<UsdPacket> packets;
-  ON_SimpleArray<UsdPacket> meshPackets;
-  ON_SimpleArray<const CRhinoObject*> meshObjects(256); //<-- Why 256?
+  ON_ClassArray<UsdPacket> packets;
+  ON_ClassArray<UsdPacket> meshPackets;
+  ON_SimpleArray<const CRhinoObject*> meshObjects;
 
   CRhinoObjectIterator it(doc.RuntimeSerialNumber(), options);
   for (const CRhinoObject* obj = it.First(); obj; obj = it.Next())
@@ -43,86 +39,18 @@ int WriteUSDFile(const wchar_t* filename,
     if (nullptr == geometry)
       continue;
 
-    ON::object_type type = obj->ObjectType();
-    switch (obj->ObjectType())
-    {
-      case ON::object_type::curve_object:
-        type = ON::object_type::curve_object;
-        break;
+    if (!IsValidUsdObject(obj->ObjectType()))
+      continue;
 
-      /* TODO : Support natively
-      case ON::object_type::point_object:
-        type = ON::object_type::point_object;
-        break;
-
-      case ON::object_type::surface_object:
-        if (usdOptions.ForceMeshes)
-          type = ON::object_type::mesh_object;
-        else
-          type = ON::object_type::surface_object;
-        break;
-
-      case ON::object_type::brep_object:
-        if (usdOptions.ForceMeshes)
-          type = ON::object_type::mesh_object;
-        else
-          type = ON::object_type::brep_object;
-        break;
-
-      case ON::object_type::subd_object:
-        if (usdOptions.ForceMeshes)
-          type = ON::object_type::mesh_object;
-        else
-          type = ON::object_type::subd_object;
-        break;
-
-      */
-
-      // No current fallback or just not a good option
-      case ON::object_type::unknown_object_type:
-      case ON::object_type::point_object: // TODO : Support
-      case ON::object_type::pointset_object:
-      case ON::object_type::layer_object:
-      case ON::object_type::material_object:
-      case ON::object_type::light_object: // TODO : Support
-      case ON::object_type::annotation_object:
-      case ON::object_type::userdata_object:
-      case ON::object_type::instance_definition: // TODO : Support
-      case ON::object_type::instance_reference: // TODO : Support
-      case ON::object_type::text_dot:
-      case ON::object_type::grip_object:
-      case ON::object_type::detail_object:
-      case ON::object_type::hatch_object: // TODO : Support
-      case ON::object_type::morph_control_object:
-      case ON::object_type::loop_object:
-      case ON::object_type::brepvertex_filter:
-      case ON::object_type::polysrf_filter:
-      case ON::object_type::edge_filter:
-      case ON::object_type::polyedge_filter:
-      case ON::object_type::meshvertex_filter:
-      case ON::object_type::meshedge_filter:
-      case ON::object_type::meshface_filter:
-      case ON::object_type::meshcomponent_reference:
-      case ON::object_type::cage_object:
-      case ON::object_type::phantom_object:
-      case ON::object_type::clipplane_object:
-        continue;
-
-      // Fallback to meshes
-      default:
-        type = ON::object_type::mesh_object;
-        break;
-    };
-
-    // TODO : Should meshes be re-meshed? Ask Dale L
+    ON::object_type type = GetTypeFromObject(obj);
     if (type == ON::object_type::mesh_object)
     {
       meshObjects.Append(obj);
-      meshPackets.Append(UsdPacket(obj, nullptr, type));
+      meshPackets.Append(UsdPacket(*obj, type));
     }
     else
     {
-      packets.Append(UsdPacket(obj, geometry, type));
+      packets.Append(UsdPacket(*obj, type));
     }
   }
 
@@ -168,20 +96,32 @@ int WriteUSDFile(const wchar_t* filename,
   for(int i = 0; i < meshPackets.Count(); i++)
   {
     UsdPacket& meshPacket = meshPackets[i];
-    const CRhinoObjectMesh& mesh = mesh_list[i];
+    CRhinoObjectMesh& mesh = mesh_list[i];
 
-    meshPacket.NewGeometry = mesh.m_mesh;
-
-    packets.Append(meshPacket);
+    UsdPacket& packet = packets.AppendNew();
+    packet = meshPacket;
+    packet.SetMesh(mesh.m_mesh);
+    
+    // Transfer Ownership
+    mesh.m_mesh = nullptr;
   }
 
-  for (const UsdPacket& packet : packets)
+  return WriteUSDFile(filename, doc, packets, usdOptions);
+}
+
+int WriteUSDFile(const wchar_t* filename,
+  CRhinoDoc& doc,
+  ON_ClassArray<UsdPacket>& packets,
+  const UsdExportOptions& usdOptions)
+{
+  double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
+
+  const ON_wString fn(filename);
+  UsdExportImport usdEI(fn, metersPerUnit);
+  for (UsdPacket& packet : packets)
   {
     usdEI.WriteObject(packet, usdOptions);
   }
-
-  // TODO : Is this necessary?
-  //UsdStageRefPtr usdModel = UsdStage::CreateInMemory();
 
   if (!usdEI.AnythingToSave())
     return 0;
@@ -190,9 +130,126 @@ int WriteUSDFile(const wchar_t* filename,
   return 1;
 }
 
+static bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
+                      ON_ClassArray<UsdPacket>& packets,
+                      ON_SimpleArray<const CRhinoObject*> meshObjects,
+                      ON_Xform transform,
+                      ON_MeshParameters mp,
+                      int mesh_ui_style)
+{
+  // Perform Meshing
+  ON_ClassArray<CRhinoObjectMesh> mesh_list(meshPackets.Count());
+  
+  CRhinoCommand::result rs = RhinoMeshObjects(meshObjects, mp, transform, mesh_ui_style, mesh_list);
+  if (CRhinoCommand::success != rs) return false;
+
+  // Save User choices
+  if (4 != mesh_ui_style)
+  {
+    CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
+  }
+
+  CExportUSDPlugIn::ThePlugin().m_saved_mp = mp;
+
+  // Push new meshes into mesh packets
+  for (int i = 0; i < meshPackets.Count(); i++)
+  {
+    UsdPacket& meshPacket = meshPackets[i];
+    CRhinoObjectMesh& mesh = mesh_list[i];
+
+    UsdPacket& packet = packets.AppendNew();
+    packet = meshPacket;
+    packet.SetMesh(mesh.m_mesh);
+
+    // Transfer Ownership
+    mesh.m_mesh = nullptr;
+  }
+
+  return true;
+}
+
 static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict, ON_MeshParameters& params)
 {
   ON_MeshParameters mp;
   if (dict.TryGetMeshParameters(L"MeshingParameters", mp))
     params = mp;
+}
+
+static bool IsValidUsdObject(ON::object_type type)
+{
+  switch (type)
+  {
+    // No current fallback or just not a good option
+    case ON::object_type::unknown_object_type:
+    case ON::object_type::point_object: // TODO : Support
+    case ON::object_type::pointset_object:
+    case ON::object_type::layer_object:
+    case ON::object_type::material_object:
+    case ON::object_type::light_object: // TODO : Support
+    case ON::object_type::annotation_object:
+    case ON::object_type::userdata_object:
+    case ON::object_type::instance_definition: // TODO : Support
+      // case ON::object_type::instance_reference: // TODO : Support
+    case ON::object_type::text_dot:
+    case ON::object_type::grip_object:
+    case ON::object_type::detail_object:
+    case ON::object_type::hatch_object: // TODO : Support
+    case ON::object_type::morph_control_object:
+    case ON::object_type::loop_object:
+    case ON::object_type::brepvertex_filter:
+    case ON::object_type::polysrf_filter:
+    case ON::object_type::edge_filter:
+    case ON::object_type::polyedge_filter:
+    case ON::object_type::meshvertex_filter:
+    case ON::object_type::meshedge_filter:
+    case ON::object_type::meshface_filter:
+    case ON::object_type::meshcomponent_reference:
+    case ON::object_type::cage_object:
+    case ON::object_type::phantom_object:
+    case ON::object_type::clipplane_object:
+      return false;
+  }
+
+  return true;
+}
+
+static ON::object_type GetTypeFromObject(const CRhinoObject* obj)
+{
+  switch (obj->ObjectType())
+  {
+    // Supported Objects
+  case ON::object_type::curve_object:
+  case ON::object_type::instance_reference:
+    return  obj->ObjectType();
+    break;
+
+    /* TODO : Support natively
+    case ON::object_type::point_object:
+      type = ON::object_type::point_object;
+      break;
+
+    case ON::object_type::surface_object:
+      if (usdOptions.ForceMeshes)
+        type = ON::object_type::mesh_object;
+      else
+        type = ON::object_type::surface_object;
+      break;
+
+    case ON::object_type::brep_object:
+      if (usdOptions.ForceMeshes)
+        type = ON::object_type::mesh_object;
+      else
+        type = ON::object_type::brep_object;
+      break;
+
+    case ON::object_type::subd_object:
+      if (usdOptions.ForceMeshes)
+        type = ON::object_type::mesh_object;
+      else
+        type = ON::object_type::subd_object;
+      break;
+    */
+  }
+
+  return ON::object_type::mesh_object;
 }
