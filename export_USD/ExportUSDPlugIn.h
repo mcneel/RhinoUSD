@@ -40,3 +40,5 @@ int WriteUSDFile(const wchar_t* filename,
                   const CRhinoFileWriteOptions& options,
                   bool scripting,
                   UsdExportOptions& usdOptions);
+
+static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict, ON_MeshParameters& params);

@@ -42,6 +42,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UsdExportOptions.h" />
+    <ClInclude Include="UsdExportPacket.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ExportUSD.rc" />

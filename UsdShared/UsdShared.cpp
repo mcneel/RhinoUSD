@@ -3,6 +3,8 @@
 #include "ON_Helpers.h"
 #include "iostream"
 #include <fstream>
+#include "UsdExportOptions.h"
+#include "UsdExportPacket.h"
 
 using namespace pxr;
 
@@ -41,6 +43,28 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit) :
   if (!pxr::UsdGeomSetStageMetersPerUnit(stage, metersPerUnit))
   {
     std::cout << "could not set StageMetersPerUnit";
+  }
+}
+
+void UsdExportImport::WriteObject(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+{
+  UsdPrim prim;
+
+  switch (packet.Type)
+  {
+  case ON::object_type::curve_object:
+    if (!AddCurve(packet, usdOptions, prim)) return;
+    break;
+
+    // Default to Mesh for now
+  default:
+    if (!AddMesh(packet, usdOptions, prim)) return;
+    break;
+  }
+
+  if (usdOptions.IncludeUserStrings)
+  {
+    AddUserDataToPrim(packet, prim);
   }
 }
 
@@ -93,7 +117,84 @@ pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYP
   }
 }
 
-ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const ON_wString meshName, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs)
+bool UsdExportImport::AddMesh(const UsdPacket& packet, const UsdExportOptions& usdOptions, UsdPrim& prim)
+{
+  if (nullptr == packet.NewGeometry) return false;
+  if (packet.Type != ON::object_type::mesh_object) return false;
+
+  // TODO : Support other types of Curves
+
+  ON_Geometry* duplicate = packet.NewGeometry->Duplicate();
+  ON_Mesh* mesh = ON_Mesh::Cast(duplicate);
+  
+  ON_Mesh* nonConstMesh(mesh);
+  if (nullptr == mesh) return false;
+
+  const CRhinoDoc* doc = packet.RhinoObject->Document();
+  if (nullptr == doc) return false;
+
+  std::map<int, ON_TextureCoordinates> textureCoordinatesByMappingChannel;
+  // this has to be done first, before meshes vertices are read to be exported
+  // because setting the texture coordinates can modify the mesh vertices
+  UsdShared::SetTextureCoordinatesOnMesh(packet.RhinoObject, mesh, doc, textureCoordinatesByMappingChannel);
+
+  //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
+  const ON_wString meshName = packet.RhinoObject->Attributes().Name();
+
+  std::vector<ON_wString> layerNames = GetLayerNames(packet, usdOptions);
+  AddMeshInternal(mesh, meshName, layerNames, textureCoordinatesByMappingChannel, prim);
+  // AddMeshMaterial();
+
+  return true;
+}
+
+/*
+void UsdExportImport::AddMeshMaterial()
+{
+  // TODO : Move this up above!
+  for (int i = 0; i < mesh_list.Count(); i++)
+  {
+    CRhinoObjectMesh& objectMesh = mesh_list[i];
+    if (nullptr == objectMesh.m_parent_object || nullptr == objectMesh.m_mesh)
+      continue;
+
+    std::map<int, ON_TextureCoordinates> textureCoordinatesByMappingChannel;
+    // this has to be done first, before meshes vertices are read to be exported
+    // because setting the texture coordinates can modify the mesh vertices
+    SetTextureCoordinatesOnMesh(objectMesh, doc, textureCoordinatesByMappingChannel);
+
+    std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc, usdOptions);
+    //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
+    const ON_wString meshName = objectMesh.m_mesh_attributes.Name();
+    ON_wString meshPath = AddMesh(objectMesh.m_mesh, meshName, layerNames, textureCoordinatesByMappingChannel);
+
+    // Old Debug method
+    // if (meshes_only) continue;
+
+    const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
+    if (pMaterial)
+    {
+      ON_UUID matId = pMaterial->InstanceId();
+      ON_wString matName = pMaterial->InstanceName();
+#pragma warning (push)
+#pragma warning (disable: 4996)
+      ON_Material material = pMaterial->SimulatedMaterial();
+#pragma warning (pop)
+      material.ToPhysicallyBased();
+      std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
+      if (pbrMat)
+      {
+        ON_PhysicallyBasedMaterial& pbr = *pbrMat;
+        unsigned int docSerNo = doc.RuntimeSerialNumber();
+        usdEI.AddMaterialWithTexturesIfNotAlreadyAdded(docSerNo, matId, matName, &pbr, pbrMat->Material().m_textures);
+        usdEI.BindPbrMaterialToMesh(matId, meshPath);
+      }
+    }
+  }
+}
+*/
+
+ON_wString UsdExportImport::AddMeshInternal(const ON_Mesh* mesh, const ON_wString meshName, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs, UsdPrim& prim)
 {
   ON_Mesh meshCopy(*mesh);
   ON_Helpers::RotateYUp(&meshCopy);
@@ -241,6 +342,8 @@ ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const ON_wString meshNa
   extents[0].Set((float)bbox.m_min.x, (float)bbox.m_min.y, (float)bbox.m_min.z);
   extents[1].Set((float)bbox.m_max.x, (float)bbox.m_max.y, (float)bbox.m_max.z);
   usdMesh.GetExtentAttr().Set(extents);
+
+  prim = usdMesh.GetPrim();
 
   return meshPath;
 }
@@ -425,7 +528,21 @@ void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wStri
   pxr::UsdShadeMaterialBindingAPI(usdMesh).Bind(usdMaterial);
 }
 
-void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames)
+bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions, UsdPrim& prim)
+{
+  if (nullptr == packet.NewGeometry) return false;
+
+  // TODO : Support other types of Curves
+  const ON_NurbsCurve* nurbsCurve = ON_NurbsCurve::Cast(packet.NewGeometry);
+  if (nullptr == nurbsCurve) return false;
+
+  std::vector<ON_wString> layerNames = GetLayerNames(packet, usdOptions);
+  AddNurbsCurveInternal(nurbsCurve, layerNames, prim);
+
+  return true;
+}
+
+void UsdExportImport::AddNurbsCurveInternal(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames, UsdPrim& prim)
 {
   ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
 
@@ -482,6 +599,33 @@ void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::
   for (int i = 0; i < stdKnots.size(); i++)
     knots[i] = stdKnots[i];
   usdNc.CreateKnotsAttr(pxr::VtValue(knots));
+
+  prim = usdNc.GetPrim();
+}
+
+void UsdExportImport::AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim& prim)
+{
+  if (nullptr == packet.RhinoObject) return;
+  const CRhinoObjectAttributes& attributes = packet.RhinoObject->Attributes();
+  
+  ON_ClassArray<ON_UserString> user_strings;
+  attributes.GetUserStrings(user_strings);
+  for (const ON_UserString& user_string : user_strings)
+  {
+    const ON_wString& keyString(user_string.m_key);
+    ON_String utf8_key(keyString);
+    const std::string utf8_string(utf8_key.Array());
+    TfToken key(utf8_string);
+
+    const ON_wString& valueString(user_string.m_string_value);
+    ON_String utf8_value(valueString);
+    const std::string utf8_value_string(utf8_value.Array());
+    VtValue value(utf8_value_string);
+
+    prim.SetCustomDataByKey(key, value);
+  }
+
+  // attributes.GetUserData()
 }
 
 void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames)
@@ -530,6 +674,43 @@ void UsdExportImport::Save()
       UsdShared::CopyFileTo(fullFileName, copyToPath);
     }
   }
+}
+
+std::vector<ON_wString> UsdExportImport::GetLayerNames(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+{
+  std::vector<ON_wString> names;
+  if (nullptr == packet.RhinoObject) return names;
+  if (nullptr == packet.NewGeometry) return names;
+
+  CRhinoDoc* doc = packet.RhinoObject->Document();
+  if (nullptr == doc) return names;
+
+  const CRhinoObjectAttributes& attributes = packet.RhinoObject->Attributes();
+  int layer_index = attributes.m_layer_index;
+
+  const CRhinoLayerTable& layer_table = doc->m_layer_table;
+  const CRhinoLayer& layer = layer_table[layer_index];
+  ON_wString layerName = UsdShared::RhinoLayerNameToUsd(layer.Name());
+  names.push_back(layerName);
+
+  ON_UUID pid(layer.ParentId());
+  while (!ON_UuidIsNil(pid))
+  {
+    layer_index = layer_table.FindLayerFromId(pid, false, false, -1);
+    const CRhinoLayer& parentLayer = layer_table[layer_index];
+    ON_wString parentLayerName = UsdShared::RhinoLayerNameToUsd(parentLayer.Name());
+    names.push_back(parentLayerName);
+    ON_UUID id(parentLayer.ParentId());
+    pid = id;
+  }
+  names.insert(names.begin(), L"Geometry");
+  if (!usdOptions.ModelName.IsEmpty())
+  {
+    names.insert(names.begin(), usdOptions.ModelName);
+  }
+
+  names.insert(names.begin(), usdOptions.DefaultLayer);
+  return names;
 }
 
 //todo: I'm sure there's a copy file function that's already available somewhere
@@ -619,5 +800,113 @@ void UsdShared::SetUsdLayersAsXformable(const std::vector<ON_wString>& layerName
 
     //std::cout << "layer: " << stdStrPath << std::endl; //debug
 		pxr::UsdGeomXform nextLayerXform = pxr::UsdGeomXform::Define(stage, pxr::SdfPath(stdStrPath));
+  }
+}
+
+void UsdShared::SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm)
+{
+  auto pr1 = std::pair<const ON_UUID, const ON_wString>(ON_nil_uuid, L"Hello");
+  //sm.insert(pr1);
+}
+
+void UsdShared::WorkoutTextureCoordinates(
+  const int mapping_channel_id,
+  const std::map<int, const ON_TextureCoordinates*>& mappingCoordinatesOnMesh,
+  std::vector<const ON_TextureCoordinates>& tcs
+)
+{
+  //auto dfltMc = static_cast<ON_Texture::MAPPING_CHANNEL>(mapping_channel_id);
+  //if (true /*is default*/)
+  //  if (dfltMc == ON_Texture::MAPPING_CHANNEL::tc_channel) // deprecated
+  //    dfltMc = ON_Texture::MAPPING_CHANNEL::default_channel;
+  if (ON_Texture::IsBuiltInMappingChannel(mapping_channel_id)) {
+    auto mc_type = ON_Texture::BuiltInMappingChannelFromUnsigned(mapping_channel_id);
+    ON_TextureMapping mapping;
+    switch (mc_type)
+    {
+    case ON_Texture::MAPPING_CHANNEL::tc_channel:
+    case ON_Texture::MAPPING_CHANNEL::default_channel: { mapping.SetSurfaceParameterMapping(); }
+                                                     //case ON_Texture::MAPPING_CHANNEL::screen_based_channel: { mapping.setmapping}
+                                                     //case ON_Texture::MAPPING_CHANNEL::wcs_channel: { return 2; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::wcs_box_channel: { return 3; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_box_channel: { return 4; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_light_probe_channel: { return 5; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_spherical_channel: { return 6; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_cube_map_channel: { return 7; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_vcross_cube_map_channel: { return 8; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_hcross_cube_map_channel: { return 9; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_hemispherical_channel: { return 10; }
+                                                     //case ON_Texture::MAPPING_CHANNEL::environment_map_emap_channel: { return 11; }
+    default: { ASSERT(false); mapping.SetSurfaceParameterMapping(); }
+    }
+    //auto a = mapping.GetTextureCoordinates()
+  }
+  // this function doesn't do anything yet.
+}
+
+void UsdShared::SetTextureCoordinatesOnMesh(const CRhinoObject* obj, ON_Mesh* pMesh, const CRhinoDoc* doc, std::map<int, ON_TextureCoordinates>& tcs)
+{
+  // instead of int as the map key use ON_UUID as a string: ON_UuidToString() and ON_UuidFromString()
+  // Jussi: Pass int the default renderer guid
+  const ON_MappingRef* pMR = obj->Attributes().m_rendering_attributes.MappingRef(RhinoApp().GetDefaultRenderApp());
+
+  const int count = pMR == nullptr ? 0 : pMR->m_mapping_channels.Count();
+
+  if (count == 0)
+  {
+    ON_TextureMapping mapping;
+    mapping.SetSurfaceParameterMapping();
+    // in this case you don't need to do the seam check thing because
+    // surface parameter mapping cannot create a seam
+    // in this case SetTextureCoordinates doesn't need to be called
+    const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &ON_Xform::IdentityTransformation);
+    //int idx = mapping.Index(); // zero? probably 1
+    //auto pr = std::pair<int, const ON_TextureCoordinates*>(idx, pTCs);
+    //ON_wString uuidStr;
+    //ON_UuidToString(mapping.Id(), uuidStr);
+    //auto pr = std::pair<ON_wString, const ON_TextureCoordinates*>(uuidStr, pTCs);
+    //tcs.insert(pr);
+    // Store a copy of the cached texture coordinate set. Original set gets destroyed if ON_Mesh::m_TC array needs to be reallocated.
+    if (nullptr != pTCs)
+      tcs[1] = *pTCs;
+  }
+  else
+  {
+    // SetTextureCoordinates is obsolete but still needs to be called 
+    // before calling SetCachedTextureCoordinatesEx 
+    // because it will create all the necessary vertices on the mesh
+    // that are needed to properly apply the texture coordinates.
+    for (int i = 0; i < count; i++)
+    {
+      const ON_MappingChannel& mc = pMR->m_mapping_channels[i];
+      // mapping_id is what we can use to find the 
+      int txMpIdx = doc->m_texture_mapping_table.FindTextureMapping(mc.m_mapping_id);
+      if (txMpIdx != -1)
+      {
+        const ON_TextureMapping& mapping = doc->m_texture_mapping_table[txMpIdx];
+        const ON_Xform local_xform = mc.m_object_xform;
+        //side effect: changes the mesh vertices
+        pMesh->SetTextureCoordinates(mapping, &local_xform);
+      }
+    }
+    for (int i = 0; i < count; i++)
+    {
+      const ON_MappingChannel& mc = pMR->m_mapping_channels[i];
+      int txMpIdx = doc->m_texture_mapping_table.FindTextureMapping(mc.m_mapping_id);
+      if (txMpIdx != -1)
+      {
+        const ON_TextureMapping& mapping = doc->m_texture_mapping_table[txMpIdx];
+        const ON_Xform local_xform = mc.m_object_xform;
+        // Jussi: No lazy evaluaion: previously cached values might be out-of-date
+        const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &local_xform, false, true);
+        ASSERT(pTCs != nullptr && pTCs->m_T.Count() == pMesh->VertexCount());
+        //ON_wString uuidStr;
+        //ON_UuidToString(/*mc.m_mapping_id*/mapping.Id(), uuidStr);
+        //tcs[uuidStr] = pTCs;
+        // Store a copy of the cached texture coordinate set. Original set gets destroyed if ON_Mesh::m_TC array needs to be reallocated.
+        if (nullptr != pTCs)
+          tcs[mc.m_mapping_channel_id] = *pTCs;
+      }
+    }
   }
 }

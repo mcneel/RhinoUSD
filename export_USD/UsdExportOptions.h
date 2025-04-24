@@ -1,5 +1,5 @@
 #pragma once
-#include "Resource.h" // main symbols
+#include "stdafx.h"
 
 using namespace std;
 
