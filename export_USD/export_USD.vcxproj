@@ -43,6 +43,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UsdExportOptions.h" />
     <ClInclude Include="UsdExportPacket.h" />
+    <ClInclude Include="write_usd.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ExportUSD.rc" />

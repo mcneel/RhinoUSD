@@ -34,19 +34,3 @@ public:
   int m_saved_mesh_ui_style = 0;
   ON_MeshParameters m_saved_mp;
 };
-
-int WriteUSDFile(const wchar_t* filename,
-                  bool usda,
-                  CRhinoDoc& doc,
-                  const CRhinoFileWriteOptions& options,
-                  bool scripting,
-                  UsdExportOptions& usdOptions);
-
-int WriteUSDFile(const wchar_t* filename,
-									CRhinoDoc& doc,
-									ON_ClassArray<UsdPacket>& packets,
-									UsdExportOptions& usdOptions);
-
-static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict, ON_MeshParameters& params);
-
-static ON::object_type GetTypeFromObject(const CRhinoObject* obj);

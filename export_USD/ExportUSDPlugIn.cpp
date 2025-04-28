@@ -8,6 +8,7 @@
 #include "ExportUSDPlugIn.h"
 #include "Resource.h""
 #include "UsdExportOptions.h"
+#include "write_usd.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -123,6 +124,7 @@ CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
 int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
 {
   bool scripting = RhinoApp().IsHeadless() || options.UseBatchMode();
+  int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
 
   auto opts = options.OptionsDictionary();
   bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
@@ -130,10 +132,13 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& d
   // Scripting
   if (useOptionsDictionary)
   {
+    mesh_ui_style = 4;
     PushFileWriteOptionsToUsdOptions(options);
   }
   else if (scripting)
   {
+    mesh_ui_style = 4;
+
     // Headed/headless/batch mode
     CRhParameterDictionary args;
     args.SetUuid(L"plugin-id", PlugInID());
@@ -143,7 +148,7 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& d
     HandleUserInput(scripting, args, Options);
   }
 
-  return WriteUSDFile(filename, 1 == index, doc, options, scripting, Options);
+  return WriteUSDFile(filename, 1 == index, doc, options, scripting, Options, mesh_ui_style);
 }
 
 void CExportUSDPlugIn::PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& options)

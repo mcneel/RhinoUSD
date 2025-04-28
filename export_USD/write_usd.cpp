@@ -4,13 +4,15 @@
 #include "../UsdShared/UsdShared.h"
 #include "UsdExportOptions.h"
 #include "UsdExportPacket.h"
+#include "write_usd.h"
 
 int WriteUSDFile(const wchar_t* filename,
                   bool usda,
                   CRhinoDoc& doc,
                   const CRhinoFileWriteOptions& options,
                   bool scripting,
-                  UsdExportOptions& usdOptions)
+                  UsdExportOptions& usdOptions,
+                  int mesh_ui_style)
 {
   // TODO : Document why this is necessary
 #if defined(ON_RUNTIME_APPLE)
@@ -24,8 +26,13 @@ int WriteUSDFile(const wchar_t* filename,
   CRhinoWaitCursor hourglass;
   ON_wString backupname;
   
-  int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
   ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
+
+  double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
+  const ON_wString fn(filename);
+
+  UsdExportImport usdEI(fn, metersPerUnit, usdOptions, options, scripting, doc, usda);
+  usdEI.
 
   ON_ClassArray<UsdPacket> packets;
   ON_ClassArray<UsdPacket> meshPackets;
@@ -63,47 +70,15 @@ int WriteUSDFile(const wchar_t* filename,
   const bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
   if (useOptionsDictionary)
   {
-    mesh_ui_style = 4; // no UI // Is 2 not correct?
     const ON_ArchivableDictionary& dict = options.OptionsDictionary();
     GetMeshParametersFromDictionary(dict, mp);
   }
 
-  if (scripting)
-  {
-    mesh_ui_style = 4;
-  }
-  
-  // Perform Meshing
-  ON_ClassArray<CRhinoObjectMesh> mesh_list(meshPackets.Count());
-  CRhinoCommand::result rs = RhinoMeshObjects(meshObjects, mp, options.Transformation(), mesh_ui_style, mesh_list);
-
-  if (CRhinoCommand::success != rs) return -1;
-
-  // Save User choices
-  if (4 != mesh_ui_style)
-  {
-    CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
-  }
-
-  CExportUSDPlugIn::ThePlugin().m_saved_mp = mp;
-  if (mesh_ui_style < 2)
+  if (!MeshPackets(meshPackets, packets, meshObjects, options.Transformation(), mp, mesh_ui_style)) return -1;
+  if (mesh_ui_style < 2 && mesh_ui_style > 0)
   {
     // clean up display after interactive meshing.
     doc.Redraw();
-  }
-
-  // Push new meshes into mesh packets
-  for(int i = 0; i < meshPackets.Count(); i++)
-  {
-    UsdPacket& meshPacket = meshPackets[i];
-    CRhinoObjectMesh& mesh = mesh_list[i];
-
-    UsdPacket& packet = packets.AppendNew();
-    packet = meshPacket;
-    packet.SetMesh(mesh.m_mesh);
-    
-    // Transfer Ownership
-    mesh.m_mesh = nullptr;
   }
 
   return WriteUSDFile(filename, doc, packets, usdOptions);
@@ -213,7 +188,7 @@ static bool IsValidUsdObject(ON::object_type type)
   return true;
 }
 
-static ON::object_type GetTypeFromObject(const CRhinoObject* obj)
+ON::object_type GetTypeFromObject(const CRhinoObject* obj)
 {
   switch (obj->ObjectType())
   {
