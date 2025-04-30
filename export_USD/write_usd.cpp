@@ -148,7 +148,7 @@ static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict,
     params = mp;
 }
 
-int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, const UsdExportOptions& usdOptions)
+int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExportOptions& usdOptions)
 {
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
@@ -160,9 +160,6 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
 
   CRhinoWaitCursor hourglass;
   ON_wString backupname;
-  
-  int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
-  ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
 
   const ON_wString fn(filename);
   double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
@@ -188,23 +185,18 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     }
   }
 
-  // TODO : Get from UsdExportOptions
-  const bool useOptionsDictionary = fileOptions.OptionsDictionary().Count() > 0;
-  if (useOptionsDictionary)
-  {
-    mesh_ui_style = 4; // no UI
-    const ON_ArchivableDictionary& dict = fileOptions.OptionsDictionary();
-    GetMeshParametersFromDictionary(dict, mp);
-  }
+  int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
+  if (usdOptions.Headless)
+    mesh_ui_style = 4;
 
-  CRhinoCommand::result rs = RhinoMeshObjects(objects, mp, fileOptions.Transformation(), mesh_ui_style, mesh_list);
+  CRhinoCommand::result rs = RhinoMeshObjects(objects, usdOptions.MeshingParams, fileOptions.Transformation(), mesh_ui_style, mesh_list);
 
   // TODO : Get from UsdExportOptions
   if (CRhinoCommand::success == rs)
   {
     if (4 != mesh_ui_style)
       CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
-    CExportUSDPlugIn::ThePlugin().m_saved_mp = mp;
+    CExportUSDPlugIn::ThePlugin().m_saved_mp = usdOptions.MeshingParams;
   }
   doc.Redraw(); // clean up display after interactive meshing.
 

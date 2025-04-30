@@ -81,7 +81,7 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
                                 CRhinoDoc& doc,
                                 const CRhinoFileWriteOptions& options)
 {
-  bool scripting = RhinoApp().IsHeadless() || options.UseBatchMode();
+	ExportOptions.Headless = RhinoApp().IsHeadless() || options.UseBatchMode();
 
   int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
   
@@ -91,11 +91,12 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
   {
     mesh_ui_style = 4;
     PushFileWriteOptionsToUsdOptions(options);
+		ExportOptions.Headless = true;
   }
-  else if (scripting)
+  else if (ExportOptions.Headless)
   {
     mesh_ui_style = 4;
-		HandleUserInput(scripting, ExportOptions);
+		HandleUserInput(ExportOptions);
   }
 
   return WriteUSDFile(filename, 1 == index, doc, options, ExportOptions);
@@ -136,13 +137,20 @@ void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc
 
 void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
 {
-  bool scripting = RhinoApp().IsHeadless();
-  HandleUserInput(scripting, ExportOptions);
+	// This only runs when a user "clicks" options, and is therefore not headless
+	ExportOptions.Headless = false;
+  HandleUserInput(ExportOptions);
 }
 
 void CExportUSDPlugIn::PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions & fileWriteOptions)
 {
   const ON_ArchivableDictionary dictionary = fileWriteOptions.OptionsDictionary();
+
+  ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
+  if (dictionary.TryGetMeshParameters(L"MeshingParameters", mp))
+  {
+    ExportOptions.MeshingParams = mp;
+  }
 
   int blocksValue;
   ON_wString rootLayerValue;
@@ -150,6 +158,7 @@ void CExportUSDPlugIn::PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOpt
   bool forceMeshesValue;
   bool includeUserStringsValue;
 
+  // Misc Export Settings
   if (dictionary.TryGetInt32(L"blocks", blocksValue))
     ExportOptions.Blocks = (BlockHandling)blocksValue;
 

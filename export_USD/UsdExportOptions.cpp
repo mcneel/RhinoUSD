@@ -3,7 +3,7 @@
 #include "UsdExportOptions.h"
 
 // True when user chnaged the Options, False on any other result
-bool HandleUserInput(bool scripting, UsdExportOptions& options)
+bool HandleUserInput(UsdExportOptions& options)
 {
   CRhParameterDictionary args;
 

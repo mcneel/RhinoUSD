@@ -15,6 +15,12 @@ public:
   bool ForceMeshes = DefaultForceMeshes;
   bool IncludeUserStrings = DefaultIncludeUserStrings;
 
+  // Non-User Settings
+  bool Headless = false;
+
+  // Meshing Settings
+  ON_MeshParameters MeshingParams;
+  
 
   ON_wString DefaultModelName = L"";
   ON_wString DefaultRootLayer = L"World";
@@ -24,4 +30,4 @@ public:
 
 };
 
-bool HandleUserInput(bool scripting, UsdExportOptions& options);
+bool HandleUserInput(UsdExportOptions& options);
