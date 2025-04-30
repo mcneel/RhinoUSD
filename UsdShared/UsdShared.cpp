@@ -87,7 +87,7 @@ bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOpti
   //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
   const ON_wString meshName = packet.Object().Attributes().Name();
 
-  std::vector<ON_wString> layerNames = GetLayerNames(packet, usdOptions);
+  std::vector<ON_wString> layerNames = UsdShared::GetLayerNames(packet, usdOptions);
   // AddMeshMaterial();
 
   ON_Mesh meshCopy(*mesh);
@@ -240,7 +240,7 @@ bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOpti
   UsdPrim prim = usdMesh.GetPrim();
   if (usdOptions.IncludeUserStrings && prim.IsValid())
   {
-    AddUserDataToPrim(packet, &prim);
+    UsdShared::AddUserDataToPrim(packet, &prim);
   }
 
   return true;
@@ -1045,4 +1045,80 @@ std::vector<ON_wString> UsdShared::GetLayerNames(const UsdPacket& packet, const 
 
   names.insert(names.begin(), usdOptions.RootLayer);
   return names;
+}
+
+void UsdShared::SetTextureCoordinatesOnMesh(const CRhinoObject& obj, ON_Mesh* pMesh, const CRhinoDoc* doc, std::map<int, ON_TextureCoordinates>& tcs)
+{
+  // instead of int as the map key use ON_UUID as a string: ON_UuidToString() and ON_UuidFromString()
+  // Jussi: Pass int the default renderer guid
+  const ON_MappingRef* pMR = obj.Attributes().m_rendering_attributes.MappingRef(RhinoApp().GetDefaultRenderApp());
+
+  const int count = pMR == nullptr ? 0 : pMR->m_mapping_channels.Count();
+
+  if (count == 0)
+  {
+    ON_TextureMapping mapping;
+    mapping.SetSurfaceParameterMapping();
+    // in this case you don't need to do the seam check thing because
+    // surface parameter mapping cannot create a seam
+    // in this case SetTextureCoordinates doesn't need to be called
+    const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &ON_Xform::IdentityTransformation);
+    //int idx = mapping.Index(); // zero? probably 1
+    //auto pr = std::pair<int, const ON_TextureCoordinates*>(idx, pTCs);
+    //ON_wString uuidStr;
+    //ON_UuidToString(mapping.Id(), uuidStr);
+    //auto pr = std::pair<ON_wString, const ON_TextureCoordinates*>(uuidStr, pTCs);
+    //tcs.insert(pr);
+    // Store a copy of the cached texture coordinate set. Original set gets destroyed if ON_Mesh::m_TC array needs to be reallocated.
+    if (nullptr != pTCs)
+      tcs[1] = *pTCs;
+  }
+  else
+  {
+    // SetTextureCoordinates is obsolete but still needs to be called 
+    // before calling SetCachedTextureCoordinatesEx 
+    // because it will create all the necessary vertices on the mesh
+    // that are needed to properly apply the texture coordinates.
+    for (int i = 0; i < count; i++)
+    {
+      const ON_MappingChannel& mc = pMR->m_mapping_channels[i];
+      // mapping_id is what we can use to find the 
+      int txMpIdx = doc->m_texture_mapping_table.FindTextureMapping(mc.m_mapping_id);
+      if (txMpIdx != -1)
+      {
+        const ON_TextureMapping& mapping = doc->m_texture_mapping_table[txMpIdx];
+        const ON_Xform local_xform = mc.m_object_xform;
+        //side effect: changes the mesh vertices
+        pMesh->SetTextureCoordinates(mapping, &local_xform);
+      }
+    }
+    for (int i = 0; i < count; i++)
+    {
+      const ON_MappingChannel& mc = pMR->m_mapping_channels[i];
+      int txMpIdx = doc->m_texture_mapping_table.FindTextureMapping(mc.m_mapping_id);
+      if (txMpIdx != -1)
+      {
+        const ON_TextureMapping& mapping = doc->m_texture_mapping_table[txMpIdx];
+        const ON_Xform local_xform = mc.m_object_xform;
+        // Jussi: No lazy evaluaion: previously cached values might be out-of-date
+        const ON_TextureCoordinates* pTCs = pMesh->SetCachedTextureCoordinatesEx(mapping, &local_xform, false, true);
+        ASSERT(pTCs != nullptr && pTCs->m_T.Count() == pMesh->VertexCount());
+        //ON_wString uuidStr;
+        //ON_UuidToString(/*mc.m_mapping_id*/mapping.Id(), uuidStr);
+        //tcs[uuidStr] = pTCs;
+        // Store a copy of the cached texture coordinate set. Original set gets destroyed if ON_Mesh::m_TC array needs to be reallocated.
+        if (nullptr != pTCs)
+          tcs[mc.m_mapping_channel_id] = *pTCs;
+      }
+    }
+  }
+}
+
+static void SetBoundingBox(UsdGeomBoundable& boundable, ON_Geometry& obj)
+{
+  VtVec3fArray extents(2);
+  ON_BoundingBox bbox = obj.BoundingBox();
+  extents[0].Set((float)bbox.m_min.x, (float)bbox.m_min.y, (float)bbox.m_min.z);
+  extents[1].Set((float)bbox.m_max.x, (float)bbox.m_max.y, (float)bbox.m_max.z);
+  boundable.GetExtentAttr().Set(extents);
 }
