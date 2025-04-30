@@ -1,14 +1,18 @@
 #pragma once
+#include "stdafx.h"
+#include "UsdExportOptions.h"
+#include "UsdExportPacket.h"
 
 class ON_wString;
 class ON_Mesh;
 
 using namespace pxr;
 
+// Move this to it's own header/cpp
 class UsdExportImport
 {
 public:
-  UsdExportImport(const ON_wString& fileName, double metersPerUnit);
+  UsdExportImport(const ON_wString& fileName, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc);
   ON_wString AddMesh(const ON_Mesh* mesh, const ON_wString meshName, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs);
   //void AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
   void AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docSerNo, const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures);
@@ -17,7 +21,17 @@ public:
   void AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames);
   bool AnythingToSave();
   void Save(/*const ON_wString& fileName*/);
+
+  void WriteObject(UsdPacket& packet, const UsdExportOptions& usdOptions);
+  bool AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions);
+  bool AddMesh(UsdPacket& packet, const UsdExportOptions& usdOptions);
+
+  const UsdExportOptions& Options;
+
 private:
+  CRhinoDoc& Doc;
+
+  // pxr stuff
   //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
   std::vector<ON_wString> filesInExport;
   // ON_UUID cannot be used as the key to a std::map
@@ -62,4 +76,9 @@ namespace UsdShared
   bool IsAcceptableUsdCharacter(wchar_t c);
   ON_wString RhinoLayerNameToUsd(const ON_wString& rhLayerName);
   void SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage);
+  bool IsValidUsdObject(ON::object_type type);
+  ON::object_type GetTypeFromObject(const CRhinoObject* obj);
+  std::vector<ON_wString> GetLayerNames(const UsdPacket& packet, const UsdExportOptions& usdOptions);
+  void AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim* prim);
+  void SetTextureCoordinatesOnMesh(const CRhinoObject& obj, ON_Mesh* pMesh, const CRhinoDoc* doc, std::map<int, ON_TextureCoordinates>& tcs);
 }

@@ -9,6 +9,7 @@
 #include "Resource.h"
 #include "UsdExportOptions.h"
 #include "write_usd.h"
+#include "UsdExportPacket.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -99,7 +100,12 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
 		HandleUserInput(ExportOptions);
   }
 
-  return WriteUSDFile(filename, 1 == index, doc, options, ExportOptions);
+  bool usda = 1 == index;
+
+  ON_ClassArray<UsdPacket> packets;
+  if (GetPackets(doc, options, ExportOptions, packets) <= 0) return -1;
+  
+  return WriteUSDFile(filename, doc, packets, ExportOptions);
 }
 
 void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
