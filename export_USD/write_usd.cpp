@@ -4,32 +4,7 @@
 #include "../UsdShared/UsdShared.h"
 #include "write_usd.h"
 #include "UsdExportOptions.h"
-
-static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhinoDoc& doc)
-{
-  std::vector<ON_wString> names;
-  const CRhinoObjectAttributes& attributes = obj->Attributes();
-  int layer_index = attributes.m_layer_index;
- 
-  const CRhinoLayerTable& layer_table = doc.m_layer_table;
-  const CRhinoLayer& layer = layer_table[layer_index];
-  ON_wString layerName = UsdShared::RhinoLayerNameToUsd(layer.Name());
-  names.push_back(layerName);
-
-  ON_UUID pid(layer.ParentId());
-  while (!ON_UuidIsNil(pid))
-  {
-    layer_index = layer_table.FindLayerFromId(pid, false, false, -1);
-    const CRhinoLayer& parentLayer = layer_table[layer_index];
-    ON_wString parentLayerName = UsdShared::RhinoLayerNameToUsd(parentLayer.Name());
-    names.push_back(parentLayerName);
-    ON_UUID id(parentLayer.ParentId());
-    pid = id;
-  }
-  names.insert(names.begin(), L"Geometry");
-  names.insert(names.begin(), L"Rhino"); // or "World"
-  return names;
-}
+#include "UsdExportPacket.h"
 
 static void SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm)
 {
@@ -148,7 +123,7 @@ static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict,
     params = mp;
 }
 
-int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExportOptions& usdOptions)
+int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExportOptions& usdOptions, ON_ClassArray<UsdPacket>& packets)
 {
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
@@ -161,79 +136,62 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   CRhinoWaitCursor hourglass;
   ON_wString backupname;
 
-  const ON_wString fn(filename);
-  double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
-  UsdExportImport usdEI(fn, metersPerUnit);
-
-  ON_ClassArray<CRhinoObjectMesh> mesh_list;
-  ON_SimpleArray<const CRhinoObject*> objects(256);
+  ON_ClassArray<UsdPacket> meshPackets;
+  ON_SimpleArray<const CRhinoObject*> meshObjects;
   CRhinoObjectIterator it(doc.RuntimeSerialNumber(), fileOptions);
-  for (CRhinoObject* obj = it.First(); obj; obj = it.Next())
+  for (const CRhinoObject* obj = it.First(); obj; obj = it.Next())
   {
-    objects.Append(obj);
-
+    // We handle all of the NON-Mesh objects first, then do every mesh object at once because it is simpler.
     const ON_Geometry* geometry = obj->Geometry();
     if (nullptr == geometry)
       continue;
-   
-    std::vector<ON_wString> layerNames = GetLayerNames(obj, doc);
+    
+    if (!UsdShared::IsValidUsdObject(obj->ObjectType()))
+      continue;
 
-    const ON_NurbsCurve* nurbsCurve = ON_NurbsCurve::Cast(geometry);
-    if (nurbsCurve)
+    ON::object_type type = UsdShared::GetTypeFromObject(obj);
+    if (type == ON::object_type::mesh_object)
     {
-      usdEI.AddNurbsCurve(nurbsCurve, layerNames);
+      meshObjects.Append(obj);
+      meshPackets.Append(UsdPacket(*obj, type));
     }
+    else
+    {
+      packets.Append(UsdPacket(*obj, type));
+    }
+  }
+
+  if (packets.Count() <= 0 && meshPackets.Count() <= 0)
+  {
+    RhinoApp().Print(L"No viable objects selected for export.\n");
+    return 0;
   }
 
   int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
   if (usdOptions.Headless)
     mesh_ui_style = 4;
 
-  CRhinoCommand::result result = RhinoMeshObjects(objects, usdOptions.MeshingParams, fileOptions.Transformation(), mesh_ui_style, mesh_list);
-  if (CRhinoCommand::success == result)
+  if (!MeshPackets(meshPackets, packets, meshObjects, fileOptions.Transformation(), usdOptions.MeshingParams, mesh_ui_style)) return -1;
+  if (mesh_ui_style < 2 && mesh_ui_style > 0)
   {
-    if (4 != mesh_ui_style)
-      CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
-
-    CExportUSDPlugIn::ThePlugin().m_saved_mp = usdOptions.MeshingParams;
+    doc.Redraw(); // clean up display after interactive meshing.
   }
-  doc.Redraw(); // clean up display after interactive meshing.
 
-  for (int i = 0; i < mesh_list.Count(); i++)
+  return 1;
+}
+
+int WriteUSDFile(const wchar_t* filename,
+  CRhinoDoc& doc,
+  ON_ClassArray<UsdPacket>& packets,
+  const UsdExportOptions& usdOptions)
+{
+  double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
+
+  const ON_wString fn(filename);
+  UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc);
+  for (UsdPacket& packet : packets)
   {
-    CRhinoObjectMesh& objectMesh = mesh_list[i];
-    if (nullptr == objectMesh.m_parent_object || nullptr == objectMesh.m_mesh)
-      continue;
-
-    std::map<int, ON_TextureCoordinates> textureCoordinatesByMappingChannel;
-    // this has to be done first, before meshes vertices are read to be exported
-    // because setting the texture coordinates can modify the mesh vertices
-    SetTextureCoordinatesOnMesh(objectMesh, doc, textureCoordinatesByMappingChannel);
-
-    std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_parent_object, doc);
-    //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
-    const ON_wString meshName = objectMesh.m_mesh_attributes.Name();
-    ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, meshName, layerNames, textureCoordinatesByMappingChannel);
-
-    const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
-    if (pMaterial)
-    {
-      ON_UUID matId = pMaterial->InstanceId();
-      ON_wString matName = pMaterial->InstanceName();
-#pragma warning (push)
-#pragma warning (disable: 4996)
-      ON_Material material = pMaterial->SimulatedMaterial();
-#pragma warning (pop)
-      material.ToPhysicallyBased();
-      std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
-      if (pbrMat)
-      {
-        ON_PhysicallyBasedMaterial& pbr = *pbrMat;
-        unsigned int docSerNo = doc.RuntimeSerialNumber();
-        usdEI.AddMaterialWithTexturesIfNotAlreadyAdded(docSerNo, matId, matName, &pbr, pbrMat->Material().m_textures);
-        usdEI.BindPbrMaterialToMesh(matId, meshPath);
-      }
-    }
+    usdEI.WriteObject(packet, usdOptions);
   }
 
   if (!usdEI.AnythingToSave())
@@ -243,3 +201,40 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   return 1;
 }
 
+static bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
+  ON_ClassArray<UsdPacket>& packets,
+  ON_SimpleArray<const CRhinoObject*> meshObjects,
+  ON_Xform transform,
+  ON_MeshParameters& mp,
+  int mesh_ui_style)
+{
+  // Perform Meshing
+  ON_ClassArray<CRhinoObjectMesh> mesh_list(meshPackets.Count());
+
+  CRhinoCommand::result rs = RhinoMeshObjects(meshObjects, mp, transform, mesh_ui_style, mesh_list);
+  if (CRhinoCommand::success != rs) return false;
+
+  // Save User choices
+  if (4 != mesh_ui_style)
+  {
+    CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
+  }
+
+  CExportUSDPlugIn::ThePlugin().m_saved_mp = mp;
+
+  // Push new meshes into mesh packets
+  for (int i = 0; i < meshPackets.Count(); i++)
+  {
+    UsdPacket& meshPacket = meshPackets[i];
+    CRhinoObjectMesh& mesh = mesh_list[i];
+
+    UsdPacket& packet = packets.AppendNew();
+    packet = meshPacket;
+    packet.SetMesh(mesh.m_mesh);
+
+    // Transfer Ownership
+    mesh.m_mesh = nullptr;
+  }
+
+  return true;
+}

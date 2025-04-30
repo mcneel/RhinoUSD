@@ -3,10 +3,14 @@
 #include "ON_Helpers.h"
 #include "iostream"
 #include <fstream>
+#include "UsdExportOptions.h"
 
 using namespace pxr;
 
-UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit) :
+UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
+  Options(options),
+  Doc(doc),
+
   usdFullFileName(fn),
   metersPerUnit(metersPerUnit),
   currentMeshIndex(0),
@@ -42,6 +46,316 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit) :
   {
     std::cout << "could not set StageMetersPerUnit";
   }
+}
+
+
+void UsdExportImport::WriteObject(UsdPacket& packet, const UsdExportOptions& usdOptions)
+{
+  switch (packet.Type())
+  {
+  case ON::object_type::curve_object:
+    if (!AddCurve(packet, usdOptions)) return;
+    break;
+
+  // TODO : Implement
+  //case ON::object_type::instance_reference:
+  //  if (!AddBlock(packet, usdOptions)) return;
+  //  break;
+
+    // Default to Mesh for now
+  default:
+    if (!AddMesh(packet, usdOptions)) return;
+    break;
+  }
+}
+
+bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOptions)
+{
+  ON_Mesh* mesh = packet.Mesh();
+
+  if (!mesh) return false;
+  if (packet.Type() != ON::object_type::mesh_object) return false;
+
+  const CRhinoDoc* doc = packet.Object().Document();
+  if (!doc) return false;
+
+  std::map<int, ON_TextureCoordinates> textureCoordinatesByMappingChannel;
+  // this has to be done first, before meshes vertices are read to be exported
+  // because setting the texture coordinates can modify the mesh vertices
+  UsdShared::SetTextureCoordinatesOnMesh(packet.Object(), mesh, doc, textureCoordinatesByMappingChannel);
+
+  //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
+  const ON_wString meshName = packet.Object().Attributes().Name();
+
+  std::vector<ON_wString> layerNames = GetLayerNames(packet, usdOptions);
+  // AddMeshMaterial();
+
+  ON_Mesh meshCopy(*mesh);
+  ON_Helpers::RotateYUp(&meshCopy);
+
+  UsdShared::SetUsdLayersAsXformable(layerNames, stage);
+  ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
+
+  ON_wString meshPath;
+  if (meshName.IsEmpty())
+    meshPath.Format(L"/mesh%d", currentMeshIndex++);
+  else
+  {
+    // RhinoLayerNameToUsd function should be renamed to something like On_wStringToValidUsd[Name|String|Path] ...
+    ON_wString validMeshName = UsdShared::RhinoLayerNameToUsd(meshName);
+    meshPath.Format(L"/%s_mesh%d", validMeshName.Array(), currentMeshIndex++);
+  }
+  meshPath = layerNamesPath + meshPath;
+  std::string stdStrName = ON_Helpers::ON_wString_to_StdString(meshPath);
+  UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, SdfPath(stdStrName));
+
+  if (!mesh->IsClosed()) {
+    usdMesh.CreateDoubleSidedAttr(pxr::VtValue(true), true);
+  }
+
+  pxr::VtArray<pxr::GfVec3f> points;
+  for (int i = 0; i < meshCopy.m_V.Count(); i++)
+  {
+    const ON_3fPoint& rhinoPt = meshCopy.m_V[i];
+    pxr::GfVec3f pt(rhinoPt.x, rhinoPt.y, rhinoPt.z);
+    points.push_back(pt);
+  }
+  usdMesh.CreatePointsAttr().Set(points);
+
+  pxr::VtArray<int> faceVertexCounts;
+  pxr::VtArray<int> faceVertexIndices;
+  for (int i = 0; i < meshCopy.m_F.Count(); i++)
+  {
+    const ON_MeshFace& face = meshCopy.m_F[i];
+    faceVertexIndices.push_back(face.vi[0]);
+    faceVertexIndices.push_back(face.vi[1]);
+    faceVertexIndices.push_back(face.vi[2]);
+    if (face.IsTriangle())
+    {
+      faceVertexCounts.push_back(3);
+    }
+    else
+    {
+      faceVertexCounts.push_back(4);
+      faceVertexIndices.push_back(face.vi[3]);
+    }
+  }
+
+  usdMesh.GetFaceVertexCountsAttr().Set(faceVertexCounts);
+  usdMesh.GetFaceVertexIndicesAttr().Set(faceVertexIndices);
+
+  if (meshCopy.HasVertexNormals())
+  {
+    pxr::VtArray<pxr::GfVec3f> normals;
+    normals.resize(meshCopy.m_N.Count());
+    for (int i = 0; i < meshCopy.m_N.Count(); i++)
+    {
+      ON_3fVector v = meshCopy.m_N[i];
+      normals[i] = pxr::GfVec3f(v.x, v.y, v.z);
+    }
+    usdMesh.CreateNormalsAttr(pxr::VtValue(normals));
+  }
+
+  if (meshCopy.HasVertexColors())
+  {
+    pxr::VtArray<pxr::GfVec3f> colors;
+    int colorsCount = meshCopy.m_C.Count();
+    for (int i = 0; i < colorsCount; i++)
+    {
+      ON_Color clr = meshCopy.m_C[i];
+      GfVec3f usdClr((float)clr.FractionRed(), (float)clr.FractionGreen(), (float)clr.FractionBlue());
+      //std::cout << usdClr << "--" << colors.size() << std::endl;
+      colors.push_back(usdClr);
+    }
+    UsdAttribute cattr = usdMesh.CreateDisplayColorAttr();
+    cattr.Set(colors);
+  }
+
+  // texture coordinates
+  //if (mesh->HasTextureCoordinates())
+  //{
+  //  //usdMesh.ApplyAPI<pxr::UsdGeomPrimvarsAPI>();
+  //  int tcCnt = mesh->m_TC.Count(); //not sure if m_S should be used instead.
+  //  for (int i = 0; i < tcCnt; i++)
+  //  {
+  //    ON_TextureCoordinates tc = mesh->m_TC[i];
+
+  //    auto primvar = usdMesh.GetPrimvar(pxr::TfToken("primvars:st"));
+  //    pxr::VtVec2fArray uvValues;
+  //    //pxr::VtArray<GfVec2f> uvArray;
+  //    if (primvar.Get<pxr::VtVec2fArray>(&uvValues))
+  //    {
+  //      //pxr::UsdGeomPrimvar pv = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+  //	    //pxr::UsdGeomPrimvar pv = usdMesh.CreateAttribute(pxr::TfToken("primvars:st", pxr::TfToken::Immortal), pxr::SdfValueTypeNames->TexCoord2fArray);
+  //	    pxr::UsdGeomPrimvar pv = usdMesh.CreateAttribute(pxr::TfToken("primvars:st", pxr::TfToken::Immortal), pxr::SdfValueTypeNames->Float2Array);
+  //	    pv.Set(uvValues);
+  //	    pv.SetInterpolation(pxr::TfToken("vertex"));
+  //    }
+
+  //	  //pxr::UsdGeomPrimvar attr2 = usdMesh.CreatePrimvar(pxr::TfToken("st"), pxr::SdfValueTypeNames->TexCoord2fArray);
+  //	  //attr = meshPrim.CreateAttribute(pxr::TfToken("primvars:st", pxr::TfToken::Immortal), pxr::SdfValueTypeNames->Float2Array);
+  //
+  //	  //attr2.Set(uvArray);
+  //	  //attr2.SetInterpolation(pxr::TfToken("vertex"));
+  //  }
+  //}
+
+  // texture coordinates
+  for (auto& tc : textureCoordinatesByMappingChannel)
+  {
+    // let's just use the 1st one in the array for now
+    int mc_id = tc.first;
+    const ON_TextureCoordinates* firstTc = &tc.second;
+    //if (tcs.size() > 1)
+    //  // todo: support multiple channels or report that some were skipped.
+    if (firstTc != nullptr)
+    {
+      ON_SimpleArray<ON_3fPoint> uvwPoints = firstTc->m_T;
+      int ayCnt = firstTc->m_T.Count();
+      //pseudo: if uvwPoints.Any(p => p.W != 0) then report that 3rd dimension is ignored
+      // i guess that W is always ignored
+
+      pxr::VtArray<pxr::GfVec2f> uvArray;
+      uvArray.resize(ayCnt); //todo: assert: ayCnt should be the same as the number of vertices on the mesh
+      for (int i = 0; i < ayCnt; i++)
+      {
+        uvArray[i] = pxr::GfVec2f(uvwPoints[i].x, uvwPoints[i].y);
+      }
+
+      ON_String sTokenName;
+      sTokenName.Format("st%u", mc_id);
+      const char* tokenName = sTokenName;
+      pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken(tokenName), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
+      //texCoords.SetInterpolation(pxr::TfToken("vertex")); //already set in CreatePrimvar
+      texCoords.Set(uvArray);
+    }
+  }
+
+  VtVec3fArray extents(2);
+  ON_BoundingBox bbox = meshCopy.BoundingBox();
+  extents[0].Set((float)bbox.m_min.x, (float)bbox.m_min.y, (float)bbox.m_min.z);
+  extents[1].Set((float)bbox.m_max.x, (float)bbox.m_max.y, (float)bbox.m_max.z);
+  usdMesh.GetExtentAttr().Set(extents);
+
+  UsdPrim prim = usdMesh.GetPrim();
+  if (usdOptions.IncludeUserStrings && prim.IsValid())
+  {
+    AddUserDataToPrim(packet, &prim);
+  }
+
+  return true;
+}
+
+bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+{
+  const ON_Geometry* geometry = packet.Object().Geometry();
+  if (!geometry) return false;
+
+  // TODO : Support other types of Curves
+  const ON_NurbsCurve* nurbsCurve = ON_NurbsCurve::Cast(geometry);
+  if (!nurbsCurve) return false;
+
+  std::vector<ON_wString> layerNames = UsdShared::GetLayerNames(packet, usdOptions);
+
+  ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
+
+  if (!nurbsCurve)
+    return false;
+
+  ON_NurbsCurve nc(*nurbsCurve);
+  ON_Helpers::RotateGeometryYUp(&nc);
+
+  ON_wString name;
+  name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
+  name = layerNamesPath + name;
+  std::string stdStrName = ON_Helpers::ON_wString_to_StdString(name);
+  pxr::UsdGeomNurbsCurves usdNc = pxr::UsdGeomNurbsCurves::Define(stage, pxr::SdfPath(stdStrName));
+
+  int degree = nurbsCurve->Degree();
+  //pxr::VtValue order(degree + 1);
+  pxr::VtArray<int> order;
+  order.resize(1);
+  order[0] = degree + 1;
+  usdNc.CreateOrderAttr(pxr::VtValue(order));
+
+  int ctrlPtsCount = nurbsCurve->m_cv_count;
+  pxr::VtArray<pxr::GfVec3f> ctrlPts;
+  ctrlPts.resize(ctrlPtsCount);
+  for (int i = 0; i < ctrlPtsCount; i++)
+  {
+    ON_3dPoint cp;
+    if (nurbsCurve->GetCV(i, cp))
+    {
+      ctrlPts[i] = pxr::GfVec3f((float)cp.x, (float)cp.y, (float)cp.z);
+    }
+  }
+  usdNc.CreatePointsAttr(pxr::VtValue(ctrlPts));
+
+  pxr::VtArray<int> crvVertexCount;
+  crvVertexCount.resize(1);
+  crvVertexCount[0] = ctrlPtsCount;
+  usdNc.CreateCurveVertexCountsAttr(pxr::VtValue(crvVertexCount));
+
+  std::vector<double> stdKnots;
+  int knotCount = nurbsCurve->KnotCount();
+  for (int i = 0; i < knotCount; i++)
+  {
+    double k = nurbsCurve->m_knot[i];
+    stdKnots.push_back(k);
+
+    // add 2 superfluous knots, one at each extremity as almost every 3rd party format requires it
+    if (i == 0 || i == knotCount - 1)
+      stdKnots.push_back(k);
+  }
+  pxr::VtArray<double> knots;
+  knots.resize(stdKnots.size());
+  for (int i = 0; i < stdKnots.size(); i++)
+    knots[i] = stdKnots[i];
+  usdNc.CreateKnotsAttr(pxr::VtValue(knots));
+
+  UsdPrim prim = usdNc.GetPrim();
+  if (usdOptions.IncludeUserStrings && prim.IsValid())
+  {
+    UsdShared::AddUserDataToPrim(packet, &prim);
+  }
+
+  return true;
+}
+
+void UsdShared::AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim* prim)
+{
+  const CRhinoObjectAttributes& attributes = packet.Object().Attributes();
+
+  ON_ClassArray<ON_UserString> user_strings;
+  attributes.GetUserStrings(user_strings);
+
+  /* TODO : Do these 2 need to be supported?
+  ON_ClassArray<ON_UserString> object_user_strings;
+  packet.Object().GetUserStrings(object_user_strings);
+
+  if (packet.Object().Geometry())
+  {
+    ON_ClassArray<ON_UserString> geoemtry_user_strings;
+    packet.Object().Geometry()->GetUserStrings(geoemtry_user_strings);
+  }
+  */
+
+  for (const ON_UserString& user_string : user_strings)
+  {
+    const ON_wString& keyString(user_string.m_key);
+    ON_String utf8_key(keyString);
+    const std::string utf8_string(utf8_key.Array());
+    TfToken key(utf8_string);
+
+    const ON_wString& valueString(user_string.m_string_value);
+    ON_String utf8_value(valueString);
+    const std::string utf8_value_string(utf8_value.Array());
+    VtValue value(utf8_value_string);
+
+    prim->SetCustomDataByKey(key, value);
+  }
+
+  // attributes.GetUserData()
 }
 
 pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type)
@@ -620,4 +934,115 @@ void UsdShared::SetUsdLayersAsXformable(const std::vector<ON_wString>& layerName
     //std::cout << "layer: " << stdStrPath << std::endl; //debug
 		pxr::UsdGeomXform nextLayerXform = pxr::UsdGeomXform::Define(stage, pxr::SdfPath(stdStrPath));
   }
+}
+
+bool UsdShared::IsValidUsdObject(ON::object_type type)
+{
+  switch (type)
+  {
+    // No current fallback or just not a good option
+  case ON::object_type::unknown_object_type:
+  case ON::object_type::point_object: // TODO : Support
+  case ON::object_type::pointset_object:
+  case ON::object_type::layer_object:
+  case ON::object_type::material_object:
+  case ON::object_type::light_object: // TODO : Support
+  case ON::object_type::annotation_object:
+  case ON::object_type::userdata_object:
+  case ON::object_type::instance_definition: // TODO : Support
+    // case ON::object_type::instance_reference: // TODO : Support
+  case ON::object_type::text_dot:
+  case ON::object_type::grip_object:
+  case ON::object_type::detail_object:
+  case ON::object_type::hatch_object: // TODO : Support
+  case ON::object_type::morph_control_object:
+  case ON::object_type::loop_object:
+  case ON::object_type::brepvertex_filter:
+  case ON::object_type::polysrf_filter:
+  case ON::object_type::edge_filter:
+  case ON::object_type::polyedge_filter:
+  case ON::object_type::meshvertex_filter:
+  case ON::object_type::meshedge_filter:
+  case ON::object_type::meshface_filter:
+  case ON::object_type::meshcomponent_reference:
+  case ON::object_type::cage_object:
+  case ON::object_type::phantom_object:
+  case ON::object_type::clipplane_object:
+    return false;
+  }
+
+  return true;
+}
+
+ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
+{
+  switch (obj->ObjectType())
+  {
+    // Supported Objects
+  case ON::object_type::curve_object:
+  // case ON::object_type::instance_reference: // TODO : Impliment
+    return  obj->ObjectType();
+    break;
+
+    /* TODO : Support natively
+    case ON::object_type::point_object:
+      type = ON::object_type::point_object;
+      break;
+    case ON::object_type::surface_object:
+      if (usdOptions.ForceMeshes)
+        type = ON::object_type::mesh_object;
+      else
+        type = ON::object_type::surface_object;
+      break;
+    case ON::object_type::brep_object:
+      if (usdOptions.ForceMeshes)
+        type = ON::object_type::mesh_object;
+      else
+        type = ON::object_type::brep_object;
+      break;
+    case ON::object_type::subd_object:
+      if (usdOptions.ForceMeshes)
+        type = ON::object_type::mesh_object;
+      else
+        type = ON::object_type::subd_object;
+      break;
+    */
+  }
+
+  return ON::object_type::mesh_object;
+}
+
+std::vector<ON_wString> UsdShared::GetLayerNames(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+{
+  std::vector<ON_wString> names;
+
+  CRhinoDoc* doc = packet.Object().Document();
+  if (!doc) return names;
+
+  const CRhinoObjectAttributes& attributes = packet.Object().Attributes();
+  int layer_index = attributes.m_layer_index;
+
+  const CRhinoLayerTable& layer_table = doc->m_layer_table;
+  const CRhinoLayer& layer = layer_table[layer_index];
+  ON_wString layerName = UsdShared::RhinoLayerNameToUsd(layer.Name());
+  names.push_back(layerName);
+
+  ON_UUID pid(layer.ParentId());
+  while (!ON_UuidIsNil(pid))
+  {
+    layer_index = layer_table.FindLayerFromId(pid, false, false, -1);
+    const CRhinoLayer& parentLayer = layer_table[layer_index];
+    ON_wString parentLayerName = UsdShared::RhinoLayerNameToUsd(parentLayer.Name());
+    names.push_back(parentLayerName);
+    ON_UUID id(parentLayer.ParentId());
+    pid = id;
+  }
+  names.insert(names.begin(), L"Geometry");
+  if (!usdOptions.ModelName.IsEmpty())
+  {
+    names.insert(names.begin(), usdOptions.ModelName);
+  }
+
+  names.insert(names.begin(), usdOptions.RootLayer);
+  return names;
 }
