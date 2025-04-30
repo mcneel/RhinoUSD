@@ -13,6 +13,7 @@ bool HandleUserInput(bool scripting, UsdExportOptions& options)
   args.SetString(L"model-name", options.ModelName);
   args.SetBool(L"force-meshes", options.ForceMeshes);
   args.SetBool(L"include-user-strings", options.IncludeUserStrings);
+  args.SetBool(L"scripting", options.Headless);
 
   if (!RhExecuteNamedCallback(L"ShowExportUsdDialog", args)) return false;
   bool userChoseOk;
