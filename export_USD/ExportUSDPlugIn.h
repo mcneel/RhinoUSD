@@ -1,5 +1,5 @@
-#include "UsdExportOptions.h"
 #pragma once
+#include "UsdExportOptions.h"
 
 class CExportUSDPlugIn : public CRhinoFileExportSystemPlugIn
 {

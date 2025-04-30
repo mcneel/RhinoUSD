@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
-#include "../export_USD/UsdExportOptions.h"
-#include "../export_USD/UsdExportPacket.h"
+#include "UsdExportOptions.h"
+#include "UsdExportPacket.h"
 
 class ON_wString;
 class ON_Mesh;
