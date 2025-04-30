@@ -940,38 +940,39 @@ bool UsdShared::IsValidUsdObject(ON::object_type type)
 {
   switch (type)
   {
-    // No current fallback or just not a good option
-  case ON::object_type::unknown_object_type:
-  case ON::object_type::point_object: // TODO : Support
-  case ON::object_type::pointset_object:
-  case ON::object_type::layer_object:
-  case ON::object_type::material_object:
-  case ON::object_type::light_object: // TODO : Support
-  case ON::object_type::annotation_object:
-  case ON::object_type::userdata_object:
-  case ON::object_type::instance_definition: // TODO : Support
-    // case ON::object_type::instance_reference: // TODO : Support
-  case ON::object_type::text_dot:
-  case ON::object_type::grip_object:
-  case ON::object_type::detail_object:
-  case ON::object_type::hatch_object: // TODO : Support
-  case ON::object_type::morph_control_object:
-  case ON::object_type::loop_object:
-  case ON::object_type::brepvertex_filter:
-  case ON::object_type::polysrf_filter:
-  case ON::object_type::edge_filter:
-  case ON::object_type::polyedge_filter:
-  case ON::object_type::meshvertex_filter:
-  case ON::object_type::meshedge_filter:
-  case ON::object_type::meshface_filter:
-  case ON::object_type::meshcomponent_reference:
-  case ON::object_type::cage_object:
-  case ON::object_type::phantom_object:
-  case ON::object_type::clipplane_object:
-    return false;
+      // No current fallback or just not a good option
+    case ON::object_type::unknown_object_type:
+    case ON::object_type::point_object: // TODO : Support
+    case ON::object_type::pointset_object:
+    case ON::object_type::layer_object:
+    case ON::object_type::material_object:
+    case ON::object_type::light_object: // TODO : Support
+    case ON::object_type::annotation_object:
+    case ON::object_type::userdata_object:
+    case ON::object_type::instance_definition: // TODO : Support
+      // case ON::object_type::instance_reference: // TODO : Support
+    case ON::object_type::text_dot:
+    case ON::object_type::grip_object:
+    case ON::object_type::detail_object:
+    case ON::object_type::hatch_object: // TODO : Support
+    case ON::object_type::morph_control_object:
+    case ON::object_type::loop_object:
+    case ON::object_type::brepvertex_filter:
+    case ON::object_type::polysrf_filter:
+    case ON::object_type::edge_filter:
+    case ON::object_type::polyedge_filter:
+    case ON::object_type::meshvertex_filter:
+    case ON::object_type::meshedge_filter:
+    case ON::object_type::meshface_filter:
+    case ON::object_type::meshcomponent_reference:
+    case ON::object_type::cage_object:
+    case ON::object_type::phantom_object:
+    case ON::object_type::clipplane_object:
+      return false;
+      
+    default:
+      return true;
   }
-
-  return true;
 }
 
 ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
