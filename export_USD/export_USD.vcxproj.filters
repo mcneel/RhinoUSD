@@ -62,6 +62,12 @@
     <ClInclude Include="write_usd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UsdExportOptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UsdExportPacket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ExportUSD.rc">
