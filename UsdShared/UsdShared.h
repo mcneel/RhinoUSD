@@ -26,6 +26,11 @@ public:
   bool AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions);
   bool AddMesh(UsdPacket& packet, const UsdExportOptions& usdOptions);
 
+
+  bool AddBlock(const UsdPacket& packet, const UsdExportOptions& usdOptions);
+  ON_ClassArray<UsdPacket> GetPackets(const CRhinoInstanceDefinition& definition, const ON_MeshParameters mp);
+  const ON_Mesh& GetMeshFromSubD(ON_SubD& subD, const ON_MeshParameters mp);
+
   const UsdExportOptions& Options;
 
 private:
