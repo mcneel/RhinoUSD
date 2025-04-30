@@ -6,8 +6,9 @@
 #endif
 
 #include "ExportUSDPlugIn.h"
-#include "write_usd.h"
 #include "Resource.h"
+#include "UsdExportOptions.h"
+#include "write_usd.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -65,6 +66,8 @@ void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, co
   ft.AddFileTypeExtension(L"usdz");
   ft.AddFileTypeExtension(L"usda");
   ft.AddFileTypeExtension(L"usd");
+  ft.SetDisplayOptionsDialog(true);
+
   extensions.Append(ft);
 }
 
@@ -73,7 +76,92 @@ CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
   return thePlugIn;
 }
 
-int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
+int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
+                                int index,
+                                CRhinoDoc& doc,
+                                const CRhinoFileWriteOptions& options)
 {
-  return WriteUSDFile(filename, 1 == index, doc, options);
+  bool scripting = RhinoApp().IsHeadless() || options.UseBatchMode();
+
+  int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
+  
+  // user has input some options via the AIP
+  bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
+  if (useOptionsDictionary)
+  {
+    mesh_ui_style = 4;
+    PushFileWriteOptionsToUsdOptions(options);
+  }
+  else if (scripting)
+  {
+    mesh_ui_style = 4;
+		HandleUserInput(scripting, ExportOptions);
+  }
+
+  return WriteUSDFile(filename, 1 == index, doc, options, ExportOptions);
+}
+
+void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
+{
+  int blocksValue = (int)ExportOptions.DefaultBlocks;
+  ON_wString RootLayerValue = ExportOptions.DefaultRootLayer;
+  ON_wString modelNameValue = ExportOptions.DefaultModelName;
+  bool forceMeshesValue = ExportOptions.DefaultForceMeshes;
+  bool includeUserStringsValue = ExportOptions.DefaultIncludeUserStrings;
+
+  if (pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, (int)ExportOptions.DefaultBlocks))
+    ExportOptions.Blocks = (BlockHandling)(blocksValue);
+
+  if (pc.LoadProfileString(lpszSection, L"root-layer", RootLayerValue, ExportOptions.DefaultRootLayer))
+    ExportOptions.RootLayer = RootLayerValue;
+
+  if (pc.LoadProfileString(lpszSection, L"model-name", modelNameValue, ExportOptions.DefaultModelName))
+    ExportOptions.ModelName = modelNameValue;
+
+  if (pc.LoadProfileBool(lpszSection, L"force-meshes", &forceMeshesValue, ExportOptions.DefaultForceMeshes))
+    ExportOptions.ForceMeshes = forceMeshesValue;
+
+  if (pc.LoadProfileBool(lpszSection, L"include-user-strings", &includeUserStringsValue, ExportOptions.DefaultIncludeUserStrings))
+    ExportOptions.IncludeUserStrings = includeUserStringsValue;
+}
+
+void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
+{
+  pc.SaveProfileString(lpszSection, L"model-name", ExportOptions.ModelName);
+  pc.SaveProfileString(lpszSection, L"root-layer", ExportOptions.RootLayer);
+  pc.SaveProfileInt(lpszSection, L"blocks", (int)ExportOptions.Blocks);
+  pc.SaveProfileBool(lpszSection, L"force-meshes", ExportOptions.ForceMeshes);
+  pc.SaveProfileBool(lpszSection, L"user-strings", ExportOptions.IncludeUserStrings);
+}
+
+void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
+{
+  bool scripting = RhinoApp().IsHeadless();
+  HandleUserInput(scripting, ExportOptions);
+}
+
+void CExportUSDPlugIn::PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions & fileWriteOptions)
+{
+  const ON_ArchivableDictionary dictionary = fileWriteOptions.OptionsDictionary();
+
+  int blocksValue;
+  ON_wString rootLayerValue;
+  ON_wString modelNameValue;
+  bool forceMeshesValue;
+  bool includeUserStringsValue;
+
+  if (dictionary.TryGetInt32(L"blocks", blocksValue))
+    ExportOptions.Blocks = (BlockHandling)blocksValue;
+
+  if (dictionary.TryGetString(L"root-layer", rootLayerValue))
+    ExportOptions.RootLayer = rootLayerValue;
+
+  if (dictionary.TryGetString(L"model-name", modelNameValue))
+    ExportOptions.ModelName = modelNameValue;
+
+  if (dictionary.TryGetBool(L"force-meshes", forceMeshesValue))
+    ExportOptions.ForceMeshes = forceMeshesValue;
+
+  if (dictionary.TryGetBool(L"include-user-strings", includeUserStringsValue))
+    ExportOptions.IncludeUserStrings = includeUserStringsValue;
 }

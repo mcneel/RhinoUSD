@@ -9,15 +9,11 @@ class UsdExportOptions
 {
 public:
   // If Model Name is empty that layer/prim isn't included
-  ON_wString ModelName;
-
-  ON_wString RootLayer;
-
-  BlockHandling Blocks;
-
-  bool ForceMeshes;
-
-  bool IncludeUserStrings;
+  ON_wString ModelName = DefaultModelName;
+  ON_wString RootLayer = DefaultRootLayer;
+  BlockHandling Blocks = DefaultBlocks;
+  bool ForceMeshes = DefaultForceMeshes;
+  bool IncludeUserStrings = DefaultIncludeUserStrings;
 
 
   ON_wString DefaultModelName = L"";
@@ -27,3 +23,5 @@ public:
   bool DefaultIncludeUserStrings = true;
 
 };
+
+bool HandleUserInput(bool scripting, UsdExportOptions& options);

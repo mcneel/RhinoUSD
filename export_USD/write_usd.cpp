@@ -3,6 +3,7 @@
 #include "../UsdShared/ON_Helpers.h"
 #include "../UsdShared/UsdShared.h"
 #include "write_usd.h"
+#include "UsdExportOptions.h"
 
 static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhinoDoc& doc)
 {
@@ -147,7 +148,7 @@ static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict,
     params = mp;
 }
 
-int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
+int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, const UsdExportOptions& usdOptions)
 {
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
@@ -159,13 +160,6 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
 
   CRhinoWaitCursor hourglass;
   ON_wString backupname;
-
-  //if (!doc.IsHeadless())
-  //{
-  //  // TODO: Add code for getting options from user
-  //  if (CRhinoCommand::success != USDExportOptionsUI(false == options.UseBatchMode()))
-  //    return -1;
-  //}
   
   int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
   ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
@@ -176,7 +170,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
 
   ON_ClassArray<CRhinoObjectMesh> mesh_list;
   ON_SimpleArray<const CRhinoObject*> objects(256);
-  CRhinoObjectIterator it(doc.RuntimeSerialNumber(), options);
+  CRhinoObjectIterator it(doc.RuntimeSerialNumber(), fileOptions);
   for (CRhinoObject* obj = it.First(); obj; obj = it.Next())
   {
     objects.Append(obj);
@@ -192,40 +186,20 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     {
       usdEI.AddNurbsCurve(nurbsCurve, layerNames);
     }
-
-    ////const CRhinoBrepObject* pBrep = CRhinoBrepObject::Cast(obj);
-    //// try casting from geometry
-    //const ON_Brep* brep = ON_Brep::Cast(geometry);
-    //if (brep)
-    //{
-    //  if (brep->IsManifold())
-    //  {
-    //    for (int i = 0; i < brep->m_S.Count(); i++)
-    //    {
-    //      ON_NurbsSurface* nurbsSurface = nullptr;
-    //      brep->m_S[i]->NurbsSurface(nurbsSurface);
-    //      if (nurbsSurface)
-    //      {
-    //        
-    //      }
-    //    }
-    //  }
-    //}
   }
 
-  const bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
+  // TODO : Get from UsdExportOptions
+  const bool useOptionsDictionary = fileOptions.OptionsDictionary().Count() > 0;
   if (useOptionsDictionary)
   {
     mesh_ui_style = 4; // no UI
-    const ON_ArchivableDictionary& dict = options.OptionsDictionary();
+    const ON_ArchivableDictionary& dict = fileOptions.OptionsDictionary();
     GetMeshParametersFromDictionary(dict, mp);
   }
 
-  CRhinoCommand::result rs = RhinoMeshObjects(objects, mp, options.Transformation(), mesh_ui_style, mesh_list);
-  //if (CRhinoCommand::success != rs)
-  //{
-  //  return 0;
-  //}
+  CRhinoCommand::result rs = RhinoMeshObjects(objects, mp, fileOptions.Transformation(), mesh_ui_style, mesh_list);
+
+  // TODO : Get from UsdExportOptions
   if (CRhinoCommand::success == rs)
   {
     if (4 != mesh_ui_style)
@@ -235,7 +209,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   doc.Redraw(); // clean up display after interactive meshing.
 
   // debug hack
-  bool meshes_only = fn.Contains(L"_MESHES_ONLY_");
+  // bool meshes_only = fn.Contains(L"_MESHES_ONLY_");
 
   for (int i = 0; i < mesh_list.Count(); i++)
   {
@@ -253,7 +227,7 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     const ON_wString meshName = objectMesh.m_mesh_attributes.Name();
     ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, meshName, layerNames, textureCoordinatesByMappingChannel);
 
-    if (meshes_only) continue;
+    // if (meshes_only) continue;
 
     const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
     if (pMaterial)
@@ -275,37 +249,6 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
       }
     }
   }
-
-
-  // Get meshes to export (meshes breps, copies mesh object meshes,
-  // deals with instance references that contain meshes and breps,
-  // etc.
-  //ON_ClassArray<CRhinoObjectMesh> mesh_list;
-  //if (CRhinoCommand::success == RhinoMeshObjects(rhinoObjects, mp, options.Transformation(), mesh_ui_style, mesh_list))
-  //{
-  //  if (mesh_ui_style >= 0 && mesh_ui_style <= 1)
-  //    CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
-  //  CExportUSDPlugIn::ThePlugin().m_saved_mp = mp;
-  //}
-  //else
-  //  return -1;
-
-  //doc.Redraw(); // clean up display after interactive meshing.
-
-  //if (mesh_list.Count() <= 0)
-  //{
-  //  RhinoApp().Print(L"No meshes selected to export.\n");
-  //  return 0;
-  //}
-
-  //UsdStageRefPtr usdModel = UsdStage::CreateInMemory();
-
-  //for (int i = 0; i < mesh_list.Count(); i++)
-  //{
-  //  CRhinoObjectMesh& objectMesh = mesh_list[i];
-  //  std::vector<ON_wString> layerNames = GetLayerNames(objectMesh.m_mesh_object, doc);
-  //  usdEI.AddMesh(objectMesh.m_mesh, layerNames);
-  //}
 
   if (!usdEI.AnythingToSave())
     return 0;
