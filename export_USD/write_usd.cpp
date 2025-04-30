@@ -189,19 +189,15 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
   if (usdOptions.Headless)
     mesh_ui_style = 4;
 
-  CRhinoCommand::result rs = RhinoMeshObjects(objects, usdOptions.MeshingParams, fileOptions.Transformation(), mesh_ui_style, mesh_list);
-
-  // TODO : Get from UsdExportOptions
-  if (CRhinoCommand::success == rs)
+  CRhinoCommand::result result = RhinoMeshObjects(objects, usdOptions.MeshingParams, fileOptions.Transformation(), mesh_ui_style, mesh_list);
+  if (CRhinoCommand::success == result)
   {
     if (4 != mesh_ui_style)
       CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style = mesh_ui_style;
+
     CExportUSDPlugIn::ThePlugin().m_saved_mp = usdOptions.MeshingParams;
   }
   doc.Redraw(); // clean up display after interactive meshing.
-
-  // debug hack
-  // bool meshes_only = fn.Contains(L"_MESHES_ONLY_");
 
   for (int i = 0; i < mesh_list.Count(); i++)
   {
@@ -218,8 +214,6 @@ int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhin
     //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
     const ON_wString meshName = objectMesh.m_mesh_attributes.Name();
     ON_wString meshPath = usdEI.AddMesh(objectMesh.m_mesh, meshName, layerNames, textureCoordinatesByMappingChannel);
-
-    // if (meshes_only) continue;
 
     const CRhRdkMaterial* pMaterial = objectMesh.m_parent_object->ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
     if (pMaterial)
