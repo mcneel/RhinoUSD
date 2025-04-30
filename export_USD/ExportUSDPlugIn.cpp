@@ -6,6 +6,7 @@
 #endif
 
 #include "ExportUSDPlugIn.h"
+#include "write_usd.h"
 #include "Resource.h"
 
 #pragma warning(push)
