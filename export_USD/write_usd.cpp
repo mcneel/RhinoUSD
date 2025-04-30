@@ -2,6 +2,7 @@
 #include "ExportUSDPlugIn.h"
 #include "../UsdShared/ON_Helpers.h"
 #include "../UsdShared/UsdShared.h"
+#include "write_usd.h"
 
 static std::vector<ON_wString> GetLayerNames(const CRhinoObject* obj, const CRhinoDoc& doc)
 {

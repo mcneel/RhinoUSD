@@ -25,4 +25,3 @@ public:
   ON_MeshParameters m_saved_mp;
 };
 
-int WriteUSDFile(const wchar_t* filename, bool usda, CRhinoDoc& doc, const CRhinoFileWriteOptions& options);
