@@ -100,7 +100,7 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
 		HandleUserInput(ExportOptions);
   }
 
-  bool usda = 1 == index;
+  // bool usda = 1 == index;
 
   ON_ClassArray<UsdPacket> packets;
   if (GetPackets(doc, options, ExportOptions, packets) <= 0) return -1;

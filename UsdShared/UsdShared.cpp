@@ -3,7 +3,7 @@
 #include "ON_Helpers.h"
 #include "iostream"
 #include <fstream>
-#include "UsdExportOptions.h"
+#include "..\export_USD\UsdExportOptions.h"
 
 using namespace pxr;
 
