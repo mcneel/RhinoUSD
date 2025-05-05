@@ -980,10 +980,10 @@ ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
   switch (obj->ObjectType())
   {
     // Supported Objects
-  case ON::object_type::curve_object:
-  // case ON::object_type::instance_reference: // TODO : Impliment
-    return  obj->ObjectType();
-    break;
+    case ON::object_type::curve_object:
+    // case ON::object_type::instance_reference: // TODO : Impliment
+      return  obj->ObjectType();
+      break;
 
     /* TODO : Support natively
     case ON::object_type::point_object:
@@ -1008,6 +1008,9 @@ ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
         type = ON::object_type::subd_object;
       break;
     */
+      
+    default:
+      return ON::object_type::mesh_object;
   }
 
   return ON::object_type::mesh_object;
