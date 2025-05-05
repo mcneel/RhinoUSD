@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "UsdExportOptions.h"
+#include "../export_USD/UsdExportOptions.h"
 #include "UsdExportPacket.h"
 
 class ON_wString;
