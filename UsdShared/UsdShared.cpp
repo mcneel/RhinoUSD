@@ -1012,8 +1012,6 @@ ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
     default:
       return ON::object_type::mesh_object;
   }
-
-  return ON::object_type::mesh_object;
 }
 
 std::vector<ON_wString> UsdShared::GetLayerNames(const UsdPacket& packet, const UsdExportOptions& usdOptions)
