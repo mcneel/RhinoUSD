@@ -30,10 +30,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='CoreRelease|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="UsdExportImport.cpp" />
+    <ClCompile Include="UsdExportImport.h" />
     <ClCompile Include="UsdExportOptions.cpp" />
     <ClCompile Include="write_usd.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UsdShared\UsdPacket.h" />
     <ClInclude Include="..\UsdShared\UsdShared.h" />
     <ClInclude Include="..\UsdShared\ON_Helpers.h" />
     <ClInclude Include="ExportUSDApp.h" />
@@ -42,7 +45,6 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UsdExportOptions.h" />
-    <ClInclude Include="UsdExportPacket.h" />
     <ClInclude Include="write_usd.h" />
   </ItemGroup>
   <ItemGroup>

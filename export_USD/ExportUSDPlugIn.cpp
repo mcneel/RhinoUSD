@@ -9,7 +9,7 @@
 #include "Resource.h"
 #include "UsdExportOptions.h"
 #include "write_usd.h"
-#include "UsdExportPacket.h"
+#include "../UsdShared/UsdPacket.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
