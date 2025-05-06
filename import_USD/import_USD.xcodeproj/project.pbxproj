@@ -1,0 +1,327 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A0326722DCA6FEC0055EA64 /* convert_metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A03266E2DCA6FEC0055EA64 /* convert_metadata.cpp */; };
+		1A0326732DCA6FEC0055EA64 /* import_USDPlugIn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0326702DCA6FEC0055EA64 /* import_USDPlugIn.cpp */; };
+		1A0326742DCA6FEC0055EA64 /* read_usd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0326712DCA6FEC0055EA64 /* read_usd.cpp */; };
+		1A0326752DCA6FEC0055EA64 /* import_USDApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A03266F2DCA6FEC0055EA64 /* import_USDApp.cpp */; };
+		1A0326762DCA6FEC0055EA64 /* convert_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A03266D2DCA6FEC0055EA64 /* convert_geometry.cpp */; };
+		1A03267A2DCA70390055EA64 /* PluginDebug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */; };
+		1A03267B2DCA70390055EA64 /* PluginDistribution.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */; };
+		1A03267C2DCA70390055EA64 /* PluginRelease.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */; };
+		1A03272F2DCA74F90055EA64 /* RhCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A03272E2DCA74F90055EA64 /* RhCore.framework */; };
+		1A0327302DCA74F90055EA64 /* RhCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A03272E2DCA74F90055EA64 /* RhCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1A0327332DCA75030055EA64 /* OpenNURBS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327322DCA75030055EA64 /* OpenNURBS.framework */; };
+		1A0327342DCA75030055EA64 /* OpenNURBS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327322DCA75030055EA64 /* OpenNURBS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1A0327362DCA75470055EA64 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327352DCA75470055EA64 /* libtbb.dylib */; };
+		1A0327372DCA75470055EA64 /* libtbb.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327352DCA75470055EA64 /* libtbb.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1A653F9A2DCA758E00677735 /* libusd_ms.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A653F992DCA758E00677735 /* libusd_ms.dylib */; };
+		1A653F9B2DCA758E00677735 /* libusd_ms.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A653F992DCA758E00677735 /* libusd_ms.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		1A0327312DCA74F90055EA64 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1A0327372DCA75470055EA64 /* libtbb.dylib in Embed Frameworks */,
+				1A0327302DCA74F90055EA64 /* RhCore.framework in Embed Frameworks */,
+				1A0327342DCA75030055EA64 /* OpenNURBS.framework in Embed Frameworks */,
+				1A653F9B2DCA758E00677735 /* libusd_ms.dylib in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		1A03265C2DCA6A790055EA64 /* import_USD.rhp */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = import_USD.rhp; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0326682DCA6FDC0055EA64 /* convert_geometry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = convert_geometry.h; sourceTree = "<group>"; };
+		1A0326692DCA6FDC0055EA64 /* convert_metadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = convert_metadata.h; sourceTree = "<group>"; };
+		1A03266A2DCA6FDC0055EA64 /* import_USDApp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = import_USDApp.h; sourceTree = "<group>"; };
+		1A03266B2DCA6FDC0055EA64 /* import_USDPlugIn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = import_USDPlugIn.h; sourceTree = "<group>"; };
+		1A03266C2DCA6FDC0055EA64 /* stdafx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
+		1A03266D2DCA6FEC0055EA64 /* convert_geometry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = convert_geometry.cpp; sourceTree = "<group>"; };
+		1A03266E2DCA6FEC0055EA64 /* convert_metadata.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = convert_metadata.cpp; sourceTree = "<group>"; };
+		1A03266F2DCA6FEC0055EA64 /* import_USDApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = import_USDApp.cpp; sourceTree = "<group>"; };
+		1A0326702DCA6FEC0055EA64 /* import_USDPlugIn.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = import_USDPlugIn.cpp; sourceTree = "<group>"; };
+		1A0326712DCA6FEC0055EA64 /* read_usd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = read_usd.cpp; sourceTree = "<group>"; };
+		1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDebug.xcconfig; path = /Users/sykes/gits/rhino9/src4/Mac/XCConfig/PluginDebug.xcconfig; sourceTree = "<absolute>"; };
+		1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDistribution.xcconfig; path = /Users/sykes/gits/rhino9/src4/Mac/XCConfig/PluginDistribution.xcconfig; sourceTree = "<absolute>"; };
+		1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginRelease.xcconfig; path = /Users/sykes/gits/rhino9/src4/Mac/XCConfig/PluginRelease.xcconfig; sourceTree = "<absolute>"; };
+		1A03272E2DCA74F90055EA64 /* RhCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RhCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0327322DCA75030055EA64 /* OpenNURBS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenNURBS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0327352DCA75470055EA64 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../MacOS/Frameworks/libtbb.dylib; sourceTree = "<group>"; };
+		1A653F992DCA758E00677735 /* libusd_ms.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libusd_ms.dylib; path = ../../../MacOS/Frameworks/libusd_ms.dylib; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1A0326592DCA6A790055EA64 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0327362DCA75470055EA64 /* libtbb.dylib in Frameworks */,
+				1A03272F2DCA74F90055EA64 /* RhCore.framework in Frameworks */,
+				1A0327332DCA75030055EA64 /* OpenNURBS.framework in Frameworks */,
+				1A653F9A2DCA758E00677735 /* libusd_ms.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1A0326532DCA6A790055EA64 = {
+			isa = PBXGroup;
+			children = (
+				1A0326672DCA6C770055EA64 /* Resources */,
+				1A0326662DCA6C610055EA64 /* Source Files */,
+				1A0326652DCA6C3C0055EA64 /* Header Files */,
+				1A0326642DCA6C1F0055EA64 /* Supporting Files */,
+				1A03272D2DCA74F90055EA64 /* Frameworks */,
+				1A03265D2DCA6A790055EA64 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1A03265D2DCA6A790055EA64 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A03265C2DCA6A790055EA64 /* import_USD.rhp */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1A0326642DCA6C1F0055EA64 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */,
+				1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */,
+				1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		1A0326652DCA6C3C0055EA64 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				1A0326682DCA6FDC0055EA64 /* convert_geometry.h */,
+				1A0326692DCA6FDC0055EA64 /* convert_metadata.h */,
+				1A03266A2DCA6FDC0055EA64 /* import_USDApp.h */,
+				1A03266B2DCA6FDC0055EA64 /* import_USDPlugIn.h */,
+				1A03266C2DCA6FDC0055EA64 /* stdafx.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		1A0326662DCA6C610055EA64 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				1A03266D2DCA6FEC0055EA64 /* convert_geometry.cpp */,
+				1A03266E2DCA6FEC0055EA64 /* convert_metadata.cpp */,
+				1A03266F2DCA6FEC0055EA64 /* import_USDApp.cpp */,
+				1A0326702DCA6FEC0055EA64 /* import_USDPlugIn.cpp */,
+				1A0326712DCA6FEC0055EA64 /* read_usd.cpp */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		1A0326672DCA6C770055EA64 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		1A03272D2DCA74F90055EA64 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1A653F992DCA758E00677735 /* libusd_ms.dylib */,
+				1A0327352DCA75470055EA64 /* libtbb.dylib */,
+				1A0327322DCA75030055EA64 /* OpenNURBS.framework */,
+				1A03272E2DCA74F90055EA64 /* RhCore.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1A03265B2DCA6A790055EA64 /* import_USD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0326602DCA6A790055EA64 /* Build configuration list for PBXNativeTarget "import_USD" */;
+			buildPhases = (
+				1A0326582DCA6A790055EA64 /* Sources */,
+				1A0326592DCA6A790055EA64 /* Frameworks */,
+				1A03265A2DCA6A790055EA64 /* Resources */,
+				1A0327312DCA74F90055EA64 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = import_USD;
+			packageProductDependencies = (
+			);
+			productName = import_USD;
+			productReference = 1A03265C2DCA6A790055EA64 /* import_USD.rhp */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1A0326542DCA6A790055EA64 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					1A03265B2DCA6A790055EA64 = {
+						CreatedOnToolsVersion = 16.3;
+					};
+				};
+			};
+			buildConfigurationList = 1A0326572DCA6A790055EA64 /* Build configuration list for PBXProject "import_USD" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1A0326532DCA6A790055EA64;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1A03265D2DCA6A790055EA64 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1A03265B2DCA6A790055EA64 /* import_USD */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1A03265A2DCA6A790055EA64 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A03267A2DCA70390055EA64 /* PluginDebug.xcconfig in Resources */,
+				1A03267B2DCA70390055EA64 /* PluginDistribution.xcconfig in Resources */,
+				1A03267C2DCA70390055EA64 /* PluginRelease.xcconfig in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1A0326582DCA6A790055EA64 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0326722DCA6FEC0055EA64 /* convert_metadata.cpp in Sources */,
+				1A0326732DCA6FEC0055EA64 /* import_USDPlugIn.cpp in Sources */,
+				1A0326742DCA6FEC0055EA64 /* read_usd.cpp in Sources */,
+				1A0326752DCA6FEC0055EA64 /* import_USDApp.cpp in Sources */,
+				1A0326762DCA6FEC0055EA64 /* convert_geometry.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1A03265E2DCA6A790055EA64 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		1A03265F2DCA6A790055EA64 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		1A0326612DCA6A790055EA64 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					../../MacOS/Frameworks,
+					"$(inherited)",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.import-USD";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = rhp;
+			};
+			name = Debug;
+		};
+		1A0326622DCA6A790055EA64 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					../../MacOS/Frameworks,
+					"$(inherited)",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.import-USD";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = rhp;
+			};
+			name = Release;
+		};
+		1A03267D2DCA706A0055EA64 /* Distribution */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */;
+			buildSettings = {
+			};
+			name = Distribution;
+		};
+		1A03267E2DCA706A0055EA64 /* Distribution */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					../../MacOS/Frameworks,
+					"$(inherited)",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.import-USD";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = rhp;
+			};
+			name = Distribution;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A0326572DCA6A790055EA64 /* Build configuration list for PBXProject "import_USD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A03265E2DCA6A790055EA64 /* Debug */,
+				1A03265F2DCA6A790055EA64 /* Release */,
+				1A03267D2DCA706A0055EA64 /* Distribution */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1A0326602DCA6A790055EA64 /* Build configuration list for PBXNativeTarget "import_USD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A0326612DCA6A790055EA64 /* Debug */,
+				1A0326622DCA6A790055EA64 /* Release */,
+				1A03267E2DCA706A0055EA64 /* Distribution */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1A0326542DCA6A790055EA64 /* Project object */;
+}

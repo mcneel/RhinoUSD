@@ -2,49 +2,15 @@
 #include "iostream"
 #include <fstream>
 #include "UsdExportOptions.h"
-#include "UsdExportPacket.h"
+#include "UsdPacket.h"
 #include "ExportUSDPlugin.h"
+#include "UsdExportImport.h"
 #include "write_usd.h"
 
 #include "UsdShared.h"
 #include "ON_Helpers.h"
 
 using namespace pxr;
-
-std::vector<ON_wString> UsdExportImport::GetLayerNames(const UsdPacket& packet, const UsdExportOptions& usdOptions)
-{
-  std::vector<ON_wString> names;
-
-  CRhinoDoc* doc = packet.Object().Document();
-  if (!doc) return names;
-
-  const CRhinoObjectAttributes& attributes = packet.Object().Attributes();
-  int layer_index = attributes.m_layer_index;
-
-  const CRhinoLayerTable& layer_table = doc->m_layer_table;
-  const CRhinoLayer& layer = layer_table[layer_index];
-  ON_wString layerName = UsdShared::RhinoLayerNameToUsd(layer.Name());
-  names.push_back(layerName);
-
-  ON_UUID pid(layer.ParentId());
-  while (!ON_UuidIsNil(pid))
-  {
-    layer_index = layer_table.FindLayerFromId(pid, false, false, -1);
-    const CRhinoLayer& parentLayer = layer_table[layer_index];
-    ON_wString parentLayerName = UsdShared::RhinoLayerNameToUsd(parentLayer.Name());
-    names.push_back(parentLayerName);
-    ON_UUID id(parentLayer.ParentId());
-    pid = id;
-  }
-  names.insert(names.begin(), L"Geometry");
-  if (!usdOptions.ModelName.IsEmpty())
-  {
-    names.insert(names.begin(), usdOptions.ModelName);
-  }
-
-  names.insert(names.begin(), usdOptions.DefaultLayer);
-  return names;
-}
 
 //todo: I'm sure there's a copy file function that's already available somewhere
 void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination)

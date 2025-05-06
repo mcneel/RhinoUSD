@@ -212,6 +212,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 223BC30E29D22B6E0090D5E8 /* PluginDebug.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					../usd/include,
@@ -245,6 +246,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 223BC31029D22B6E0090D5E8 /* PluginRelease.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					../usd/include,
@@ -298,6 +300,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 223BC30F29D22B6E0090D5E8 /* PluginDistribution.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					../usd/include,
