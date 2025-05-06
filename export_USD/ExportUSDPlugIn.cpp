@@ -61,60 +61,15 @@ GUID CExportUSDPlugIn::PlugInID() const
 
 void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileWriteOptions& options)
 {
-  CRhinoFileType ft;
-  ft.SetFileTypePlugInID(PlugInID());
-  ft.FileTypeDescription(L"USD (*.usdz, *.usda, *.usd)");
+	CRhinoFileType ft;
+	ft.SetFileTypePlugInID(PlugInID());
+	ft.FileTypeDescription(L"USD (*.usdz, *.usda, *.usd)");
   ft.AddFileTypeExtension(L"usdz");
   ft.AddFileTypeExtension(L"usda");
   ft.AddFileTypeExtension(L"usd");
   ft.SetDisplayOptionsDialog(true);
 
   extensions.Append(ft);
-}
-
-UsdExportOptions Options;
-
-void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
-{
-   int blocksValue = (int)Options.DefaultBlocks;
-  ON_wString defaultLayerValue = Options.DefaultDefaultLayer;
-  ON_wString modelNameValue = Options.DefaultModelName;
-  bool forceMeshesValue = Options.DefaultForceMeshes;
-  bool includeUserStringsValue = Options.DefaultIncludeUserStrings;
-
-  if (pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, (int)Options.DefaultBlocks))
-    Options.Blocks = (BlockHandling)(blocksValue);
-
-  if (pc.LoadProfileString(lpszSection, L"default-layer", defaultLayerValue, Options.DefaultDefaultLayer))
-    Options.DefaultLayer = defaultLayerValue;
-
-  if (pc.LoadProfileString(lpszSection, L"model-name", modelNameValue, Options.DefaultModelName))
-    Options.ModelName = modelNameValue;
-
-  if (pc.LoadProfileBool(lpszSection, L"force-meshes", &forceMeshesValue, Options.DefaultForceMeshes))
-    Options.ForceMeshes = forceMeshesValue;
-
-  if (pc.LoadProfileBool(lpszSection, L"include-user-strings", &includeUserStringsValue, Options.DefaultIncludeUserStrings))
-    Options.IncludeUserStrings = includeUserStringsValue;
-}
-
-void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
-{
-  pc.SaveProfileString(lpszSection, L"model-name", Options.ModelName);
-  pc.SaveProfileString(lpszSection, L"default-layer", Options.DefaultLayer);
-  pc.SaveProfileInt(lpszSection, L"blocks", (int)Options.Blocks);
-  pc.SaveProfileBool(lpszSection, L"force-meshes", Options.ForceMeshes);
-  pc.SaveProfileBool(lpszSection, L"user-strings", Options.IncludeUserStrings);
-}
-
-void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
-{
-  CRhParameterDictionary args;
-  args.SetUuid(L"plugin-id", PlugInID());
-  args.SetWindowHandle(L"hwnd", parent);
-
-  bool scripting = RhinoApp().IsHeadless();
-  HandleUserInput(scripting, args, Options);
 }
 
 CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
