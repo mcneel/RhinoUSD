@@ -1,18 +1,56 @@
 #include "stdafx.h"
-#include "ExportUSDPlugIn.h"
+
 #include "../UsdShared/ON_Helpers.h"
 #include "../UsdShared/UsdShared.h"
-#include "UsdExportOptions.h"
-#include "UsdExportPacket.h"
-#include "write_usd.h"
+#include "../UsdShared/UsdPacket.h"
 
-int WriteUSDFile(const wchar_t* filename,
-                  bool usda,
-                  CRhinoDoc& doc,
-                  const CRhinoFileWriteOptions& options,
-                  bool scripting,
-                  UsdExportOptions& usdOptions,
-                  int mesh_ui_style)
+#include "ExportUSDPlugIn.h"
+#include "write_usd.h"
+#include "UsdExportOptions.h"
+#include "UsdExportImport.h"
+
+static void SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm)
+{
+  auto pr1 = std::pair<const ON_UUID, const ON_wString>(ON_nil_uuid, L"Hello");
+  //sm.insert(pr1);
+}
+
+static void WorkoutTextureCoordinates(
+  const int mapping_channel_id,
+  const std::map<int, const ON_TextureCoordinates*>& mappingCoordinatesOnMesh,
+  std::vector<const ON_TextureCoordinates>& tcs
+)
+{
+  //auto dfltMc = static_cast<ON_Texture::MAPPING_CHANNEL>(mapping_channel_id);
+  //if (true /*is default*/)
+  //  if (dfltMc == ON_Texture::MAPPING_CHANNEL::tc_channel) // deprecated
+  //    dfltMc = ON_Texture::MAPPING_CHANNEL::default_channel;
+  if (ON_Texture::IsBuiltInMappingChannel(mapping_channel_id)) {
+    auto mc_type = ON_Texture::BuiltInMappingChannelFromUnsigned(mapping_channel_id);
+    ON_TextureMapping mapping;
+    switch (mc_type)
+    {
+      case ON_Texture::MAPPING_CHANNEL::tc_channel:
+      case ON_Texture::MAPPING_CHANNEL::default_channel: { mapping.SetSurfaceParameterMapping(); }
+      //case ON_Texture::MAPPING_CHANNEL::screen_based_channel: { mapping.setmapping}
+      //case ON_Texture::MAPPING_CHANNEL::wcs_channel: { return 2; }
+      //case ON_Texture::MAPPING_CHANNEL::wcs_box_channel: { return 3; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_box_channel: { return 4; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_light_probe_channel: { return 5; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_spherical_channel: { return 6; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_cube_map_channel: { return 7; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_vcross_cube_map_channel: { return 8; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_hcross_cube_map_channel: { return 9; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_hemispherical_channel: { return 10; }
+      //case ON_Texture::MAPPING_CHANNEL::environment_map_emap_channel: { return 11; }
+      default: { ASSERT(false); mapping.SetSurfaceParameterMapping(); }
+    }
+    //auto a = mapping.GetTextureCoordinates()
+  }
+  // this function doesn't do anything yet.
+}
+
+int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExportOptions& usdOptions, ON_ClassArray<UsdPacket>& packets)
 {
   // TODO : Document why this is necessary
 #if defined(ON_RUNTIME_APPLE)
@@ -25,31 +63,21 @@ int WriteUSDFile(const wchar_t* filename,
 
   CRhinoWaitCursor hourglass;
   ON_wString backupname;
-  
-  ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
 
-  double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
-  const ON_wString fn(filename);
-
-  UsdExportImport usdEI(fn, metersPerUnit, usdOptions, options, scripting, doc, usda);
-  usdEI.
-
-  ON_ClassArray<UsdPacket> packets;
   ON_ClassArray<UsdPacket> meshPackets;
   ON_SimpleArray<const CRhinoObject*> meshObjects;
-
-  CRhinoObjectIterator it(doc.RuntimeSerialNumber(), options);
+  CRhinoObjectIterator it(doc.RuntimeSerialNumber(), fileOptions);
   for (const CRhinoObject* obj = it.First(); obj; obj = it.Next())
   {
     // We handle all of the NON-Mesh objects first, then do every mesh object at once because it is simpler.
     const ON_Geometry* geometry = obj->Geometry();
     if (nullptr == geometry)
       continue;
-
-    if (!IsValidUsdObject(obj->ObjectType()))
+    
+    if (!UsdShared::IsValidUsdObject(obj->ObjectType()))
       continue;
 
-    ON::object_type type = GetTypeFromObject(obj);
+    ON::object_type type = UsdShared::GetTypeFromObject(obj);
     if (type == ON::object_type::mesh_object)
     {
       meshObjects.Append(obj);
@@ -67,21 +95,17 @@ int WriteUSDFile(const wchar_t* filename,
     return 0;
   }
 
-  const bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
-  if (useOptionsDictionary)
-  {
-    const ON_ArchivableDictionary& dict = options.OptionsDictionary();
-    GetMeshParametersFromDictionary(dict, mp);
-  }
+  int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
+  if (usdOptions.Headless)
+    mesh_ui_style = 4;
 
-  if (!MeshPackets(meshPackets, packets, meshObjects, options.Transformation(), mp, mesh_ui_style)) return -1;
+  if (!MeshPackets(meshPackets, packets, meshObjects, fileOptions.Transformation(), usdOptions.MeshingParams, mesh_ui_style)) return -1;
   if (mesh_ui_style < 2 && mesh_ui_style > 0)
   {
-    // clean up display after interactive meshing.
-    doc.Redraw();
+    doc.Redraw(); // clean up display after interactive meshing.
   }
 
-  return WriteUSDFile(filename, doc, packets, usdOptions);
+  return 1;
 }
 
 int WriteUSDFile(const wchar_t* filename,
@@ -92,7 +116,7 @@ int WriteUSDFile(const wchar_t* filename,
   double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
 
   const ON_wString fn(filename);
-  UsdExportImport usdEI(fn, metersPerUnit);
+  UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc);
   for (UsdPacket& packet : packets)
   {
     usdEI.WriteObject(packet, usdOptions);
@@ -105,16 +129,16 @@ int WriteUSDFile(const wchar_t* filename,
   return 1;
 }
 
-static bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
-                      ON_ClassArray<UsdPacket>& packets,
-                      ON_SimpleArray<const CRhinoObject*> meshObjects,
-                      ON_Xform transform,
-                      ON_MeshParameters mp,
-                      int mesh_ui_style)
+bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
+  ON_ClassArray<UsdPacket>& packets,
+  ON_SimpleArray<const CRhinoObject*> meshObjects,
+  ON_Xform transform,
+  ON_MeshParameters& mp,
+  int mesh_ui_style)
 {
   // Perform Meshing
   ON_ClassArray<CRhinoObjectMesh> mesh_list(meshPackets.Count());
-  
+
   CRhinoCommand::result rs = RhinoMeshObjects(meshObjects, mp, transform, mesh_ui_style, mesh_list);
   if (CRhinoCommand::success != rs) return false;
 
@@ -141,90 +165,4 @@ static bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
   }
 
   return true;
-}
-
-static void GetMeshParametersFromDictionary(const ON_ArchivableDictionary& dict, ON_MeshParameters& params)
-{
-  ON_MeshParameters mp;
-  if (dict.TryGetMeshParameters(L"MeshingParameters", mp))
-    params = mp;
-}
-
-static bool IsValidUsdObject(ON::object_type type)
-{
-  switch (type)
-  {
-    // No current fallback or just not a good option
-    case ON::object_type::unknown_object_type:
-    case ON::object_type::point_object: // TODO : Support
-    case ON::object_type::pointset_object:
-    case ON::object_type::layer_object:
-    case ON::object_type::material_object:
-    case ON::object_type::light_object: // TODO : Support
-    case ON::object_type::annotation_object:
-    case ON::object_type::userdata_object:
-    case ON::object_type::instance_definition: // TODO : Support
-      // case ON::object_type::instance_reference: // TODO : Support
-    case ON::object_type::text_dot:
-    case ON::object_type::grip_object:
-    case ON::object_type::detail_object:
-    case ON::object_type::hatch_object: // TODO : Support
-    case ON::object_type::morph_control_object:
-    case ON::object_type::loop_object:
-    case ON::object_type::brepvertex_filter:
-    case ON::object_type::polysrf_filter:
-    case ON::object_type::edge_filter:
-    case ON::object_type::polyedge_filter:
-    case ON::object_type::meshvertex_filter:
-    case ON::object_type::meshedge_filter:
-    case ON::object_type::meshface_filter:
-    case ON::object_type::meshcomponent_reference:
-    case ON::object_type::cage_object:
-    case ON::object_type::phantom_object:
-    case ON::object_type::clipplane_object:
-      return false;
-  }
-
-  return true;
-}
-
-ON::object_type GetTypeFromObject(const CRhinoObject* obj)
-{
-  switch (obj->ObjectType())
-  {
-    // Supported Objects
-  case ON::object_type::curve_object:
-  case ON::object_type::instance_reference:
-    return  obj->ObjectType();
-    break;
-
-    /* TODO : Support natively
-    case ON::object_type::point_object:
-      type = ON::object_type::point_object;
-      break;
-
-    case ON::object_type::surface_object:
-      if (usdOptions.ForceMeshes)
-        type = ON::object_type::mesh_object;
-      else
-        type = ON::object_type::surface_object;
-      break;
-
-    case ON::object_type::brep_object:
-      if (usdOptions.ForceMeshes)
-        type = ON::object_type::mesh_object;
-      else
-        type = ON::object_type::brep_object;
-      break;
-
-    case ON::object_type::subd_object:
-      if (usdOptions.ForceMeshes)
-        type = ON::object_type::mesh_object;
-      else
-        type = ON::object_type::subd_object;
-      break;
-    */
-  }
-
-  return ON::object_type::mesh_object;
 }

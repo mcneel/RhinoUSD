@@ -6,9 +6,10 @@
 #endif
 
 #include "ExportUSDPlugIn.h"
-#include "Resource.h""
+#include "Resource.h"
 #include "UsdExportOptions.h"
 #include "write_usd.h"
+#include "../UsdShared/UsdPacket.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -121,59 +122,106 @@ CExportUSDPlugIn& CExportUSDPlugIn::ThePlugin()
   return thePlugIn;
 }
 
-int CExportUSDPlugIn::WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options)
+int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
+                                int index,
+                                CRhinoDoc& doc,
+                                const CRhinoFileWriteOptions& options)
 {
-  bool scripting = RhinoApp().IsHeadless() || options.UseBatchMode();
+	ExportOptions.Headless = RhinoApp().IsHeadless() || options.UseBatchMode();
+
   int mesh_ui_style = CExportUSDPlugIn::ThePlugin().m_saved_mesh_ui_style;
-
-  auto opts = options.OptionsDictionary();
+  
+  // user has input some options via the AIP
   bool useOptionsDictionary = options.OptionsDictionary().Count() > 0;
-
-  // Scripting
   if (useOptionsDictionary)
   {
     mesh_ui_style = 4;
     PushFileWriteOptionsToUsdOptions(options);
+		ExportOptions.Headless = true;
   }
-  else if (scripting)
+  else if (ExportOptions.Headless)
   {
     mesh_ui_style = 4;
-
-    // Headed/headless/batch mode
-    CRhParameterDictionary args;
-    args.SetUuid(L"plugin-id", PlugInID());
-    args.SetInt(L"doc", doc.RuntimeSerialNumber());
-    args.SetBool(L"scripting", scripting);
-
-    HandleUserInput(scripting, args, Options);
+		HandleUserInput(ExportOptions);
   }
 
-  return WriteUSDFile(filename, 1 == index, doc, options, scripting, Options, mesh_ui_style);
+  // bool usda = 1 == index;
+
+  ON_ClassArray<UsdPacket> packets;
+  if (GetPackets(doc, options, ExportOptions, packets) <= 0) return -1;
+  
+  return WriteUSDFile(filename, doc, packets, ExportOptions);
 }
 
-void CExportUSDPlugIn::PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& options)
+void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
 {
-  const ON_ArchivableDictionary dictionary = options.OptionsDictionary();
+  int blocksValue = (int)ExportOptions.DefaultBlocks;
+  ON_wString RootLayerValue = ExportOptions.DefaultRootLayer;
+  ON_wString modelNameValue = ExportOptions.DefaultModelName;
+  bool forceMeshesValue = ExportOptions.DefaultForceMeshes;
+  bool includeUserStringsValue = ExportOptions.DefaultIncludeUserStrings;
+
+  if (pc.LoadProfileInt(lpszSection, L"blocks", &blocksValue, (int)ExportOptions.DefaultBlocks))
+    ExportOptions.Blocks = (BlockHandling)(blocksValue);
+
+  if (pc.LoadProfileString(lpszSection, L"root-layer", RootLayerValue, ExportOptions.DefaultRootLayer))
+    ExportOptions.RootLayer = RootLayerValue;
+
+  if (pc.LoadProfileString(lpszSection, L"model-name", modelNameValue, ExportOptions.DefaultModelName))
+    ExportOptions.ModelName = modelNameValue;
+
+  if (pc.LoadProfileBool(lpszSection, L"force-meshes", &forceMeshesValue, ExportOptions.DefaultForceMeshes))
+    ExportOptions.ForceMeshes = forceMeshesValue;
+
+  if (pc.LoadProfileBool(lpszSection, L"include-user-strings", &includeUserStringsValue, ExportOptions.DefaultIncludeUserStrings))
+    ExportOptions.IncludeUserStrings = includeUserStringsValue;
+}
+
+void CExportUSDPlugIn::SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)
+{
+  pc.SaveProfileString(lpszSection, L"model-name", ExportOptions.ModelName);
+  pc.SaveProfileString(lpszSection, L"root-layer", ExportOptions.RootLayer);
+  pc.SaveProfileInt(lpszSection, L"blocks", (int)ExportOptions.Blocks);
+  pc.SaveProfileBool(lpszSection, L"force-meshes", ExportOptions.ForceMeshes);
+  pc.SaveProfileBool(lpszSection, L"user-strings", ExportOptions.IncludeUserStrings);
+}
+
+void CExportUSDPlugIn::DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType)
+{
+	// This only runs when a user "clicks" options, and is therefore not headless
+	ExportOptions.Headless = false;
+  HandleUserInput(ExportOptions);
+}
+
+void CExportUSDPlugIn::PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions & fileWriteOptions)
+{
+  const ON_ArchivableDictionary dictionary = fileWriteOptions.OptionsDictionary();
+
+  ON_MeshParameters mp = CExportUSDPlugIn::ThePlugin().m_saved_mp;
+  if (dictionary.TryGetMeshParameters(L"MeshingParameters", mp))
+  {
+    ExportOptions.MeshingParams = mp;
+  }
 
   int blocksValue;
-  ON_wString defaultLayerValue;
+  ON_wString rootLayerValue;
   ON_wString modelNameValue;
   bool forceMeshesValue;
   bool includeUserStringsValue;
 
+  // Misc Export Settings
   if (dictionary.TryGetInt32(L"blocks", blocksValue))
-    Options.Blocks = (BlockHandling)blocksValue;
+    ExportOptions.Blocks = (BlockHandling)blocksValue;
 
-  if (dictionary.TryGetString(L"default-layer", defaultLayerValue))
-    Options.DefaultLayer = defaultLayerValue;
+  if (dictionary.TryGetString(L"root-layer", rootLayerValue))
+    ExportOptions.RootLayer = rootLayerValue;
 
   if (dictionary.TryGetString(L"model-name", modelNameValue))
-    Options.ModelName = modelNameValue;
+    ExportOptions.ModelName = modelNameValue;
 
   if (dictionary.TryGetBool(L"force-meshes", forceMeshesValue))
-    Options.ForceMeshes = forceMeshesValue;
+    ExportOptions.ForceMeshes = forceMeshesValue;
 
   if (dictionary.TryGetBool(L"include-user-strings", includeUserStringsValue))
-    Options.IncludeUserStrings = includeUserStringsValue;
-
+    ExportOptions.IncludeUserStrings = includeUserStringsValue;
 }

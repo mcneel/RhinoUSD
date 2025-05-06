@@ -1,7 +1,5 @@
 #pragma once
-#include "stdafx.h"
 #include "UsdExportOptions.h"
-#include "UsdExportPacket.h"
 
 class CExportUSDPlugIn : public CRhinoFileExportSystemPlugIn
 {
@@ -20,12 +18,14 @@ public:
   void AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileWriteOptions& options) override;
   int WriteFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileWriteOptions& options) override;
 
+  UsdExportOptions ExportOptions;
+
   void LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc) override;
   void SaveProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc) override;
 
   void DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType) override;
 
-  void PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& options);
+  void PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& fileWriteOptions);
 
 private:
   ON_wString m_plugin_version;
@@ -34,3 +34,4 @@ public:
   int m_saved_mesh_ui_style = 0;
   ON_MeshParameters m_saved_mp;
 };
+

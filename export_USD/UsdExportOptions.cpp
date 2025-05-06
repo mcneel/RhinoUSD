@@ -2,16 +2,18 @@
 #include "../../../RhinoUiHooks.h"
 #include "UsdExportOptions.h"
 
-
 // True when user chnaged the Options, False on any other result
-bool HandleUserInput(bool scripting, CRhParameterDictionary& args, UsdExportOptions& options)
+bool HandleUserInput(UsdExportOptions& options)
 {
+  CRhParameterDictionary args;
+
   // Plugin Settings
   args.SetInt(L"blocks", (int)options.Blocks);
-  args.SetString(L"default-layer", options.DefaultLayer);
+  args.SetString(L"root-layer", options.RootLayer);
   args.SetString(L"model-name", options.ModelName);
   args.SetBool(L"force-meshes", options.ForceMeshes);
   args.SetBool(L"include-user-strings", options.IncludeUserStrings);
+  args.SetBool(L"scripting", options.Headless);
 
   if (!RhExecuteNamedCallback(L"ShowExportUsdDialog", args)) return false;
   bool userChoseOk;
@@ -19,7 +21,7 @@ bool HandleUserInput(bool scripting, CRhParameterDictionary& args, UsdExportOpti
   if (!userChoseOk) return false;
 
   int blocksValue;
-  ON_wString defaultLayerValue;
+  ON_wString rootLayerValue;
   ON_wString modelNameValue;
   bool forceMeshesValue;
   bool includeUserStringsValue;
@@ -29,9 +31,10 @@ bool HandleUserInput(bool scripting, CRhParameterDictionary& args, UsdExportOpti
     options.Blocks = (BlockHandling)blocksValue;
   }
 
-  if (args.GetString(L"default-layer", defaultLayerValue))
+  if (args.GetString(L"root-layer", rootLayerValue))
   {
-    options.DefaultLayer = defaultLayerValue;
+    // TODO : Validate that root layer is not null or empty
+    options.RootLayer = rootLayerValue;
   }
 
   if (args.GetString(L"model-name", modelNameValue))
