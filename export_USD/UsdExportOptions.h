@@ -8,6 +8,12 @@ enum class BlockHandling : int { SeparateFiles = 0, Ignore = 1, InsideFile = 2 }
 class UsdExportOptions
 {
 public:
+  ON_wString DefaultModelName = L"";
+  ON_wString DefaultRootLayer = L"World";
+  BlockHandling DefaultBlocks = BlockHandling::SeparateFiles;
+  bool DefaultForceMeshes = false;
+  bool DefaultIncludeUserStrings = true;
+
   // If Model Name is empty that layer/prim isn't included
   ON_wString ModelName = DefaultModelName;
   ON_wString RootLayer = DefaultRootLayer;
@@ -20,13 +26,7 @@ public:
 
   // Meshing Settings
   ON_MeshParameters MeshingParams;
-  
 
-  ON_wString DefaultModelName = L"";
-  ON_wString DefaultRootLayer = L"World";
-  BlockHandling DefaultBlocks = BlockHandling::SeparateFiles;
-  bool DefaultForceMeshes = false;
-  bool DefaultIncludeUserStrings = true;
 
 };
 

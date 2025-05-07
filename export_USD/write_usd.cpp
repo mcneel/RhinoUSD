@@ -1,10 +1,13 @@
 #include "stdafx.h"
-#include "ExportUSDPlugIn.h"
+
 #include "../UsdShared/ON_Helpers.h"
 #include "../UsdShared/UsdShared.h"
+#include "../UsdShared/UsdPacket.h"
+
+#include "ExportUSDPlugIn.h"
 #include "write_usd.h"
 #include "UsdExportOptions.h"
-#include "UsdExportPacket.h"
+#include "UsdExportImport.h"
 
 static void SetStringMap(std::multimap<const ON_UUID, const ON_wString>& sm)
 {
@@ -120,6 +123,8 @@ int WriteUSDFile(const wchar_t* filename,
 
   if (!usdEI.AnythingToSave())
     return 0;
+
+  usdEI.SetDefaultPrim();
 
   usdEI.Save();
   return 1;

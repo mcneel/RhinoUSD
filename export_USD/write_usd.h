@@ -1,7 +1,7 @@
+#pragma once
 #include "stdafx.h"
 #include "UsdExportOptions.h"
-#include "UsdExportPacket.h"
-#pragma once
+#include "../UsdShared/UsdPacket.h"
 
 int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& options, UsdExportOptions& usdOptions, ON_ClassArray<UsdPacket>& packets);
 

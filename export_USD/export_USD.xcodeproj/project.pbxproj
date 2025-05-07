@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A0956AA2DCA09B300E825A6 /* UsdExportImport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0956A92DCA09B300E825A6 /* UsdExportImport.cpp */; };
 		1A6FA13D2D6DA22800A94307 /* devinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A6FA13C2D6DA22800A94307 /* devinfo.cpp */; };
+		1A7CAE942DC8DC250026DADA /* UsdExportOptions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A7CAE922DC8DC250026DADA /* UsdExportOptions.cpp */; };
 		223BC30C29D22B390090D5E8 /* ExportUSDPlugIn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC30A29D22B390090D5E8 /* ExportUSDPlugIn.cpp */; };
 		223BC30D29D22B390090D5E8 /* write_usd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC30B29D22B390090D5E8 /* write_usd.cpp */; };
 		22C600CA29D23121002FBBF0 /* OpenNURBS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C600C929D23121002FBBF0 /* OpenNURBS.framework */; };
@@ -19,7 +21,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1A0956A82DCA09A300E825A6 /* UsdExportImport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UsdExportImport.h; sourceTree = "<group>"; };
+		1A0956A92DCA09B300E825A6 /* UsdExportImport.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UsdExportImport.cpp; sourceTree = "<group>"; };
+		1A0956AB2DCA09C600E825A6 /* UsdPacket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UsdPacket.h; path = ../UsdShared/UsdPacket.h; sourceTree = SOURCE_ROOT; };
 		1A6FA13C2D6DA22800A94307 /* devinfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = devinfo.cpp; path = ../../devinfo.cpp; sourceTree = "<group>"; };
+		1A7CAE912DC8DC250026DADA /* UsdExportOptions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UsdExportOptions.h; sourceTree = "<group>"; };
+		1A7CAE922DC8DC250026DADA /* UsdExportOptions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UsdExportOptions.cpp; sourceTree = "<group>"; };
 		220221EB29D22A31005357DE /* export_USD.rhp */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = export_USD.rhp; sourceTree = BUILT_PRODUCTS_DIR; };
 		223BC30829D22B280090D5E8 /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
 		223BC30929D22B280090D5E8 /* ExportUSDPlugIn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportUSDPlugIn.h; sourceTree = "<group>"; };
@@ -85,10 +92,13 @@
 		223BC30629D22AC90090D5E8 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
+				1A0956AB2DCA09C600E825A6 /* UsdPacket.h */,
+				1A0956A82DCA09A300E825A6 /* UsdExportImport.h */,
 				223BC30929D22B280090D5E8 /* ExportUSDPlugIn.h */,
 				223BC30829D22B280090D5E8 /* stdafx.h */,
 				997ED8BB29D3DC4D00DAE8F8 /* ON_Helpers.h */,
 				997ED8BA29D3DC4D00DAE8F8 /* UsdShared.h */,
+				1A7CAE912DC8DC250026DADA /* UsdExportOptions.h */,
 			);
 			name = "Header Files";
 			sourceTree = "<group>";
@@ -96,6 +106,8 @@
 		223BC30729D22AD90090D5E8 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				1A0956A92DCA09B300E825A6 /* UsdExportImport.cpp */,
+				1A7CAE922DC8DC250026DADA /* UsdExportOptions.cpp */,
 				1A6FA13C2D6DA22800A94307 /* devinfo.cpp */,
 				997ED8B929D3DC4D00DAE8F8 /* ON_Helpers.cpp */,
 				997ED8B829D3DC4D00DAE8F8 /* UsdShared.cpp */,
@@ -188,6 +200,8 @@
 				223BC30D29D22B390090D5E8 /* write_usd.cpp in Sources */,
 				997ED8BD29D3DC4D00DAE8F8 /* ON_Helpers.cpp in Sources */,
 				223BC30C29D22B390090D5E8 /* ExportUSDPlugIn.cpp in Sources */,
+				1A7CAE942DC8DC250026DADA /* UsdExportOptions.cpp in Sources */,
+				1A0956AA2DCA09B300E825A6 /* UsdExportImport.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

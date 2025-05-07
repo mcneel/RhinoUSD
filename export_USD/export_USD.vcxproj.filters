@@ -39,6 +39,12 @@
     <ClCompile Include="UsdExportOptions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UsdExportImport.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UsdExportImport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExportUSDApp.h">
@@ -68,7 +74,7 @@
     <ClInclude Include="UsdExportOptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UsdExportPacket.h">
+    <ClInclude Include="..\UsdShared\UsdPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
