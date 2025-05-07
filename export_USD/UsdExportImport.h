@@ -19,6 +19,9 @@ public:
   void BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wString meshPath);
   void AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames);
   void AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames);
+  bool AddBlock(const UsdPacket& packet, const UsdExportOptions& usdOptions);
+  ON_ClassArray<UsdPacket> GetPackets(const CRhinoInstanceDefinition& definition, const ON_MeshParameters mp);
+  const ON_Mesh& GetMeshFromSubD(ON_SubD& subD, const ON_MeshParameters mp);
   bool AnythingToSave();
   void Save(/*const ON_wString& fileName*/);
 

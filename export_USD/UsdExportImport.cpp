@@ -7,6 +7,7 @@
 
 #include "UsdExportOptions.h"
 #include "UsdExportImport.h"
+#include "write_usd.h"
 
 using namespace pxr;
 using namespace std;
@@ -325,6 +326,96 @@ bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& 
   }
 
   return true;
+}
+
+bool UsdExportImport::AddBlock(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+{
+  if (packet.Type() != ON::object_type::instance_reference) return false;
+
+  CRhinoDoc* doc = packet.Object().Document();
+  if (!doc) return false;
+
+  const ON_Geometry* duplicate = packet.Object().Geometry();
+  const ON_InstanceRef* reference = ON_InstanceRef::Cast(duplicate);
+
+  ON_UUID refId = reference->m_instance_definition_uuid;
+
+  int index = doc->m_instance_definition_table.FindInstanceDefinition(refId, true);
+  if (index < 0) return false;
+
+  const CRhinoInstanceDefinition* definition = doc->m_instance_definition_table[index];
+
+  ON_wString onFilename;
+  onFilename.Format(L"%s.usdz", definition->Name());
+  const wchar_t* filename = onFilename.Array();
+
+  ON_ClassArray<UsdPacket> packets = GetPackets(*definition, ON_MeshParameters());
+  int returnValue = WriteUSDFile(filename, *doc, packets, usdOptions);
+  returnValue = WriteUSDFile(filename, false, *doc, options, true, usdOptions, -1);
+  if (returnValue < 0) return false;
+
+  std::vector<ON_wString> layerNames = UsdShared::GetLayerNames(packet, usdOptions);
+  ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
+
+  ON_wString name;
+  name.Format(L"/blockInstance%d", currentNurbsCurveIndex++);
+  name = layerNamesPath + name;
+
+  ON_String utf8_name = name;
+  std::string stdStrName(utf8_name.Array()); //= ON_Helpers::ON_wString_to_StdString(name);
+
+  UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(stdStrName));
+  pxr::UsdReferences references = instanceForm.GetPrim().GetReferences();
+
+  ON_wString definitionName = definition->Name() + L".usda";
+  ON_String definition_utf8_name(definitionName);
+
+  std::string fileName(definition_utf8_name.Array());
+  references.AddReference(fileName, SdfPath(stdStrName));
+
+  UsdPrim prim = instanceForm.GetPrim();
+  SdfAssetPath assetPath("block.usda");
+  TfToken token("assetPath");
+  prim.SetMetadata(token, assetPath);
+
+  if (usdOptions.IncludeUserStrings && prim.IsValid())
+  {
+    UsdShared::AddUserDataToPrim(packet, &prim);
+  }
+
+  return true;
+}
+
+ON_ClassArray<UsdPacket> UsdExportImport::GetPackets(const CRhinoInstanceDefinition& definition, const ON_MeshParameters mp)
+{
+  ON_ClassArray<UsdPacket> packets;
+  ObjectArray objects;
+
+  for (const CRhinoObject* obj : objects)
+  {
+    UsdPacket& packet = packets.AppendNew();
+    UsdPacket newPacket(*obj, UsdShared::GetTypeFromObject(obj));
+
+    if (newPacket.Type() == ON::object_type::mesh_object)
+    {
+
+      // auto renderMesh = obj->RenderMeshes(ON::mesh_type::render_mesh, true);
+
+
+      // newPacket.SetMesh(); 
+    }
+
+    packet = newPacket;
+  }
+
+  return packets;
+}
+
+const ON_Mesh& UsdExportImport::GetMeshFromSubD(ON_SubD& subD, const ON_MeshParameters mp)
+{
+  int mesh_density = 5;
+  ON_SubDDisplayParameters limit_mesh_parameters = ON_SubDDisplayParameters::CreateFromDisplayDensity(mp.MeshDensity());
+  return *subD.GetSurfaceMesh(limit_mesh_parameters, nullptr);
 }
 
 void UsdShared::AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim* prim)
