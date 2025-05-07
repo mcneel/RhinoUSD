@@ -351,10 +351,9 @@ bool UsdExportImport::AddBlock(const UsdPacket& packet, const UsdExportOptions& 
 
   ON_ClassArray<UsdPacket> packets = GetPackets(*definition, ON_MeshParameters());
   int returnValue = WriteUSDFile(filename, *doc, packets, usdOptions);
-  returnValue = WriteUSDFile(filename, false, *doc, options, true, usdOptions, -1);
   if (returnValue < 0) return false;
 
-  std::vector<ON_wString> layerNames = UsdShared::GetLayerNames(packet, usdOptions);
+  std::vector<ON_wString> layerNames = GetLayerNames(packet);
   ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
 
   ON_wString name;
