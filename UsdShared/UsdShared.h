@@ -13,7 +13,7 @@ namespace UsdShared
   void CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination);
   void CreateUsdzFile(const ON_wString& fullFileNameNoExtension, const std::vector<ON_wString>& filesToInclude);
   bool IsAcceptableUsdCharacter(wchar_t c);
-  ON_wString RhinoLayerNameToUsd(const ON_wString& rhLayerName);
+  ON_wString RhinoLayerNameToUsd(const ON_wString& rhLayerName, const ON_wString& defaultName = L"Default");
   void SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage);
   bool IsValidUsdObject(ON::object_type type);
   ON::object_type GetTypeFromObject(const CRhinoObject* obj);
