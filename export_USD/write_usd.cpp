@@ -124,6 +124,8 @@ int WriteUSDFile(const wchar_t* filename,
   if (!usdEI.AnythingToSave())
     return 0;
 
+  usdEI.SetDefaultPrim();
+
   usdEI.Save();
   return 1;
 }

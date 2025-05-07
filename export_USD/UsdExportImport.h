@@ -28,6 +28,8 @@ public:
 
   std::vector<ON_wString> GetLayerNames(const UsdPacket& packet);
 
+  void SetDefaultPrim();
+
   const UsdExportOptions& Options;
 
 private:

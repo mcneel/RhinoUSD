@@ -50,6 +50,7 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
   {
     std::cout << "could not set StageMetersPerUnit";
   }
+
 }
 
 
@@ -825,6 +826,16 @@ void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const
 bool UsdExportImport::AnythingToSave()
 {
   return currentMeshIndex > 0 || !materialsAddedToScene.empty() || currentNurbsCurveIndex > 0;
+}
+
+void UsdExportImport::SetDefaultPrim()
+{
+  ON_wString absolutePath(L"/");
+  absolutePath += Options.RootLayer;
+  std::string stringPath = ON_Helpers::ON_wString_to_StdString(absolutePath);
+  pxr::UsdPrim defaultPrim = stage->GetPrimAtPath(pxr::SdfPath(stringPath));
+
+  stage->SetDefaultPrim(defaultPrim);
 }
 
 void UsdExportImport::Save()
