@@ -13,7 +13,7 @@ using namespace pxr;
 using namespace std;
 
 UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
-  Options(options),
+  UsdOptions(options),
   Doc(doc),
 
   usdFullFileName(fn),
@@ -54,44 +54,41 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
 
 }
 
-
-void UsdExportImport::WriteObject(UsdPacket& packet, const UsdExportOptions& usdOptions)
+void UsdExportImport::WriteObject(std::shared_ptr<UsdPacket>& packet, const UsdExportOptions& usdOptions)
 {
-  switch (packet.Type())
+  switch (packet->Type())
   {
   case ON::object_type::curve_object:
     if (!AddCurve(packet, usdOptions)) return;
     break;
 
-    // TODO : Implement
-    //case ON::object_type::instance_reference:
-    //  if (!AddBlock(packet, usdOptions)) return;
-    //  break;
+    case ON::object_type::instance_reference:
+      if (!AddBlock(packet, usdOptions)) return;
+      break;
 
-      // Default to Mesh for now
   default:
     if (!AddMesh(packet, usdOptions)) return;
     break;
   }
 }
 
-bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOptions)
+bool UsdExportImport::AddMesh(std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
 {
-  ON_Mesh* mesh = packet.Mesh();
+  ON_Mesh* mesh = packet->Mesh();
 
   if (!mesh) return false;
-  if (packet.Type() != ON::object_type::mesh_object) return false;
+  if (packet->Type() != ON::object_type::mesh_object) return false;
 
-  const CRhinoDoc* doc = packet.Object().Document();
+  const CRhinoDoc* doc = packet->Object().Document();
   if (!doc) return false;
 
   std::map<int, ON_TextureCoordinates> textureCoordinatesByMappingChannel;
   // this has to be done first, before meshes vertices are read to be exported
   // because setting the texture coordinates can modify the mesh vertices
-  UsdShared::SetTextureCoordinatesOnMesh(packet.Object(), mesh, doc, textureCoordinatesByMappingChannel);
+  UsdShared::SetTextureCoordinatesOnMesh(packet->Object(), mesh, doc, textureCoordinatesByMappingChannel);
 
   //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
-  const ON_wString meshName = packet.Object().Attributes().Name();
+  const ON_wString meshName = packet->Object().Attributes().Name();
 
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
   // AddMeshMaterial();
@@ -252,9 +249,11 @@ bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOpti
   return true;
 }
 
-bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+bool UsdExportImport::AddCurve(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
 {
-  const ON_Geometry* geometry = packet.Object().Geometry();
+  if (packet->Type() != ON::object_type::curve_object) return false;
+
+  const ON_Geometry* geometry = packet->Object().Geometry();
   if (!geometry) return false;
 
   // TODO : Support other types of Curves
@@ -328,14 +327,14 @@ bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& 
   return true;
 }
 
-bool UsdExportImport::AddBlock(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
 {
-  if (packet.Type() != ON::object_type::instance_reference) return false;
+  if (packet->Type() != ON::object_type::instance_reference) return false;
 
-  CRhinoDoc* doc = packet.Object().Document();
+  CRhinoDoc* doc = packet->Object().Document();
   if (!doc) return false;
 
-  const ON_Geometry* duplicate = packet.Object().Geometry();
+  const ON_Geometry* duplicate = packet->Object().Geometry();
   const ON_InstanceRef* reference = ON_InstanceRef::Cast(duplicate);
 
   ON_UUID refId = reference->m_instance_definition_uuid;
@@ -344,13 +343,21 @@ bool UsdExportImport::AddBlock(const UsdPacket& packet, const UsdExportOptions& 
   if (index < 0) return false;
 
   const CRhinoInstanceDefinition* definition = doc->m_instance_definition_table[index];
+  ON_wString definitionName = definition->Name() + L".usda";
+  ON_String definition_utf8_name(definitionName);
+  std::string fileName(definition_utf8_name.Array());
 
-  ON_wString onFilename;
-  onFilename.Format(L"%s.usdz", definition->Name());
-  const wchar_t* filename = onFilename.Array();
+  ON_String strr(usdFullFileName);
+  std::string stdstr(strr);
 
-  ON_ClassArray<UsdPacket> packets = GetPackets(*definition, ON_MeshParameters());
-  int returnValue = WriteUSDFile(filename, *doc, packets, usdOptions);
+  size_t separatorIndex = stdstr.find_last_of("\\/");
+  std::string pathWithoutFileName = stdstr.substr(0, separatorIndex);
+  std::string newFilePath = pathWithoutFileName + "\\" + fileName;
+  ON_wString onNewFilePath(newFilePath.data());
+
+  ON_ClassArray<std::shared_ptr<UsdPacket>> packets(1);
+  GetInstancePackets(definition, packets);
+  int returnValue = WriteUSDFile(onNewFilePath, *doc, packets, usdOptions);
   if (returnValue < 0) return false;
 
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
@@ -366,10 +373,6 @@ bool UsdExportImport::AddBlock(const UsdPacket& packet, const UsdExportOptions& 
   UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(stdStrName));
   pxr::UsdReferences references = instanceForm.GetPrim().GetReferences();
 
-  ON_wString definitionName = definition->Name() + L".usda";
-  ON_String definition_utf8_name(definitionName);
-
-  std::string fileName(definition_utf8_name.Array());
   references.AddReference(fileName, SdfPath(stdStrName));
 
   UsdPrim prim = instanceForm.GetPrim();
@@ -385,30 +388,63 @@ bool UsdExportImport::AddBlock(const UsdPacket& packet, const UsdExportOptions& 
   return true;
 }
 
-ON_ClassArray<UsdPacket> UsdExportImport::GetPackets(const CRhinoInstanceDefinition& definition, const ON_MeshParameters mp)
+// TODO : Use Smart Pointers
+void UsdExportImport::GetInstancePackets(const CRhinoInstanceDefinition* definition, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets)
 {
-  ON_ClassArray<UsdPacket> packets;
   ObjectArray objects;
+  definition->GetObjects(objects);
 
+  const CRhinoFileWriteOptions fileOptions;
+
+  GetPacketsFromCRhinoObjects(objects, fileOptions, packets);
+}
+
+bool UsdExportImport::GetPacketsFromCRhinoObjects(ObjectArray& objects, const CRhinoFileWriteOptions& fileOptions, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets, int mesh_ui_style)
+{
+  CRhinoWaitCursor hourglass;
+  ON_wString backupname;
+
+  ON_ClassArray<std::shared_ptr<UsdPacket>> meshPackets;
+  ON_SimpleArray<const CRhinoObject*> meshObjects;
   for (const CRhinoObject* obj : objects)
   {
-    UsdPacket& packet = packets.AppendNew();
-    UsdPacket newPacket(*obj, UsdShared::GetTypeFromObject(obj));
+    // We handle all of the NON-Mesh objects first, then do every mesh object at once because it is simpler.
+    const ON_Geometry* geometry = obj->Geometry();
+    if (nullptr == geometry)
+      continue;
 
-    if (newPacket.Type() == ON::object_type::mesh_object)
+    if (!UsdShared::IsValidUsdObject(obj->ObjectType()))
+      continue;
+
+    ON::object_type type = UsdShared::GetTypeFromObject(obj);
+    if (type == ON::object_type::mesh_object)
     {
-
-      // auto renderMesh = obj->RenderMeshes(ON::mesh_type::render_mesh, true);
-
-
-      // newPacket.SetMesh(); 
+      meshObjects.Append(obj);
+      meshPackets.Append(std::make_shared<UsdPacket>(*obj, type));
     }
-
-    packet = newPacket;
+    else
+    {
+      packets.Append(std::make_unique<UsdPacket>(*obj, type));
+    }
   }
 
-  return packets;
+  if (packets.Count() <= 0 && meshPackets.Count() <= 0)
+  {
+    return false;
+  }
+
+  ON_MeshParameters params = UsdOptions.MeshingParams;
+  if (!MeshPackets(meshPackets, packets, meshObjects, fileOptions.Transformation(), params, mesh_ui_style)) return false;
+  if (mesh_ui_style < 2 && mesh_ui_style > 0)
+  {
+    Doc.Redraw(); // clean up display after interactive meshing.
+  }
+
+  // TODO : Add meshPackets to packets
+
+  return false;
 }
+
 
 const ON_Mesh& UsdExportImport::GetMeshFromSubD(ON_SubD& subD, const ON_MeshParameters mp)
 {
@@ -417,21 +453,21 @@ const ON_Mesh& UsdExportImport::GetMeshFromSubD(ON_SubD& subD, const ON_MeshPara
   return *subD.GetSurfaceMesh(limit_mesh_parameters, nullptr);
 }
 
-void UsdShared::AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim* prim)
+void UsdShared::AddUserDataToPrim(const std::shared_ptr<UsdPacket> packet, pxr::UsdPrim* prim)
 {
-  const CRhinoObjectAttributes& attributes = packet.Object().Attributes();
+  const CRhinoObjectAttributes& attributes = packet->Object().Attributes();
 
   ON_ClassArray<ON_UserString> user_strings;
   attributes.GetUserStrings(user_strings);
 
   /* TODO : Do these 2 need to be supported?
   ON_ClassArray<ON_UserString> object_user_strings;
-  packet.Object().GetUserStrings(object_user_strings);
+  packet->Object().GetUserStrings(object_user_strings);
 
-  if (packet.Object().Geometry())
+  if (packet->Object().Geometry())
   {
     ON_ClassArray<ON_UserString> geoemtry_user_strings;
-    packet.Object().Geometry()->GetUserStrings(geoemtry_user_strings);
+    packet->Object().Geometry()->GetUserStrings(geoemtry_user_strings);
   }
   */
 
@@ -921,7 +957,7 @@ bool UsdExportImport::AnythingToSave()
 void UsdExportImport::SetDefaultPrim()
 {
   ON_wString absolutePath(L"/");
-  absolutePath += Options.RootLayer;
+  absolutePath += UsdOptions.RootLayer;
   std::string stringPath = ON_Helpers::ON_wString_to_StdString(absolutePath);
   pxr::UsdPrim defaultPrim = stage->GetPrimAtPath(pxr::SdfPath(stringPath));
 
@@ -951,14 +987,14 @@ void UsdExportImport::Save()
   }
 }
 
-std::vector<ON_wString> UsdExportImport::GetLayerNames(const UsdPacket& packet)
+std::vector<ON_wString> UsdExportImport::GetLayerNames(const std::shared_ptr<UsdPacket> packet)
 {
   std::vector<ON_wString> names;
 
-  CRhinoDoc* doc = packet.Object().Document();
+  CRhinoDoc* doc = packet->Object().Document();
   if (!doc) return names;
 
-  const CRhinoObjectAttributes& attributes = packet.Object().Attributes();
+  const CRhinoObjectAttributes& attributes = packet->Object().Attributes();
   int layer_index = attributes.m_layer_index;
 
   const CRhinoLayerTable& layer_table = doc->m_layer_table;
@@ -977,12 +1013,12 @@ std::vector<ON_wString> UsdExportImport::GetLayerNames(const UsdPacket& packet)
     pid = id;
   }
   names.insert(names.begin(), L"Geometry");
-  if (!Options.ModelName.IsEmpty())
+  if (!UsdOptions.ModelName.IsEmpty())
   {
-    names.insert(names.begin(), Options.ModelName);
+    names.insert(names.begin(), UsdOptions.ModelName);
   }
 
-  names.insert(names.begin(), Options.RootLayer);
+  names.insert(names.begin(), UsdOptions.RootLayer);
   return names;
 }
 

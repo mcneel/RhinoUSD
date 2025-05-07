@@ -17,6 +17,6 @@ namespace UsdShared
   void SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage);
   bool IsValidUsdObject(ON::object_type type);
   ON::object_type GetTypeFromObject(const CRhinoObject* obj);
-  void AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim* prim);
+  void AddUserDataToPrim(const std::shared_ptr<UsdPacket> packet, pxr::UsdPrim* prim);
   void SetTextureCoordinatesOnMesh(const CRhinoObject& obj, ON_Mesh* pMesh, const CRhinoDoc* doc, std::map<int, ON_TextureCoordinates>& tcs);
 }

@@ -111,7 +111,6 @@ bool UsdShared::IsValidUsdObject(ON::object_type type)
     case ON::object_type::annotation_object:
     case ON::object_type::userdata_object:
     case ON::object_type::instance_definition: // TODO : Support
-      // case ON::object_type::instance_reference: // TODO : Support
     case ON::object_type::text_dot:
     case ON::object_type::grip_object:
     case ON::object_type::detail_object:
@@ -142,7 +141,7 @@ ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
   {
     // Supported Objects
     case ON::object_type::curve_object:
-    // case ON::object_type::instance_reference: // TODO : Impliment
+    case ON::object_type::instance_reference:
       return  obj->ObjectType();
       break;
 

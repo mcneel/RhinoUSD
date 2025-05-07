@@ -50,7 +50,7 @@ static void WorkoutTextureCoordinates(
   // this function doesn't do anything yet.
 }
 
-int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExportOptions& usdOptions, ON_ClassArray<UsdPacket>& packets)
+int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, const UsdExportOptions& usdOptions, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets)
 {
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
@@ -63,8 +63,9 @@ int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExp
   CRhinoWaitCursor hourglass;
   ON_wString backupname;
 
-  ON_ClassArray<UsdPacket> meshPackets;
+  ON_ClassArray<std::shared_ptr<UsdPacket>> meshPackets;
   ON_SimpleArray<const CRhinoObject*> meshObjects;
+
   CRhinoObjectIterator it(doc.RuntimeSerialNumber(), fileOptions);
   for (const CRhinoObject* obj = it.First(); obj; obj = it.Next())
   {
@@ -80,11 +81,11 @@ int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExp
     if (type == ON::object_type::mesh_object)
     {
       meshObjects.Append(obj);
-      meshPackets.Append(UsdPacket(*obj, type));
+      meshPackets.Append(std::make_shared<UsdPacket>(*obj, type));
     }
     else
     {
-      packets.Append(UsdPacket(*obj, type));
+      packets.Append(std::make_shared<UsdPacket>(*obj, type));
     }
   }
 
@@ -98,7 +99,8 @@ int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExp
   if (usdOptions.Headless)
     mesh_ui_style = 4;
 
-  if (!MeshPackets(meshPackets, packets, meshObjects, fileOptions.Transformation(), usdOptions.MeshingParams, mesh_ui_style)) return -1;
+  ON_MeshParameters params(usdOptions.MeshingParams);
+  if (!MeshPackets(meshPackets, packets, meshObjects, fileOptions.Transformation(), params, mesh_ui_style)) return -1;
   if (mesh_ui_style < 2 && mesh_ui_style > 0)
   {
     doc.Redraw(); // clean up display after interactive meshing.
@@ -109,15 +111,16 @@ int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, UsdExp
 
 int WriteUSDFile(const wchar_t* filename,
   CRhinoDoc& doc,
-  ON_ClassArray<UsdPacket>& packets,
+  ON_ClassArray<std::shared_ptr<UsdPacket>> packets,
   const UsdExportOptions& usdOptions)
 {
   double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
 
   const ON_wString fn(filename);
   UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc);
-  for (UsdPacket& packet : packets)
+  for(int i = 0; i < packets.Count(); i++)
   {
+    std::shared_ptr<UsdPacket> packet = packets[i];
     usdEI.WriteObject(packet, usdOptions);
   }
 
@@ -130,9 +133,9 @@ int WriteUSDFile(const wchar_t* filename,
   return 1;
 }
 
-bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
-  ON_ClassArray<UsdPacket>& packets,
-  ON_SimpleArray<const CRhinoObject*> meshObjects,
+bool MeshPackets(ON_ClassArray<std::shared_ptr<UsdPacket>>& meshPackets,
+  ON_ClassArray<std::shared_ptr<UsdPacket>>& packets,
+  ON_SimpleArray<const CRhinoObject*>& meshObjects,
   ON_Xform transform,
   ON_MeshParameters& mp,
   int mesh_ui_style)
@@ -154,12 +157,12 @@ bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
   // Push new meshes into mesh packets
   for (int i = 0; i < meshPackets.Count(); i++)
   {
-    UsdPacket& meshPacket = meshPackets[i];
+    std::shared_ptr<UsdPacket> meshPacket = meshPackets[i];
+    
     CRhinoObjectMesh& mesh = mesh_list[i];
+    meshPacket->SetMesh(mesh.m_mesh);
 
-    UsdPacket& packet = packets.AppendNew();
-    packet = meshPacket;
-    packet.SetMesh(mesh.m_mesh);
+    packets.Append(meshPacket);
 
     // Transfer Ownership
     mesh.m_mesh = nullptr;

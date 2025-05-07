@@ -102,7 +102,7 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
 
   // bool usda = 1 == index;
 
-  ON_ClassArray<UsdPacket> packets;
+  ON_ClassArray<std::shared_ptr<UsdPacket>> packets;
   if (GetPackets(doc, options, ExportOptions, packets) <= 0) return -1;
   
   return WriteUSDFile(filename, doc, packets, ExportOptions);

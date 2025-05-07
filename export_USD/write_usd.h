@@ -3,13 +3,13 @@
 #include "UsdExportOptions.h"
 #include "../UsdShared/UsdPacket.h"
 
-int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& options, UsdExportOptions& usdOptions, ON_ClassArray<UsdPacket>& packets);
+int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, const UsdExportOptions& usdOptions, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets);
 
-int WriteUSDFile(const wchar_t* filename, CRhinoDoc& doc, ON_ClassArray<UsdPacket>& packets, const UsdExportOptions& usdOptions);
+int WriteUSDFile(const wchar_t* filename, CRhinoDoc& doc, ON_ClassArray<std::shared_ptr<UsdPacket>>, const UsdExportOptions& usdOptions);
 
-bool MeshPackets(ON_ClassArray<UsdPacket>& meshPackets,
-  ON_ClassArray<UsdPacket>& packets,
-  ON_SimpleArray<const CRhinoObject*> meshObjects,
+bool MeshPackets(ON_ClassArray<std::shared_ptr<UsdPacket>>& meshPackets,
+  ON_ClassArray<std::shared_ptr<UsdPacket>>& packets,
+  ON_SimpleArray<const CRhinoObject*>& meshObjects,
   ON_Xform transform,
   ON_MeshParameters& mp,
   int mesh_ui_style);
