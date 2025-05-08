@@ -128,6 +128,7 @@ int WriteUSDFile(const wchar_t* filename,
     return 0;
 
   usdEI.SetDefaultPrim();
+  usdEI.SetAuthorMetadata();
 
   usdEI.Save();
   return 1;

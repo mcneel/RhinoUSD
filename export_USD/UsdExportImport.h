@@ -6,8 +6,6 @@
 #include "UsdExportOptions.h"
 #include "../UsdShared/UsdPacket.h"
 
-using namespace pxr;
-
 // Move this to it's own header/cpp
 class UsdExportImport
 {
@@ -33,11 +31,14 @@ public:
   std::vector<ON_wString> GetLayerNames(const std::shared_ptr<UsdPacket> packet);
 
   void SetDefaultPrim();
+  void SetAuthorMetadata();
 
   const UsdExportOptions& UsdOptions;
 
 private:
   CRhinoDoc& Doc;
+
+  ON_SimpleArray<ON_wString> Blocks;
 
   // pxr stuff
   //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
@@ -47,11 +48,12 @@ private:
   const ON_wString usdFullFileName;
   double metersPerUnit;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
-  UsdStageRefPtr stage;
+  pxr::UsdStageRefPtr stage;
   int currentMeshIndex;
   //int currentMaterialIndex;
   int currentShaderIndex;
   int currentNurbsCurveIndex;
+  int currentBlockIndex;
   pxr::TfToken tokPreviewSurface;
   pxr::TfToken tokSurface;
 

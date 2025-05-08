@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "iostream"
 #include <fstream>
+#include <chrono>
 
 #include "../UsdShared/UsdShared.h"
 #include "../UsdShared/ON_Helpers.h"
@@ -22,6 +23,7 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
   //currentMaterialIndex(0),
   currentShaderIndex(0),
   currentNurbsCurveIndex(0),
+  currentBlockIndex(0),
   tokPreviewSurface("UsdPreviewSurface"),
   tokSurface("surface"),
 
@@ -35,7 +37,8 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
   tokOpacity("opacity"),
   tokIor("ior"),
   tokDisplacement("displacement"),
-  tokOcclusion("occlusion")
+  tokOcclusion("occlusion"),
+  Blocks(ON_SimpleArray<ON_wString>(10))
 {
   stage = UsdStage::CreateInMemory();
   //stage = UsdStage::CreateNew(<some path>);
@@ -327,6 +330,9 @@ bool UsdExportImport::AddCurve(const std::shared_ptr<UsdPacket> packet, const Us
   return true;
 }
 
+// TODO : This is very hard to read and honestly not that good
+// TODO : Does this work recursively?
+// TOOD : Create a Folder for these files! (Should this offer nesting?)
 bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
 {
   if (packet->Type() != ON::object_type::instance_reference) return false;
@@ -334,8 +340,8 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   CRhinoDoc* doc = packet->Object().Document();
   if (!doc) return false;
 
-  const ON_Geometry* duplicate = packet->Object().Geometry();
-  const ON_InstanceRef* reference = ON_InstanceRef::Cast(duplicate);
+  const ON_Geometry* geometry = packet->Object().Geometry();
+  const ON_InstanceRef* reference = ON_InstanceRef::Cast(geometry);
 
   ON_UUID refId = reference->m_instance_definition_uuid;
 
@@ -343,42 +349,49 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   if (index < 0) return false;
 
   const CRhinoInstanceDefinition* definition = doc->m_instance_definition_table[index];
-  ON_wString definitionName = definition->Name() + L".usda";
-  ON_String definition_utf8_name(definitionName);
-  std::string fileName(definition_utf8_name.Array());
+  if (Blocks.Search(definition->Name()) > -1)
+  {
+    return true;
+  }
+  
+  ON_wString BlockFolder(L"Refs");
+  BlockFolder += ON_FileSystemPath::DirectorySeparator;
 
-  ON_String strr(usdFullFileName);
-  std::string stdstr(strr);
+  ON_wString rootDirectory = ON_FileSystemPath::DirectoryFromPath(usdFullFileName);
+  ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName);
 
-  size_t separatorIndex = stdstr.find_last_of("\\/");
-  std::string pathWithoutFileName = stdstr.substr(0, separatorIndex);
-  std::string newFilePath = pathWithoutFileName + "\\" + fileName;
-  ON_wString onNewFilePath(newFilePath.data());
+  ON_wString blockFileName(definition->Name());
+  blockFileName += fileExtension;
+
+  ON_wString blockPath = ON_FileSystemPath::CombinePaths(BlockFolder, false, blockFileName, true, false);
+  ON_wString blockFilePath = ON_FileSystemPath::CombinePaths(rootDirectory, false, blockPath, true, false);
+  //if (!ON_FileSystem::PathExists(blockFilePath))
+  //{
+  //  // Create Directory? (USD May handle this?)
+  //}
 
   ON_ClassArray<std::shared_ptr<UsdPacket>> packets(1);
   GetInstancePackets(definition, packets);
-  int returnValue = WriteUSDFile(onNewFilePath, *doc, packets, usdOptions);
+  int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
   if (returnValue < 0) return false;
 
+  Blocks.Append(definition->Name());
+
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
-  ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
+  ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
 
-  ON_wString name;
-  name.Format(L"/blockInstance%d", currentNurbsCurveIndex++);
-  name = layerNamesPath + name;
+  ON_wString blockPrimName;
+  blockPrimName.Format(L"/blockInstance%d", currentBlockIndex++);
+  blockPrimPath += blockPrimName;
 
-  ON_String utf8_name = name;
-  std::string stdStrName(utf8_name.Array()); //= ON_Helpers::ON_wString_to_StdString(name);
-
-  UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(stdStrName));
-  pxr::UsdReferences references = instanceForm.GetPrim().GetReferences();
-
-  references.AddReference(fileName, SdfPath(stdStrName));
+  UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(ON_Helpers::ON_wString_to_StdString(blockPath)));
 
   UsdPrim prim = instanceForm.GetPrim();
-  SdfAssetPath assetPath("block.usda");
-  TfToken token("assetPath");
-  prim.SetMetadata(token, assetPath);
+
+  UsdAttribute assetAttr = prim.CreateAttribute(TfToken("Ref"), SdfValueTypeNames->Asset);
+
+  SdfAssetPath assetPath(ON_Helpers::ON_wString_to_StdString(blockPath));
+  assetAttr.Set(assetPath);
 
   if (usdOptions.IncludeUserStrings && prim.IsValid())
   {
@@ -962,6 +975,23 @@ void UsdExportImport::SetDefaultPrim()
   pxr::UsdPrim defaultPrim = stage->GetPrimAtPath(pxr::SdfPath(stringPath));
 
   stage->SetDefaultPrim(defaultPrim);
+}
+
+void UsdExportImport::SetAuthorMetadata()
+{
+  pxr::UsdPrim defaultPrim = stage->GetDefaultPrim();
+  
+#ifdef DEBUG
+  // TODO : This would be good to be in the HEAD of the file
+  // TODO : Time must be in UTC
+  if (pxr::UsdAttribute dateAttribute = defaultPrim.CreateAttribute(pxr::TfToken("date"), pxr::SdfValueTypeNames->String))
+  {
+    const std::chrono::system_clock::time_point& now = std::chrono::system_clock::now();
+    const std::time_t tt = std::chrono::system_clock::to_time_t(now);
+      
+    dateAttribute.Set(pxr::VtValue(std::ctime(&tt)));
+  }
+#endif
 }
 
 void UsdExportImport::Save()
