@@ -384,7 +384,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   blockPrimName.Format(L"/blockInstance%d", currentBlockIndex++);
   blockPrimPath += blockPrimName;
 
-  UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(ON_Helpers::ON_wString_to_StdString(blockPath)));
+  UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(ON_Helpers::ON_wString_to_StdString(blockPrimPath)));
 
   UsdPrim prim = instanceForm.GetPrim();
 
