@@ -365,10 +365,6 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   ON_wString blockPath = ON_FileSystemPath::CombinePaths(BlockFolder, false, blockFileName, true, false);
   ON_wString blockFilePath = ON_FileSystemPath::CombinePaths(rootDirectory, false, blockPath, true, false);
-  //if (!ON_FileSystem::PathExists(blockFilePath))
-  //{
-  //  // Create Directory? (USD May handle this?)
-  //}
 
   ON_ClassArray<std::shared_ptr<UsdPacket>> packets(1);
   GetInstancePackets(definition, packets);
@@ -384,14 +380,28 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   blockPrimName.Format(L"/blockInstance%d", currentBlockIndex++);
   blockPrimPath += blockPrimName;
 
+  // TOOD : Make Component
+  // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(ON_Helpers::ON_wString_to_StdString(blockPrimPath)));
 
   UsdPrim prim = instanceForm.GetPrim();
+  
+  pxr::SdfReference ref(ON_Helpers::ON_wString_to_StdString(blockPath));
+  prim.GetReferences().AddReference(ref, pxr::UsdListPosition::UsdListPositionBackOfAppendList);
 
-  UsdAttribute assetAttr = prim.CreateAttribute(TfToken("Ref"), SdfValueTypeNames->Asset);
+  // https://openusd.org/release/glossary.html#usdglossary-assetinfo
+  // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
+  pxr::VtDictionary vtDict(4);
+  vtDict.SetValueAtPath("identifier", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(blockPath)));
+  vtDict.SetValueAtPath("name", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(definition->Name())));
+  vtDict.SetValueAtPath("version", pxr::VtValue(ON_Helpers::ON_UUID_to_StdString(refId)));
+  // TODO : Include embedded block paths?
+  // vtDict.SetValueAtPath("payloadAssetDependencies", pxr::VtValue());
+  prim.SetAssetInfo(vtDict);
 
-  SdfAssetPath assetPath(ON_Helpers::ON_wString_to_StdString(blockPath));
-  assetAttr.Set(assetPath);
+  // TODO : Set Transform!
+  // reference->m_xform
+  // pxr::UsdGeomXformOp op = instanceForm.AddTransformOp();
 
   if (usdOptions.IncludeUserStrings && prim.IsValid())
   {
