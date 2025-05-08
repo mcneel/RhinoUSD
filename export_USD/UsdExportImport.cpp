@@ -353,9 +353,6 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   {
     return true;
   }
-  
-  ON_wString BlockFolder(L"Refs");
-  BlockFolder += ON_FileSystemPath::DirectorySeparator;
 
   ON_wString rootDirectory = ON_FileSystemPath::DirectoryFromPath(usdFullFileName);
   ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName);
@@ -363,8 +360,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   ON_wString blockFileName(definition->Name());
   blockFileName += fileExtension;
 
-  ON_wString blockPath = ON_FileSystemPath::CombinePaths(BlockFolder, false, blockFileName, true, false);
-  ON_wString blockFilePath = ON_FileSystemPath::CombinePaths(rootDirectory, false, blockPath, true, false);
+  ON_wString blockFilePath = ON_FileSystemPath::CombinePaths(rootDirectory, false, blockFileName, true, false);
 
   ON_ClassArray<std::shared_ptr<UsdPacket>> packets(1);
   GetInstancePackets(definition, packets);
@@ -386,13 +382,13 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   UsdPrim prim = instanceForm.GetPrim();
   
-  pxr::SdfReference ref(ON_Helpers::ON_wString_to_StdString(blockPath));
+  pxr::SdfReference ref(ON_Helpers::ON_wString_to_StdString(blockFileName));
   prim.GetReferences().AddReference(ref, pxr::UsdListPosition::UsdListPositionBackOfAppendList);
 
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
   pxr::VtDictionary vtDict(4);
-  vtDict.SetValueAtPath("identifier", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(blockPath)));
+  vtDict.SetValueAtPath("identifier", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(blockFileName)));
   vtDict.SetValueAtPath("name", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(definition->Name())));
   vtDict.SetValueAtPath("version", pxr::VtValue(ON_Helpers::ON_UUID_to_StdString(refId)));
   // TODO : Include embedded block paths?
