@@ -16,7 +16,7 @@
 // Note, doing so will requrie that your plug-in is
 // built with the same version of Visual Studio as was
 // used to build Rhino.
-#define RHINO_SDK_MFC
+// #define RHINO_SDK_MFC
 
 // Plug-ins must use the release version of MFC used by Rhino.
 // Plug-ins that require debugging information need to be built with
@@ -97,22 +97,22 @@
 #pragma warning(disable:4305)
 #undef min
 #undef max
-#include "pxr/pxr.h"
-#include "pxr/usd/sdf/layer.h"
-#include "pxr/usd/usd/stage.h"
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/primRange.h"
-#include "pxr/usd/usd/tokens.h"
-#include "pxr/usd/sdf/path.h"
-#include "pxr/usd/usdGeom/mesh.h"
-#include "pxr/usd/usdGeom/xform.h"
-#include "pxr/usd/usdGeom/sphere.h"
-#include "pxr/usd/usdGeom/metrics.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdShade/materialBindingAPI.h"
-#include "pxr/base/plug/registry.h"
-#include "pxr/usd/usdGeom/nurbsCurves.h"
-#include "pxr/usd/usdGeom/nurbsPatch.h"
-#include "pxr/usd/usdGeom/primvarsAPI.h"
-#include "pxr/usd/usd/zipFile.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/layer.h>
+#include <pxr/usd/usd/stage.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/primRange.h>
+#include <pxr/usd/usd/tokens.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/metrics.h>
+#include <pxr/usd/usdShade/material.h>
+#include <pxr/usd/usdShade/materialBindingAPI.h>
+#include <pxr/base/plug/registry.h>
+#include <pxr/usd/usdGeom/nurbsCurves.h>
+#include <pxr/usd/usdGeom/nurbsPatch.h>
+#include <pxr/usd/usdGeom/primvarsAPI.h>
+#include <pxr/usd/usd/zipFile.h>
 #pragma warning(pop)

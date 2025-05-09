@@ -32,6 +32,6 @@ private:
   
   const wchar_t* m_filename;
   
-  UsdStageRefPtr Model;
+  pxr::UsdStageRefPtr Model;
   
 }

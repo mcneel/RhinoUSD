@@ -12,18 +12,11 @@
 		1A0326742DCA6FEC0055EA64 /* read_usd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0326712DCA6FEC0055EA64 /* read_usd.cpp */; };
 		1A0326752DCA6FEC0055EA64 /* import_USDApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A03266F2DCA6FEC0055EA64 /* import_USDApp.cpp */; };
 		1A0326762DCA6FEC0055EA64 /* convert_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A03266D2DCA6FEC0055EA64 /* convert_geometry.cpp */; };
-		1A03267A2DCA70390055EA64 /* PluginDebug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */; };
-		1A03267B2DCA70390055EA64 /* PluginDistribution.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */; };
-		1A03267C2DCA70390055EA64 /* PluginRelease.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */; };
 		1A03272F2DCA74F90055EA64 /* RhCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A03272E2DCA74F90055EA64 /* RhCore.framework */; };
-		1A0327302DCA74F90055EA64 /* RhCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A03272E2DCA74F90055EA64 /* RhCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1A0327332DCA75030055EA64 /* OpenNURBS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327322DCA75030055EA64 /* OpenNURBS.framework */; };
-		1A0327342DCA75030055EA64 /* OpenNURBS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327322DCA75030055EA64 /* OpenNURBS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1A0327362DCA75470055EA64 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327352DCA75470055EA64 /* libtbb.dylib */; };
-		1A0327372DCA75470055EA64 /* libtbb.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327352DCA75470055EA64 /* libtbb.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1A0451CD2DCAB7AC00D15C5E /* UsdImport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0451CC2DCAB7A800D15C5E /* UsdImport.cpp */; };
 		1A653F9A2DCA758E00677735 /* libusd_ms.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A653F992DCA758E00677735 /* libusd_ms.dylib */; };
-		1A653F9B2DCA758E00677735 /* libusd_ms.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A653F992DCA758E00677735 /* libusd_ms.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,10 +26,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1A0327372DCA75470055EA64 /* libtbb.dylib in Embed Frameworks */,
-				1A0327302DCA74F90055EA64 /* RhCore.framework in Embed Frameworks */,
-				1A0327342DCA75030055EA64 /* OpenNURBS.framework in Embed Frameworks */,
-				1A653F9B2DCA758E00677735 /* libusd_ms.dylib in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -220,9 +209,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A03267A2DCA70390055EA64 /* PluginDebug.xcconfig in Resources */,
-				1A03267B2DCA70390055EA64 /* PluginDistribution.xcconfig in Resources */,
-				1A03267C2DCA70390055EA64 /* PluginRelease.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,10 +237,13 @@
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				HEADER_SEARCH_PATHS = (
+					../usd/include,
 					"../usd/include/boost-1_78",
-					../usd/include/,
 				);
-				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../MacOS/Frameworks,
+				);
 			};
 			name = Debug;
 		};
@@ -264,10 +253,13 @@
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				HEADER_SEARCH_PATHS = (
+					../usd/include,
 					"../usd/include/boost-1_78",
-					../usd/include/,
 				);
-				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../MacOS/Frameworks,
+				);
 			};
 			name = Release;
 		};
@@ -275,14 +267,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					../usd/include/,
-					"../usd/include/boost-1_78",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					../../MacOS/Frameworks,
-					"$(inherited)",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.import-USD";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = rhp;
@@ -293,14 +277,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					../usd/include/,
-					"../usd/include/boost-1_78",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					../../MacOS/Frameworks,
-					"$(inherited)",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.import-USD";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = rhp;
@@ -313,10 +289,13 @@
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				HEADER_SEARCH_PATHS = (
+					../usd/include,
 					"../usd/include/boost-1_78",
-					../usd/include/,
 				);
-				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../MacOS/Frameworks,
+				);
 			};
 			name = Distribution;
 		};
@@ -324,14 +303,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					../usd/include/,
-					"../usd/include/boost-1_78",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					../../MacOS/Frameworks,
-					"$(inherited)",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mcneel.rhinoceros.import-USD";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = rhp;

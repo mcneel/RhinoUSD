@@ -10,7 +10,7 @@ bool UsdImport::ReadFile()
 {
   ON_String onString(m_filename);
   
-  Model = UsdStage::Open(onString.Array());
+  Model = pxr::UsdStage::Open(onString.Array());
   
   // TODO : Layers
   auto layerStack = Model->GetLayerStack();
@@ -29,7 +29,7 @@ bool UsdImport::ReadFile()
   // TraversePrimTree(root, m_doc, PrimDataCollection());
 
   ON_Layer* previousLayer;
-  for (auto prim : primRange)
+  for (pxr::UsdPrim prim : primRange)
   {
     // TODO : This also checks for ancestors
     if (prim.IsAbstract()) continue;
@@ -40,7 +40,7 @@ bool UsdImport::ReadFile()
     auto description = prim.GetDescription();
     auto name = prim.GetDisplayName();
 
-    ON_Layer* onLayer = TryGetLayerFromPrim(prim);
+    std::shared_ptr<ON_Layer> onLayer = TryGetLayerFromPrim(prim);
     if (previousLayer->Id() != ON_UUID())
     {
       onLayer->SetParentId(previousLayer->Id());
@@ -57,7 +57,7 @@ bool UsdImport::ReadFile()
       int t = 7;
     }
 
-    if (ON_Geometry* geom = TryGetPrimGeometry(prim))
+    if (std::shared_ptr<const ON_Geometry> geom = TryGetPrimGeometry(prim))
     {
       ON_3dmObjectAttributes* attribs = TryGetAttributesFromPrim(prim);
       TryAddToDocument(geom, attribs);
