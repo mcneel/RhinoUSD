@@ -236,6 +236,7 @@
 			baseConfigurationReference = 1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					../usd/include,
 					"../usd/include/boost-1_78",
@@ -252,6 +253,7 @@
 			baseConfigurationReference = 1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					../usd/include,
 					"../usd/include/boost-1_78",
@@ -288,6 +290,7 @@
 			baseConfigurationReference = 1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					../usd/include,
 					"../usd/include/boost-1_78",
