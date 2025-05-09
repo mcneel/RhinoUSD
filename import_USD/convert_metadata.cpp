@@ -2,22 +2,22 @@
 #include "stdafx.h"
 #include "convert_metadata.h"
 
-ON_3dmObjectAttributes* TryGetAttributesFromPrim(UsdPrim& prim)
+std::shared_ptr<const ON_3dmObjectAttributes> TryGetAttributesFromPrim(pxr::UsdPrim& prim)
 {
 
-  ON_3dmObjectAttributes* attribs = new ON_3dmObjectAttributes();
+  std::shared_ptr<ON_3dmObjectAttributes> attribs = std::make_unique<ON_3dmObjectAttributes>();
 
   std::string usdName = prim.GetName().GetString();
   // attribs->SetName(onString.To, true);
 
   // Attribs
-  UsdAttributeVector attribVectors = prim.GetAttributes();
-  for (UsdAttribute& usdAttrib : attribVectors)
+  pxr::UsdAttributeVector attribVectors = prim.GetAttributes();
+  for (pxr::UsdAttribute& usdAttrib : attribVectors)
   {
     auto usdAttribName = usdAttrib.GetName().GetString();
 
     // Metadata
-    UsdMetadataValueMap map = usdAttrib.GetAllMetadata();
+    pxr::UsdMetadataValueMap map = usdAttrib.GetAllMetadata();
     for (auto& metaValue : map)
     {
 
@@ -25,17 +25,18 @@ ON_3dmObjectAttributes* TryGetAttributesFromPrim(UsdPrim& prim)
 
   }
 
-  return attribs;
+  std::shared_ptr<const ON_3dmObjectAttributes> constAttribs = std::make_unique<ON_3dmObjectAttributes>(attribs);
+  return constAttribs;
 }
 
-ON_Layer* TryGetLayerFromPrim(UsdPrim& prim)
+std::shared_ptr<ON_Layer> TryGetLayerFromPrim(pxr::UsdPrim& prim)
 {
   auto description = prim.GetDescription();
   auto primPath = prim.GetPath();
   auto primString = primPath.GetAsString();
 
-  ON_Layer* onLayer = new ON_Layer();
-  onLayer->SetName(L"Test");
+  std::shared_ptr<ON_Layer> onLayer = std::make_shared<ON_Layer>();
+  onLayer.SetName(L"Test");
 
   return onLayer;
 }

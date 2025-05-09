@@ -1,17 +1,14 @@
+#pragma once
 #include "stdafx.h"
-#include "pxr/usd/usd/primRange.h"
 
-using namespace pxr;
-using namespace pxrInternal_v0_23__pxrReserved__;
+ON_3dmObjectAttributes* TryGetAttributesFromPrim(pxr::UsdPrim& prim);
 
-ON_3dmObjectAttributes* TryGetAttributesFromPrim(UsdPrim& prim);
-
-ON_Layer* TryGetLayerFromPrim(UsdPrim& prim);
+ON_Layer* TryGetLayerFromPrim(pxr::UsdPrim& prim);
 
 template <typename T>
-T GetValueFromAttribute(UsdAttribute& attribute)
+T GetValueFromAttribute(pxr::UsdAttribute& attribute)
 {
-  VtValue attributeValue;
+  pxr::VtValue attributeValue;
   // TOOD : Bool check
   attribute.Get(&attributeValue);
   

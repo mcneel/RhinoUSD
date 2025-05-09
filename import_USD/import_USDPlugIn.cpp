@@ -7,6 +7,7 @@
 
 #include "import_USDPlugIn.h"
 #include "Resource.h"
+#include "UsdImport.h"
 
 // The plug-in object must be constructed before any plug-in classes derived
 // from CRhinoCommand. The #pragma init_seg(lib) ensures that this happens.
@@ -66,13 +67,18 @@ void Cimport_USDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, c
   ft.FileTypeDescription(L"USD (*.usd, *.usda)");
   ft.AddFileTypeExtension(L"usd");
   ft.AddFileTypeExtension(L"usda");
+  
+  // TODO : Impliment Options Dialog
+  // ft.SetDisplayOptionsDialog(true);
+  
   extensions.Append(ft);
+  
 }
 
 BOOL Cimport_USDPlugIn::ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options)
 {
   UNREFERENCED_PARAMETER(index);
-  if (ReadUSDFile(filename, doc, options))
-    return TRUE;
-	return FALSE;
+  
+  UsdImport usdImport(filename, doc, options);
+  return usdImport.ReadFile();
 }

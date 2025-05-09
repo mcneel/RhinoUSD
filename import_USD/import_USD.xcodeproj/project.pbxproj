@@ -21,6 +21,7 @@
 		1A0327342DCA75030055EA64 /* OpenNURBS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327322DCA75030055EA64 /* OpenNURBS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1A0327362DCA75470055EA64 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327352DCA75470055EA64 /* libtbb.dylib */; };
 		1A0327372DCA75470055EA64 /* libtbb.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327352DCA75470055EA64 /* libtbb.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1A0451CD2DCAB7AC00D15C5E /* UsdImport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0451CC2DCAB7A800D15C5E /* UsdImport.cpp */; };
 		1A653F9A2DCA758E00677735 /* libusd_ms.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A653F992DCA758E00677735 /* libusd_ms.dylib */; };
 		1A653F9B2DCA758E00677735 /* libusd_ms.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A653F992DCA758E00677735 /* libusd_ms.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -60,6 +61,10 @@
 		1A03272E2DCA74F90055EA64 /* RhCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RhCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0327322DCA75030055EA64 /* OpenNURBS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenNURBS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0327352DCA75470055EA64 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../MacOS/Frameworks/libtbb.dylib; sourceTree = "<group>"; };
+		1A0451CA2DCAB5AE00D15C5E /* read_usd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = read_usd.h; sourceTree = "<group>"; };
+		1A0451CB2DCAB6AC00D15C5E /* UsdImport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UsdImport.h; sourceTree = "<group>"; };
+		1A0451CC2DCAB7A800D15C5E /* UsdImport.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UsdImport.cpp; sourceTree = "<group>"; };
+		1A0451CE2DCAB93300D15C5E /* UsdImportPacket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UsdImportPacket.h; sourceTree = "<group>"; };
 		1A653F992DCA758E00677735 /* libusd_ms.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libusd_ms.dylib; path = ../../../MacOS/Frameworks/libusd_ms.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -111,11 +116,14 @@
 		1A0326652DCA6C3C0055EA64 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
+				1A0451CE2DCAB93300D15C5E /* UsdImportPacket.h */,
+				1A0451CA2DCAB5AE00D15C5E /* read_usd.h */,
 				1A0326682DCA6FDC0055EA64 /* convert_geometry.h */,
 				1A0326692DCA6FDC0055EA64 /* convert_metadata.h */,
 				1A03266A2DCA6FDC0055EA64 /* import_USDApp.h */,
 				1A03266B2DCA6FDC0055EA64 /* import_USDPlugIn.h */,
 				1A03266C2DCA6FDC0055EA64 /* stdafx.h */,
+				1A0451CB2DCAB6AC00D15C5E /* UsdImport.h */,
 			);
 			name = "Header Files";
 			sourceTree = "<group>";
@@ -123,6 +131,7 @@
 		1A0326662DCA6C610055EA64 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				1A0451CC2DCAB7A800D15C5E /* UsdImport.cpp */,
 				1A03266D2DCA6FEC0055EA64 /* convert_geometry.cpp */,
 				1A03266E2DCA6FEC0055EA64 /* convert_metadata.cpp */,
 				1A03266F2DCA6FEC0055EA64 /* import_USDApp.cpp */,
@@ -227,6 +236,7 @@
 				1A0326722DCA6FEC0055EA64 /* convert_metadata.cpp in Sources */,
 				1A0326732DCA6FEC0055EA64 /* import_USDPlugIn.cpp in Sources */,
 				1A0326742DCA6FEC0055EA64 /* read_usd.cpp in Sources */,
+				1A0451CD2DCAB7AC00D15C5E /* UsdImport.cpp in Sources */,
 				1A0326752DCA6FEC0055EA64 /* import_USDApp.cpp in Sources */,
 				1A0326762DCA6FEC0055EA64 /* convert_geometry.cpp in Sources */,
 			);
@@ -239,6 +249,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = D6XDM4N99E;
+				HEADER_SEARCH_PATHS = (
+					"../usd/include/boost-1_78",
+					../usd/include/,
+				);
+				LIBRARY_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
@@ -246,6 +262,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = D6XDM4N99E;
+				HEADER_SEARCH_PATHS = (
+					"../usd/include/boost-1_78",
+					../usd/include/,
+				);
+				LIBRARY_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};
@@ -253,6 +275,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					../usd/include/,
+					"../usd/include/boost-1_78",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					../../MacOS/Frameworks,
 					"$(inherited)",
@@ -267,6 +293,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					../usd/include/,
+					"../usd/include/boost-1_78",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					../../MacOS/Frameworks,
 					"$(inherited)",
@@ -281,6 +311,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = D6XDM4N99E;
+				HEADER_SEARCH_PATHS = (
+					"../usd/include/boost-1_78",
+					../usd/include/,
+				);
+				LIBRARY_SEARCH_PATHS = "";
 			};
 			name = Distribution;
 		};
@@ -288,6 +324,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					../usd/include/,
+					"../usd/include/boost-1_78",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					../../MacOS/Frameworks,
 					"$(inherited)",

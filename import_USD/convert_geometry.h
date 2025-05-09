@@ -1,10 +1,6 @@
+#pragma once
 #include "stdafx.h"
-#include "pxr/usd/usd/primRange.h"
 
-using namespace pxr;
+std::shared_ptr<const ON_Geometry> TryGetPrimGeometry(pxr::UsdPrim& prim);
 
-ON_Mesh* TryGetMeshFromPrim(UsdPrim& prim);
-
-ON_Geometry* TryGetPrimGeometry(UsdPrim& prim);
-
-ON_Matrix* TryGetTransform(UsdGeomGprim& gPrim);
+std::shared_ptr<const ON_Matrix> TryGetTransform(pxr::UsdGeomGprim& gPrim);

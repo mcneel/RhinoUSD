@@ -255,3 +255,12 @@ static void SetBoundingBox(UsdGeomBoundable& boundable, ON_Geometry& obj)
   extents[1].Set((float)bbox.m_max.x, (float)bbox.m_max.y, (float)bbox.m_max.z);
   boundable.GetExtentAttr().Set(extents);
 }
+
+ON_wString GetOnwFromOldString(std::string string)
+{
+  std::wstring wstring(string.begin(), string.end());
+
+  ON_UserString onUString;
+  ON_wString ons(static_cast<const wchar_t*>(wstring.c_str()));
+  return ons;
+}
