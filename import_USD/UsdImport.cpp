@@ -10,9 +10,9 @@
 
 bool UsdImport::ReadFile()
 {
-  ON_String onString(m_filename);
-  
-  Model = pxr::UsdStage::Open(onString.Array());
+  const ON_wString wPath(m_filename);
+  const std::string filePath = ON_Helpers::ON_wString_to_StdString(wPath);
+  Model = pxr::UsdStage::Open(filePath);
   
   // TODO : Layers
   auto layerStack = Model->GetLayerStack();
@@ -41,16 +41,8 @@ bool UsdImport::ReadFile()
 
     auto description = prim.GetDescription();
     auto name = prim.GetDisplayName();
-
-    std::shared_ptr<ON_Layer> onLayer = ConvertMetadata::TryGetLayerFromPrim(prim);
-    if (previousLayer->Id() != ON_UUID())
-    {
-      onLayer->SetParentId(previousLayer->Id());
-    }
-
-    int layerIndex = m_doc.m_layer_table.CreateLayer(*onLayer, 0, 0, 0);
-    // auto layeraaa = m_doc.m_layer_table[layerIndex];
-    // previousLayer = m_doc.m_layer_table[layerIndex];
+    
+    int layerIndex = ConvertMetadata::GetOrCreateLayerIndex(m_doc, prim);
 
     pxr::TfTokenVector properties = prim.GetPropertyNames();
     for (auto& property : properties)
