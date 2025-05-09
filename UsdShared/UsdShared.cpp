@@ -56,10 +56,10 @@ bool UsdShared::IsAcceptableUsdCharacter(wchar_t c)
   return false;
 }
 
-ON_wString UsdShared::RhinoLayerNameToUsd(const ON_wString& rhLayerName) 
+ON_wString UsdShared::RhinoLayerNameToUsd(const ON_wString& rhLayerName, const ON_wString& defaultName)
 {
   if (rhLayerName.Length() < 1)
-    return L"Default";
+    return defaultName;
 
   ON_wString rc;
   wchar_t c = rhLayerName[0];

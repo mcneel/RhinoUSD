@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "../../../RhinoUiHooks.h"
 #include "UsdExportOptions.h"
+#include "../UsdShared/UsdShared.h"
 
 // True when user chnaged the Options, False on any other result
 bool HandleUserInput(UsdExportOptions& options)
@@ -33,13 +34,12 @@ bool HandleUserInput(UsdExportOptions& options)
 
   if (args.GetString(L"root-layer", rootLayerValue))
   {
-    // TODO : Validate that root layer is not null or empty
-    options.RootLayer = rootLayerValue;
+    options.RootLayer = UsdShared::RhinoLayerNameToUsd(rootLayerValue);
   }
 
   if (args.GetString(L"model-name", modelNameValue))
   {
-    options.ModelName = modelNameValue;
+    options.ModelName = UsdShared::RhinoLayerNameToUsd(modelNameValue, L"");
   }
 
   if (args.GetBool(L"force-meshes", forceMeshesValue))
