@@ -83,17 +83,7 @@ bool UsdImport::AddPrimDataToDoc(UsdImportPacket& data)
   const ON_Xform xForm = data.GetXForm();
   geom->Transform(xForm);
 
-  if (auto revSurface = ON_RevSurface::Cast(geom))
-  {
-    CRhinoSurfaceObject surfObj(attribs);
-    surfObj.SetSurface(revSurface);
-    
-    // TODO : Cast
-    m_doc.AddObject(surfObj);
-    
-    delete revSurface;
-  }
-  else if (auto brep = ON_Brep::Cast(geom))
+  if (auto brep = ON_Brep::Cast(geom))
   {
     m_doc.AddBrepObject(*brep, &attribs);
   }

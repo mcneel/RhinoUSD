@@ -9,7 +9,7 @@ std::string ON_Helpers::ON_wString_to_StdString(const ON_wString& onwstr)
   return str;
 }
 
-ON_wString StdString_to_ON_wString(const std::string& str)
+ON_wString ON_Helpers::StdString_to_ON_wString(const std::string& str)
 {
   ON_String onStr(str.data());
   return ON_wString(onStr);
