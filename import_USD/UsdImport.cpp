@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include <string>
 
+#include "../UsdShared/ON_Helpers.h"
+
 #include "convert_geometry.h"
 #include "convert_metadata.h"
 #include "UsdImportPacket.h"
@@ -40,7 +42,7 @@ bool UsdImport::ReadFile()
     auto description = prim.GetDescription();
     auto name = prim.GetDisplayName();
 
-    std::shared_ptr<ON_Layer> onLayer = TryGetLayerFromPrim(prim);
+    std::shared_ptr<ON_Layer> onLayer = ConvertMetadata::TryGetLayerFromPrim(prim);
     if (previousLayer->Id() != ON_UUID())
     {
       onLayer->SetParentId(previousLayer->Id());
@@ -57,9 +59,9 @@ bool UsdImport::ReadFile()
       int t = 7;
     }
 
-    if (std::shared_ptr<const ON_Geometry> geom = TryGetPrimGeometry(prim))
+    if (std::shared_ptr<ON_Geometry> geom = ConvertGeometry::TryGetPrimGeometry(prim))
     {
-      ON_3dmObjectAttributes* attribs = TryGetAttributesFromPrim(prim);
+      std::shared_ptr<const ON_3dmObjectAttributes> attribs = ConvertMetadata::TryGetAttributesFromPrim(prim);
       TryAddToDocument(geom, attribs);
     }
 
@@ -68,18 +70,20 @@ bool UsdImport::ReadFile()
   return true;
 }
 
-bool UsdImport::AddPrimDataToDoc(PrimDataCollection& data)
+bool UsdImport::AddPrimDataToDoc(UsdImportPacket& data)
 {
-  if (data.geometry == nullptr) return false;
+  ON_Geometry* geom = data.GetGeometry().get();
+  if (geom == nullptr) return false;
 
-  ON_3dmObjectAttributes attribs;
-  attribs.SetVisible(data.isVisible);
+  ON_3dmObjectAttributes initAttribs;
+  initAttribs.SetVisible(data.isVisible);
+  
+  const ON_3dmObjectAttributes attribs(initAttribs);
 
-  const ON_Matrix matrix = data.transform;
-  ON_Xform xform(matrix);
-  data.geometry->Transform(xform);
+  const ON_Xform xForm = data.GetXForm();
+  geom->Transform(xForm);
 
-  if (auto revSurface = ON_RevSurface::Cast(data.geometry))
+  if (auto revSurface = ON_RevSurface::Cast(geom))
   {
     CRhinoSurfaceObject surfObj(attribs);
     surfObj.SetSurface(revSurface);
@@ -89,25 +93,25 @@ bool UsdImport::AddPrimDataToDoc(PrimDataCollection& data)
     
     delete revSurface;
   }
-  else if (auto brep = ON_Brep::Cast(data.geometry))
+  else if (auto brep = ON_Brep::Cast(geom))
   {
-    m_doc.AddBrepObject(*brep, attribs);
+    m_doc.AddBrepObject(*brep, &attribs);
   }
-  else if (auto mesh = ON_Mesh::Cast(data.geometry))
+  else if (auto mesh = ON_Mesh::Cast(geom))
   {
-    m_doc.AddMeshObject(*mesh, attribs);
+    m_doc.AddMeshObject(*mesh, &attribs);
   }
-  else if (auto curve = ON_Curve::Cast(data.geometry))
+  else if (auto curve = ON_Curve::Cast(geom))
   {
-    m_doc.AddCurveObject(*curve, attribs);
+    m_doc.AddCurveObject(*curve, &attribs);
   }
-  else if (auto surface = ON_NurbsSurface::Cast(data.geometry))
+  else if (auto surface = ON_NurbsSurface::Cast(geom))
   {
-    m_doc.AddSurfaceObject(*surface, attribs);
+    m_doc.AddSurfaceObject(*surface, &attribs);
   }
-  else if (auto pointCloud = ON_PointCloud::Cast(data.geometry))
+  else if (auto pointCloud = ON_PointCloud::Cast(geom))
   {
-    m_doc.AddPointCloudObject(pointCloud->PointCount(), pointCloud->m_P, attribs);
+    m_doc.AddPointCloudObject(pointCloud->PointCount(), pointCloud->m_P, &attribs);
   }
   else
   {
@@ -117,7 +121,7 @@ bool UsdImport::AddPrimDataToDoc(PrimDataCollection& data)
   return true;
 }
 
-void UsdImport::TraversePrimTree(pxr::UsdPrim& root, pxr::PrimDataCollection& collection)
+void UsdImport::TraversePrimTree(pxr::UsdPrim& root, UsdImportPacket& collection)
 {
   for (auto prim : root.GetChildren())
   {
@@ -128,9 +132,10 @@ void UsdImport::TraversePrimTree(pxr::UsdPrim& root, pxr::PrimDataCollection& co
 
     // It's Geometry!
     // Are classes that inherit this going to return true?
-    if (ON_Geometry* onGeom = TryGetPrimGeometry(prim))
+    std::shared_ptr<ON_Geometry> onGeom = ConvertGeometry::TryGetPrimGeometry(prim);
+    if (onGeom != nullptr)
     {
-      collection.geometry = onGeom;
+      collection.SetGeometry(onGeom);
       if (pxr::UsdGeomGprim geom = pxr::UsdGeomGprim(prim))
       {
         auto visibleAttribute = geom.GetVisibilityAttr();
@@ -140,9 +145,9 @@ void UsdImport::TraversePrimTree(pxr::UsdPrim& root, pxr::PrimDataCollection& co
 
         // TODO : What to do if the Geometry is a Time Varying Transform? I'd assume get the first?
         //        Maybe settings could specify a time frame?
-        auto usdTransform = geom.ComputeLocalToWorldTransform(UsdTimeCode::Default());
-        auto onTransform = TryGetTransform(geom);
-        collection.transform = onTransform;
+        auto usdTransform = geom.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default());
+        auto onTransform = ConvertGeometry::TryGetTransform(geom);
+        collection.SetTransform(onTransform);
       }
     }
 
@@ -152,7 +157,7 @@ void UsdImport::TraversePrimTree(pxr::UsdPrim& root, pxr::PrimDataCollection& co
       pxr::VtValue value = metaData.second;
 
       ON_UserString onUString;
-      onUString.m_key = GetOnFromOldString(key.GetString());
+      onUString.m_key = ON_Helpers::StdString_to_ON_wString(key.GetString());
 
       // TODO : Improve this.
       if (value.CanCast<std::wstring>())
@@ -164,7 +169,7 @@ void UsdImport::TraversePrimTree(pxr::UsdPrim& root, pxr::PrimDataCollection& co
       else
       {
         // TODO : Better Fallback
-        onUString.m_string_value = GetOnFromOldString(value.GetTypeName());
+        onUString.m_string_value = ON_Helpers::StdString_to_ON_wString(value.GetTypeName());
       }
         
       collection.userStrings.Append(onUString);
@@ -174,8 +179,11 @@ void UsdImport::TraversePrimTree(pxr::UsdPrim& root, pxr::PrimDataCollection& co
 
 }
 
-bool UsdImport::TryAddToDocument(std::shared_ptr<ON_Geometry> geom, ON_3dmObjectAttributes* attribs)
+bool UsdImport::TryAddToDocument(std::shared_ptr<ON_Geometry> geomPtr, std::shared_ptr<const ON_3dmObjectAttributes> attribsPtr)
 {
+  ON_Geometry* geom = geomPtr.get();
+  const ON_3dmObjectAttributes* attribs = attribsPtr.get();
+  
   if (ON_Mesh* mesh = ON_Mesh::Cast(geom))
   {
     m_doc.AddMeshObject(*mesh, attribs);

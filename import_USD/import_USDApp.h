@@ -26,7 +26,7 @@ public:
   // Only standard MFC DLL instance initialization belongs here. 
   // All other significant initialization should take place in
   // Cimport_USDPlugIn::OnLoadPlugIn().
-	BOOL InitInstance() override;
+  BOOL32 InitInstance() override;
   
   // CRITICAL: DO NOT CALL RHINO SDK FUNCTIONS HERE!
   // Only standard MFC DLL instance clean up belongs here. 

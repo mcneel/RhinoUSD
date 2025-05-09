@@ -4,7 +4,7 @@
 
 using namespace pxr;
 
-std::shared_ptr<const ON_Plane> TryGetPlane(pxr::UsdPrim& prim)
+std::shared_ptr<ON_Plane> TryGetPlane(pxr::UsdPrim& prim)
 {
   // if (ON_Plane* plane = GetPlane(prim)) return plane;
 
@@ -13,43 +13,43 @@ std::shared_ptr<const ON_Plane> TryGetPlane(pxr::UsdPrim& prim)
 
 
 // TODO : Capsule vs Capsule_1?
-std::shared_ptr<const ON_Mesh> GetCapsule(pxr::UsdPrim& prim)
+std::shared_ptr<ON_Mesh> GetCapsule(pxr::UsdPrim& prim)
 {
   // UsdGeomCapsule
   return nullptr;
 }
 
-std::shared_ptr<const ON_RevSurface> GetCone(pxr::UsdPrim& prim) { return nullptr; }
+std::shared_ptr<ON_RevSurface> GetCone(pxr::UsdPrim& prim) { return nullptr; }
 
-std::shared_ptr<const ON_Brep> GetBox(pxr::UsdPrim& prim)
+std::shared_ptr<ON_Brep> GetBox(pxr::UsdPrim& prim)
 {
   
   return nullptr;
 }
 
 // TODO : Cylinder and Cylinder_1?
-std::shared_ptr<const ON_RevSurface> GetCylinder(pxr::UsdPrim& prim)
+std::shared_ptr<ON_RevSurface> GetCylinder(pxr::UsdPrim& prim)
 {
   // UsdGeomCylinder
   
   return nullptr;
 }
 
-std::shared_ptr<const ON_Curve> GetCurves(pxr::UsdPrim& prim)
+std::shared_ptr<ON_Curve> GetCurves(pxr::UsdPrim& prim)
 {
   // UsdGeomBasisCurves
   return nullptr;
 }
 
-std::shared_ptr<const ON_NurbsCurve> GetNurbs(pxr::UsdPrim& prim)
+std::shared_ptr<ON_NurbsCurve> GetNurbs(pxr::UsdPrim& prim)
 {
   if (UsdGeomNurbsCurves nurbs = UsdGeomNurbsCurves(prim))
   {
-    auto knots = GetValueFromAttribute<VtArray<double>>(nurbs.GetKnotsAttr());
-    auto orders = GetValueFromAttribute<VtArray<int>>(nurbs.GetOrderAttr());
-    auto points = GetValueFromAttribute<VtArray<GfVec3f>>(nurbs.GetPointsAttr());
+    auto knots = ConvertMetadata::GetValueFromAttribute<VtArray<double>>(nurbs.GetKnotsAttr());
+    auto orders = ConvertMetadata::GetValueFromAttribute<VtArray<int>>(nurbs.GetOrderAttr());
+    auto points = ConvertMetadata::GetValueFromAttribute<VtArray<GfVec3f>>(nurbs.GetPointsAttr());
 
-    auto onNurbs = new ON_NurbsCurve();
+    std::shared_ptr<ON_NurbsCurve> onNurbs = std::make_shared<ON_NurbsCurve>();
     for (int i = 0; i < points.capacity(); i++)
     {
       auto point = points[i];
@@ -57,7 +57,7 @@ std::shared_ptr<const ON_NurbsCurve> GetNurbs(pxr::UsdPrim& prim)
       double y = (double)point[1];
       double z = (double)point[2];
 
-      const ON_3dPoint* onPoint = new ON_3dPoint(x, y, z);
+      const ON_3dPoint onPoint(x, y, z);
       // TODO : Set Curve
       // onNurbs->SetCV(i, onPoint);
     }
@@ -77,9 +77,9 @@ std::shared_ptr<const ON_NurbsCurve> GetNurbs(pxr::UsdPrim& prim)
 } // UsdGeomNurbsCurves
 
 // ON_BezierCurve
-std::shared_ptr<const ON_Curve> GetHermite(pxr::UsdPrim& prim) { return nullptr; } // UsdGeomHermiteCurves
+std::shared_ptr<ON_Curve> GetHermite(pxr::UsdPrim& prim) { return nullptr; } // UsdGeomHermiteCurves
 
-std::shared_ptr<const ON_Mesh> GetMesh(pxr::UsdPrim& prim)
+std::shared_ptr<ON_Mesh> GetMesh(pxr::UsdPrim& prim)
 {
   if (UsdGeomMesh mesh = UsdGeomMesh(prim))
   {
@@ -100,8 +100,7 @@ std::shared_ptr<const ON_Mesh> GetMesh(pxr::UsdPrim& prim)
     if (vertexCount < 3) return nullptr;
     if (faceCount < 1) return nullptr;
 
-    ON_Mesh* rhinoMesh = new ON_Mesh(faceCount, vertexCount, true, false);
-
+    std::shared_ptr<ON_Mesh> rhinoMesh = std::make_shared<ON_Mesh>(faceCount, vertexCount, true, false);
     for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
     {
       pxr::GfVec3d usdPoint = points[vertexIndex];
@@ -141,22 +140,22 @@ std::shared_ptr<const ON_Mesh> GetMesh(pxr::UsdPrim& prim)
   return nullptr;
 }
 
-std::shared_ptr<const ON_NurbsSurface> GetNurbsPatch(pxr::UsdPrim& prim) { return nullptr; } // UsdGeomNurbsPatch
+std::shared_ptr<ON_NurbsSurface> GetNurbsPatch(pxr::UsdPrim& prim) { return nullptr; } // UsdGeomNurbsPatch
 
 // TODO : Consider ON_3dPointArray also.
-std::shared_ptr<const ON_PointCloud> GetPoints(pxr::UsdPrim& prim)
+std::shared_ptr<ON_PointCloud> GetPoints(pxr::UsdPrim& prim)
 {
   // UsdGeomPointBased
   return nullptr;
 }
 
-std::shared_ptr<const ON_Mesh> GetTetrahedralMesh(pxr::UsdPrim& prim)
+std::shared_ptr<ON_Mesh> GetTetrahedralMesh(pxr::UsdPrim& prim)
 {
   // UsdGeomTetMesh
   return nullptr;
 }
 
-std::shared_ptr<const ON_RevSurface> GetSphere(pxr::UsdPrim& prim)
+std::shared_ptr<ON_RevSurface> GetSphere(pxr::UsdPrim& prim)
 {
   if (auto sphere = UsdGeomSphere(prim))
   {
@@ -166,9 +165,10 @@ std::shared_ptr<const ON_RevSurface> GetSphere(pxr::UsdPrim& prim)
       pxr::VtValue radiusValue;
       radiusAttrib.Get(&radiusValue);
       double radius = radiusValue.Get<double>();
-      const ON_3dPoint* point = new ON_3dPoint(0, 0, 0);
-      auto sphere = new ON_Sphere(*point, radius);
-      return sphere->RevSurfaceForm(false);
+      ON_3dPoint point(0, 0, 0);
+      ON_Sphere sphere(point, radius);
+      auto rev = sphere.RevSurfaceForm(false);
+      
     }
   }
 
@@ -177,33 +177,28 @@ std::shared_ptr<const ON_RevSurface> GetSphere(pxr::UsdPrim& prim)
 
 // ON_ ? ? Get ? ? (UsdPrim & prim) {} // For UsdVolVolume <- Unsure what this is yet
 
-std::shared_ptr<const ON_Matrix> TryGetTransform(pxr::UsdGeomGprim& gPrim)
+std::shared_ptr<const ON_Matrix> ConvertGeometry::TryGetTransform(pxr::UsdGeomGprim& gPrim)
 {
   pxr::GfMatrix4d usdTransform = gPrim.ComputeLocalToWorldTransform(UsdTimeCode::Default());
   double* m = usdTransform.data();
-  auto matrix = new ON_Matrix(4, 4, *m, true);
 
-  return matrix;
+  return std::make_shared<ON_Matrix>(4, 4, *m, true);
 }
 
-std::shared_ptr<const ON_Geometry> TryGetPrimGeometry(pxr::UsdPrim& prim)
+std::shared_ptr<ON_Geometry> ConvertGeometry::TryGetPrimGeometry(pxr::UsdPrim& prim)
 {
-  pxr::UsdGeomGprim geom = pxr::UsdGeomGprim(prim);
-  if (&geom == nullptr) return nullptr;
-
-  // TODO : This feels. Slow.
-  if (std::shared_ptr<const ON_Mesh> mesh = GetCapsule(prim)) return mesh;
-  if (std::shared_ptr<const ON_RevSurface> cone = GetCone(prim)) return cone;
-  if (std::shared_ptr<const ON_Brep> box = GetBox(prim)) return box;
-  if (std::shared_ptr<const ON_RevSurface> cylinder = GetCylinder(prim)) return cylinder;
-  if (std::shared_ptr<const ON_Curve> curve = GetCurves(prim)) return curve;
-  if (std::shared_ptr<const ON_NurbsCurve> nurbscurve = GetNurbs(prim)) return nurbscurve;
-  if (std::shared_ptr<const ON_Curve> beziercurve = GetHermite(prim)) return beziercurve;
-  if (std::shared_ptr<const ON_Mesh> mesh = GetMesh(prim)) return mesh;
-  if (std::shared_ptr<const ON_NurbsSurface> nurbssurface = GetNurbsPatch(prim)) return nurbssurface;
-  if (std::shared_ptr<const ON_PointCloud> pointcloud = GetPoints(prim)) return pointcloud;
-  if (std::shared_ptr<const ON_Mesh> mesh = GetTetrahedralMesh(prim)) return mesh;
-  if (std::shared_ptr<const ON_RevSurface> sphere = GetSphere(prim)) return sphere;
+  if (std::shared_ptr<ON_Mesh> mesh = GetCapsule(prim)) return mesh;
+  if (std::shared_ptr<ON_RevSurface> cone = GetCone(prim)) return cone;
+  if (std::shared_ptr<ON_Brep> box = GetBox(prim)) return box;
+  if (std::shared_ptr<ON_RevSurface> cylinder = GetCylinder(prim)) return cylinder;
+  if (std::shared_ptr<ON_Curve> curve = GetCurves(prim)) return curve;
+  if (std::shared_ptr<ON_NurbsCurve> nurbscurve = GetNurbs(prim)) return nurbscurve;
+  if (std::shared_ptr<ON_Curve> beziercurve = GetHermite(prim)) return beziercurve;
+  if (std::shared_ptr<ON_Mesh> mesh = GetMesh(prim)) return mesh;
+  if (std::shared_ptr<ON_NurbsSurface> nurbssurface = GetNurbsPatch(prim)) return nurbssurface;
+  if (std::shared_ptr<ON_PointCloud> pointcloud = GetPoints(prim)) return pointcloud;
+  if (std::shared_ptr<ON_Mesh> mesh = GetTetrahedralMesh(prim)) return mesh;
+  if (std::shared_ptr<ON_RevSurface> sphere = GetSphere(prim)) return sphere;
 
   return nullptr;
 }

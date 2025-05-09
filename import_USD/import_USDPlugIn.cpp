@@ -75,7 +75,7 @@ void Cimport_USDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, c
   
 }
 
-BOOL Cimport_USDPlugIn::ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options)
+BOOL32 Cimport_USDPlugIn::ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options)
 {
   UNREFERENCED_PARAMETER(index);
   

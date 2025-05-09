@@ -17,6 +17,7 @@
 		1A0327362DCA75470055EA64 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A0327352DCA75470055EA64 /* libtbb.dylib */; };
 		1A0451CD2DCAB7AC00D15C5E /* UsdImport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A0451CC2DCAB7A800D15C5E /* UsdImport.cpp */; };
 		1A653F9A2DCA758E00677735 /* libusd_ms.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A653F992DCA758E00677735 /* libusd_ms.dylib */; };
+		1AF24B362DCE1FE000D9C60D /* UsdImportPacket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1AF24B352DCE1FDA00D9C60D /* UsdImportPacket.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -55,6 +56,8 @@
 		1A0451CC2DCAB7A800D15C5E /* UsdImport.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UsdImport.cpp; sourceTree = "<group>"; };
 		1A0451CE2DCAB93300D15C5E /* UsdImportPacket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UsdImportPacket.h; sourceTree = "<group>"; };
 		1A653F992DCA758E00677735 /* libusd_ms.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libusd_ms.dylib; path = ../../../MacOS/Frameworks/libusd_ms.dylib; sourceTree = "<group>"; };
+		1AF24B352DCE1FDA00D9C60D /* UsdImportPacket.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UsdImportPacket.cpp; sourceTree = "<group>"; };
+		1AF24B372DCE210700D9C60D /* ON_Helpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ON_Helpers.h; path = ../UsdShared/ON_Helpers.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +108,7 @@
 		1A0326652DCA6C3C0055EA64 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
+				1AF24B372DCE210700D9C60D /* ON_Helpers.h */,
 				1A0451CE2DCAB93300D15C5E /* UsdImportPacket.h */,
 				1A0451CA2DCAB5AE00D15C5E /* read_usd.h */,
 				1A0326682DCA6FDC0055EA64 /* convert_geometry.h */,
@@ -120,6 +124,7 @@
 		1A0326662DCA6C610055EA64 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				1AF24B352DCE1FDA00D9C60D /* UsdImportPacket.cpp */,
 				1A0451CC2DCAB7A800D15C5E /* UsdImport.cpp */,
 				1A03266D2DCA6FEC0055EA64 /* convert_geometry.cpp */,
 				1A03266E2DCA6FEC0055EA64 /* convert_metadata.cpp */,
@@ -223,6 +228,7 @@
 				1A0326732DCA6FEC0055EA64 /* import_USDPlugIn.cpp in Sources */,
 				1A0326742DCA6FEC0055EA64 /* read_usd.cpp in Sources */,
 				1A0451CD2DCAB7AC00D15C5E /* UsdImport.cpp in Sources */,
+				1AF24B362DCE1FE000D9C60D /* UsdImportPacket.cpp in Sources */,
 				1A0326752DCA6FEC0055EA64 /* import_USDApp.cpp in Sources */,
 				1A0326762DCA6FEC0055EA64 /* convert_geometry.cpp in Sources */,
 			);

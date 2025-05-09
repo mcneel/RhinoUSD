@@ -20,8 +20,9 @@ public:
     // No delete needed
   }
   
+  void TraversePrimTree(pxr::UsdPrim& root, UsdImportPacket& collection);
   bool AddPrimDataToDoc(UsdImportPacket& data);
-  bool TryAddToDocument(ON_Geometry* geom, ON_3dmObjectAttributes* attribs);
+  bool TryAddToDocument(std::shared_ptr<ON_Geometry> geom, std::shared_ptr<const ON_3dmObjectAttributes> attribs);
   bool ReadFile();
 
   
@@ -34,4 +35,4 @@ private:
   
   pxr::UsdStageRefPtr Model;
   
-}
+};
