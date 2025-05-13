@@ -80,21 +80,31 @@ ON_wString UsdShared::RhinoLayerNameToUsd(const ON_wString& rhLayerName, const O
 
 void UsdShared::SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage)
 {
+  
   ON_wString path;
   for (ON_wString name : layerNames)
   {
     // make sure the layer is activated
-    pxr::UsdPrim existingPrim;
-
     path = path + L"/" + name;
     std::string stdStrPath = ON_Helpers::ON_wString_to_StdString(path);
-    existingPrim = stage->GetPrimAtPath(pxr::SdfPath(stdStrPath));
-    if (!existingPrim)
+    pxr::UsdPrim existingPrim = stage->GetPrimAtPath(pxr::SdfPath(stdStrPath));
+    
+    try
     {
-        if (!existingPrim.IsActive())
-        {
-            existingPrim.ClearActive();
-        }
+      if (!existingPrim)
+      {
+          if (!existingPrim.IsActive())
+          {
+              existingPrim.ClearActive();
+          }
+      }
+    }
+    catch (...)
+    {
+      ON_DEBUG("Null Prim in Export USD, throwing on prim.IsActive()");
+      // RhinoApp().Print(L"MESSAGE\n");
+      // C Sykes : Above codes function is unknown.
+      // NOTE : I don't think this exception matters.
     }
 
     //std::cout << "layer: " << stdStrPath << std::endl; //debug
