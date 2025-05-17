@@ -10,7 +10,7 @@
 class UsdExportImport
 {
 public:
-  UsdExportImport(const ON_wString& fileName, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc);
+  UsdExportImport(const ON_wString& fileName, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc, const ON_wString externalReferenceName = L"");
   ON_wString AddMesh(const ON_Mesh* mesh, const ON_wString meshName, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs);
   //void AddAndBindMaterial(const ON_Material* material, const std::vector<ON_wString>& layerNames, const ON_wString meshPath);
   void AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docSerNo, const ON_UUID& matId, const ON_wString& matName, const ON_PhysicallyBasedMaterial* pbrMaterial, const ON_ObjectArray<ON_Texture>& textures);
@@ -76,4 +76,6 @@ private:
 
   pxr::TfToken tokDisplacement;
   pxr::TfToken tokOcclusion;
+  
+  ON_wString ExternalReferenceName;
 };

@@ -112,12 +112,13 @@ int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, const 
 int WriteUSDFile(const wchar_t* filename,
   CRhinoDoc& doc,
   ON_ClassArray<std::shared_ptr<UsdPacket>> packets,
-  const UsdExportOptions& usdOptions)
+  const UsdExportOptions& usdOptions,
+  const ON_wString externalReferenceName)
 {
   double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
 
   const ON_wString fn(filename);
-  UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc);
+  UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc, externalReferenceName);
   
   usdEI.SetDefaultPrim();
   usdEI.SetAuthorMetadata();

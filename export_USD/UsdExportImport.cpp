@@ -13,7 +13,11 @@
 using namespace pxr;
 using namespace std;
 
-UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
+UsdExportImport::UsdExportImport(const ON_wString& fn,
+                                 double metersPerUnit,
+                                 const UsdExportOptions& options,
+                                 CRhinoDoc& doc,
+                                 const ON_wString externalReferenceName) :
   UsdOptions(options),
   Doc(doc),
 
@@ -38,7 +42,8 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
   tokIor("ior"),
   tokDisplacement("displacement"),
   tokOcclusion("occlusion"),
-  Blocks(ON_SimpleArray<ON_wString>(10))
+  Blocks(ON_SimpleArray<ON_wString>(10)),
+  ExternalReferenceName(externalReferenceName)
 {
   stage = UsdStage::CreateInMemory();
   
@@ -364,18 +369,18 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   ON_wString blockFilePath = ON_FileSystemPath::CombinePaths(rootDirectory, false, blockFileName, true, false);
 
+  ON_wString blockPrimName;
+  blockPrimName.Format(L"/BlockInstance%d", currentBlockIndex++);
+  
   ON_ClassArray<std::shared_ptr<UsdPacket>> packets(1);
   GetInstancePackets(definition, packets);
-  int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
+  int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions, L"TestBlock");
   if (returnValue < 0) return false;
 
   Blocks.Append(definition->Name());
 
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
   ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
-
-  ON_wString blockPrimName;
-  blockPrimName.Format(L"/BlockInstance%d", currentBlockIndex++);
   blockPrimPath += blockPrimName;
 
   // TOOD : Make Component
@@ -384,8 +389,12 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   UsdPrim prim = instanceForm.GetPrim();
   
-  pxr::SdfReference ref(ON_Helpers::ON_wString_to_StdString(blockFileName));
-  prim.GetReferences().AddReference(ref, pxr::UsdListPosition::UsdListPositionBackOfAppendList);
+  // pxr::SdfReference ref(ON_Helpers::ON_wString_to_StdString(blockFileName));
+  pxr::UsdReferences references = prim.GetReferences();
+  std::string referenceFilePath = ON_Helpers::ON_wString_to_StdString(blockFilePath);
+  ON_wString blockPath("/");
+  blockPath += L"TestBlock";
+  references.AddReference(referenceFilePath, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(blockPath)));
 
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
@@ -1030,36 +1039,21 @@ void UsdExportImport::Save()
 
 std::vector<ON_wString> UsdExportImport::GetLayerNames(const std::shared_ptr<UsdPacket> packet)
 {
-  std::vector<ON_wString> names;
-
-  CRhinoDoc* doc = packet->Object().Document();
-  if (!doc) return names;
-
-  const CRhinoObjectAttributes& attributes = packet->Object().Attributes();
-  int layer_index = attributes.m_layer_index;
-
-  const CRhinoLayerTable& layer_table = doc->m_layer_table;
-  const CRhinoLayer& layer = layer_table[layer_index];
-  ON_wString layerName = UsdShared::RhinoLayerNameToUsd(layer.Name());
-  names.push_back(layerName);
-
-  ON_UUID pid(layer.ParentId());
-  while (!ON_UuidIsNil(pid))
+  std::vector<ON_wString> priorLayers(0);
+  if (!ExternalReferenceName.IsEmpty())
   {
-    layer_index = layer_table.FindLayerFromId(pid, false, false, -1);
-    const CRhinoLayer& parentLayer = layer_table[layer_index];
-    ON_wString parentLayerName = UsdShared::RhinoLayerNameToUsd(parentLayer.Name());
-    names.push_back(parentLayerName);
-    ON_UUID id(parentLayer.ParentId());
-    pid = id;
+    priorLayers.insert(priorLayers.begin(), ExternalReferenceName);
   }
-  names.insert(names.begin(), L"Geometry");
-  if (!UsdOptions.ModelName.IsEmpty())
+  else
   {
-    names.insert(names.begin(), UsdOptions.ModelName);
+    priorLayers.insert(priorLayers.begin(), UsdOptions.RootLayer);
+    if (!UsdOptions.ModelName.IsEmpty())
+    {
+      priorLayers.insert(priorLayers.begin(), UsdOptions.ModelName);
+    }
+    priorLayers.insert(priorLayers.begin(), L"Geometry");
   }
-
-  names.insert(names.begin(), UsdOptions.RootLayer);
-  return names;
+  
+  return UsdShared::GetLayerNames(packet->Object(), priorLayers);
 }
 
