@@ -41,6 +41,7 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
   Blocks(ON_SimpleArray<ON_wString>(10))
 {
   stage = UsdStage::CreateInMemory();
+  
   //stage = UsdStage::CreateNew(<some path>);
 
   // Set the Z up direction for Rhino
@@ -61,17 +62,17 @@ void UsdExportImport::WriteObject(std::shared_ptr<UsdPacket>& packet, const UsdE
 {
   switch (packet->Type())
   {
-  case ON::object_type::curve_object:
-    if (!AddCurve(packet, usdOptions)) return;
-    break;
+    case ON::object_type::curve_object:
+      if (!AddCurve(packet, usdOptions)) return;
+      break;
 
     case ON::object_type::instance_reference:
       if (!AddBlock(packet, usdOptions)) return;
       break;
 
-  default:
-    if (!AddMesh(packet, usdOptions)) return;
-    break;
+    default:
+      if (!AddMesh(packet, usdOptions)) return;
+      break;
   }
 }
 
@@ -104,12 +105,12 @@ bool UsdExportImport::AddMesh(std::shared_ptr<UsdPacket> packet, const UsdExport
 
   ON_wString meshPath;
   if (meshName.IsEmpty())
-    meshPath.Format(L"/mesh%d", currentMeshIndex++);
+    meshPath.Format(L"/Mesh%d", currentMeshIndex++);
   else
   {
     // RhinoLayerNameToUsd function should be renamed to something like On_wStringToValidUsd[Name|String|Path] ...
     ON_wString validMeshName = UsdShared::RhinoLayerNameToUsd(meshName);
-    meshPath.Format(L"/%s_mesh%d", validMeshName.Array(), currentMeshIndex++);
+    meshPath.Format(L"/%s_Mesh%d", validMeshName.Array(), currentMeshIndex++);
   }
   meshPath = layerNamesPath + meshPath;
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(meshPath);
@@ -275,6 +276,7 @@ bool UsdExportImport::AddCurve(const std::shared_ptr<UsdPacket> packet, const Us
 
   ON_wString name;
   name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
+  name.Format(L"/NurbsCurve%d", currentNurbsCurveIndex++);
   name = layerNamesPath + name;
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(name);
   pxr::UsdGeomNurbsCurves usdNc = pxr::UsdGeomNurbsCurves::Define(stage, pxr::SdfPath(stdStrName));
@@ -373,7 +375,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
 
   ON_wString blockPrimName;
-  blockPrimName.Format(L"/blockInstance%d", currentBlockIndex++);
+  blockPrimName.Format(L"/BlockInstance%d", currentBlockIndex++);
   blockPrimPath += blockPrimName;
 
   // TOOD : Make Component
@@ -970,7 +972,10 @@ void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const
 
 bool UsdExportImport::AnythingToSave()
 {
-  return currentMeshIndex > 0 || !materialsAddedToScene.empty() || currentNurbsCurveIndex > 0;
+  return currentMeshIndex > 0 ||
+        !materialsAddedToScene.empty() ||
+        currentNurbsCurveIndex > 0 ||
+        currentBlockIndex > 0;
 }
 
 void UsdExportImport::SetDefaultPrim()
