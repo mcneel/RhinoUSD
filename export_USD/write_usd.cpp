@@ -118,6 +118,10 @@ int WriteUSDFile(const wchar_t* filename,
 
   const ON_wString fn(filename);
   UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc);
+  
+  usdEI.SetDefaultPrim();
+  usdEI.SetAuthorMetadata();
+  
   for(int i = 0; i < packets.Count(); i++)
   {
     std::shared_ptr<UsdPacket> packet = packets[i];
@@ -126,9 +130,6 @@ int WriteUSDFile(const wchar_t* filename,
 
   if (!usdEI.AnythingToSave())
     return 0;
-
-  usdEI.SetDefaultPrim();
-  usdEI.SetAuthorMetadata();
 
   usdEI.Save();
   return 1;
