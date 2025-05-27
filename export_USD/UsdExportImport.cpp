@@ -384,8 +384,11 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   UsdPrim prim = instanceForm.GetPrim();
   
-  pxr::SdfReference ref(ON_Helpers::ON_wString_to_StdString(blockFileName));
-  prim.GetReferences().AddReference(ref, pxr::UsdListPosition::UsdListPositionBackOfAppendList);
+  const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(blockPrimName));
+  const std::string refString(ON_Helpers::ON_wString_to_StdString(blockFilePath));
+  
+  pxr::UsdReferences references = prim.GetReferences();
+  references.AddReference(refString, path);
 
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
