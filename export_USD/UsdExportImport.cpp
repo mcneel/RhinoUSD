@@ -373,6 +373,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
   ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
+  ON_wString blockPrimRefPath(blockPrimPath);
 
   ON_wString blockPrimName;
   blockPrimName.Format(L"/BlockInstance%d", currentBlockIndex++);
@@ -384,9 +385,16 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   UsdPrim prim = instanceForm.GetPrim();
   
-  const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(blockPrimName));
+  const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(blockPrimRefPath));
   const std::string refString(ON_Helpers::ON_wString_to_StdString(blockFilePath));
   
+// Set Kind -> Causes issues
+//  pxr::UsdEditTarget().MapToSpecPath(path);
+//  pxr::UsdModelAPI modelApi = pxr::UsdModelAPI();
+//  modelApi.SetKind(pxr::KindTokens->assembly);
+  
+  prim.SetInstanceable(true);
+
   pxr::UsdReferences references = prim.GetReferences();
   references.AddReference(refString, path);
 
@@ -399,6 +407,11 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   // TODO : Include embedded block paths?
   // vtDict.SetValueAtPath("payloadAssetDependencies", pxr::VtValue());
   prim.SetAssetInfo(vtDict);
+  prim.SetAssetInfoByKey(pxr::TfToken("id"), pxr::VtValue("example"));
+//  
+//  pxr::SdfSubLayerProxy stack = stage->GetRootLayer()->GetSubLayerPaths();
+//  stack.push_back(ON_Helpers::ON_wString_to_StdString(blockFileName));
+//  
 
   // TODO : Set Transform!
   // reference->m_xform
