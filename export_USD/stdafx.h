@@ -112,4 +112,6 @@
 #include "pxr/usd/usdGeom/nurbsPatch.h"
 #include "pxr/usd/usdGeom/primvarsAPI.h"
 #include "pxr/usd/usd/zipFile.h"
+#include "pxr/usd/usd/modelAPI.h"
+#include "pxr/usd/kind/registry.h"
 #pragma warning(pop)
