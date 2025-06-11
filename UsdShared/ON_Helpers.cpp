@@ -3,10 +3,8 @@
 
 std::string ON_Helpers::ON_wString_to_StdString(const ON_wString& onwstr)
 {
-  // todo: problems with potentially losing data
-  std::wstring wstr(static_cast<const wchar_t*>(onwstr));
-  std::string str(wstr.begin(), wstr.end());
-  return str;
+  ON_String utf8Str(onwstr);
+  return static_cast<const char*>(utf8Str);
 }
 
 ON_wString ON_Helpers::ON_TextureTYPE_to_ON_wString(const ON_Texture::TYPE type)

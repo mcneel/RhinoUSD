@@ -8,10 +8,9 @@
 using namespace pxr;
 
 //todo: I'm sure there's a copy file function that's already available somewhere
-void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination)
+// C++17 std::fileystem::copy_file("source_filename", "dest_filename");
+void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destFullFileName)
 {
-  ON_wString fileName = ON_FileSystemPath::FileNameFromPath(fullFileName, true);
-  ON_wString destFullFileName = destination + fileName;
   std::ifstream  src(ON_Helpers::ON_wString_to_StdString(fullFileName), std::ios::binary);
   std::ofstream  dst(ON_Helpers::ON_wString_to_StdString(destFullFileName),   std::ios::binary);
   dst << src.rdbuf();
@@ -111,7 +110,6 @@ bool UsdShared::IsValidUsdObject(ON::object_type type)
     case ON::object_type::annotation_object:
     case ON::object_type::userdata_object:
     case ON::object_type::instance_definition: // TODO : Support
-      // case ON::object_type::instance_reference: // TODO : Support
     case ON::object_type::text_dot:
     case ON::object_type::grip_object:
     case ON::object_type::detail_object:
@@ -142,7 +140,7 @@ ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
   {
     // Supported Objects
     case ON::object_type::curve_object:
-    // case ON::object_type::instance_reference: // TODO : Impliment
+    case ON::object_type::instance_reference:
       return  obj->ObjectType();
       break;
 
