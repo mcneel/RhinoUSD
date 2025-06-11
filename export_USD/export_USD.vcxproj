@@ -177,6 +177,7 @@ xcopy /y /s /i "$(ProjectDir)..\usd\usd" "$(OutDir)usd"
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>CORE_BUILD;WIN64;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
