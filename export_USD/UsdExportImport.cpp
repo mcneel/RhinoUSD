@@ -1047,8 +1047,7 @@ void UsdExportImport::Save()
   stage->Save();
   UsdShared::CopyFileTo(tempUsdFilePath, usdFullFileName);
   
-  // TODO : Remove temp files when completely done
-  
+  ON_FileSystem::RemoveFile(tempUsdFilePath.Array());
   return;
 
   // I think out of date

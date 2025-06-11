@@ -128,9 +128,6 @@ int WriteUSDFile(const wchar_t* filename,
     usdEI.WriteObject(packet, usdOptions);
   }
 
-//  if (!usdEI.AnythingToSave())
-//    return 0;
-
   usdEI.Save();
   return 1;
 }
