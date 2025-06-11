@@ -13,11 +13,11 @@
 using namespace pxr;
 using namespace std;
 
-UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
+UsdExportImport::UsdExportImport(const ON_wString& fileName, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
   UsdOptions(options),
   Doc(doc),
 
-  usdFullFileName(fn),
+  usdFullFileName(fileName),
   metersPerUnit(metersPerUnit),
   currentMeshIndex(0),
   //currentMaterialIndex(0),
@@ -40,9 +40,7 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
   tokOcclusion("occlusion"),
   Blocks(ON_SimpleArray<ON_wString>(10))
 {
-  stage = UsdStage::CreateInMemory();
-  
-  //stage = UsdStage::CreateNew(<some path>);
+  CreateUsdFile();
 
   // Set the Z up direction for Rhino
   pxr::TfToken upAxis = pxr::UsdGeomTokens->y; // z;
@@ -56,6 +54,29 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
     std::cout << "could not set StageMetersPerUnit";
   }
 
+}
+
+const ON_wString TempFolder("TEMP_USD");
+
+void UsdExportImport::CreateUsdFile()
+{
+  ON_wString tempPath;
+  if (CRhinoFileUtilities::GetTemporaryPath(tempPath))
+  {
+    ON_wString tempFolder = ON_FileSystemPath::CombinePaths(tempPath, false, TempFolder, false, false);
+
+    UUID uuid;
+    ON_wString fileName;
+    ON_CreateUuid(uuid);
+    ON_UuidToString(uuid, fileName);
+
+    ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName);
+    fileName += extension;
+
+    tempUsdFilePath = ON_FileSystemPath::CombinePaths(tempFolder, false, fileName, true, false);
+
+    stage = UsdStage::CreateNew(ON_Helpers::ON_wString_to_StdString(tempUsdFilePath));
+  }
 }
 
 void UsdExportImport::WriteObject(std::shared_ptr<UsdPacket>& packet, const UsdExportOptions& usdOptions)
@@ -396,7 +417,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   prim.SetInstanceable(true);
 
   pxr::UsdReferences references = prim.GetReferences();
-  references.AddReference(refString, path);
+  references.AddReference(ON_Helpers::ON_wString_to_StdString(blockFileName), path);
 
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
@@ -1001,7 +1022,7 @@ void UsdExportImport::SetDefaultPrim()
   std::string stringPath = ON_Helpers::ON_wString_to_StdString(absolutePath);
   pxr::UsdPrim defaultPrim = stage->GetPrimAtPath(pxr::SdfPath(stringPath));
 
-  stage->SetDefaultPrim(defaultPrim);
+  stage->GetRootLayer()->SetDefaultPrim(pxr::TfToken(ON_Helpers::ON_wString_to_StdString(UsdOptions.RootLayer)));
 }
 
 void UsdExportImport::SetAuthorMetadata()
@@ -1023,6 +1044,14 @@ void UsdExportImport::SetAuthorMetadata()
 
 void UsdExportImport::Save()
 {
+  stage->Save();
+  UsdShared::CopyFileTo(tempUsdFilePath, usdFullFileName);
+  
+  // TODO : Remove temp files when completely done
+  
+  return;
+
+  // I think out of date
   if (ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName) == L".usdz")
   {
     ON_wString fullFileNameWithoutExtension = UsdShared::PathWithoutExtension(usdFullFileName);

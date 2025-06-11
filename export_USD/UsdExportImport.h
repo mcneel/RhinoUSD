@@ -22,7 +22,8 @@ public:
   bool GetPacketsFromCRhinoObjects(ObjectArray& objects, const CRhinoFileWriteOptions& fileOptions, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets, int mesh_ui_style = -1);
   const ON_Mesh& GetMeshFromSubD(ON_SubD& subD, const ON_MeshParameters mp);
   bool AnythingToSave();
-  void Save(/*const ON_wString& fileName*/);
+  void Save();
+  void CreateUsdFile();
 
   void WriteObject(std::shared_ptr<UsdPacket>& packet, const UsdExportOptions& usdOptions);
   bool AddCurve(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions);
@@ -34,6 +35,8 @@ public:
   void SetAuthorMetadata();
 
   const UsdExportOptions& UsdOptions;
+
+  ON_wString tempUsdFilePath;
 
 private:
   CRhinoDoc& Doc;

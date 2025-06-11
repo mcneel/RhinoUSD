@@ -120,7 +120,7 @@ int WriteUSDFile(const wchar_t* filename,
   UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc);
   
   usdEI.SetDefaultPrim();
-  usdEI.SetAuthorMetadata();
+  // usdEI.SetAuthorMetadata();
   
   for(int i = 0; i < packets.Count(); i++)
   {
@@ -128,8 +128,8 @@ int WriteUSDFile(const wchar_t* filename,
     usdEI.WriteObject(packet, usdOptions);
   }
 
-  if (!usdEI.AnythingToSave())
-    return 0;
+//  if (!usdEI.AnythingToSave())
+//    return 0;
 
   usdEI.Save();
   return 1;
