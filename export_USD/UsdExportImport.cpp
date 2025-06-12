@@ -57,6 +57,8 @@ UsdExportImport::UsdExportImport(const ON_wString& fileName, double metersPerUni
 
 }
 
+ON_ClassArray<UsdFilePathPair> UsdExportImport::Exported(0);
+
 const ON_wString TempFolder("TEMP_USD");
 
 void UsdExportImport::CreateUsdFile()
@@ -72,11 +74,14 @@ void UsdExportImport::CreateUsdFile()
     ON_UuidToString(uuid, fileName);
 
     ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName);
+    if (extension.EqualOrdinal(L".usdz", true))
+    {
+      extension = L".usdc";
+    }
     fileName += extension;
 
     tempUsdFilePath = ON_FileSystemPath::CombinePaths(tempFolder, false, fileName, true, false);
     
-    // TODO : USDZ is odd and should be written after temp files. USDZ needs a different API.
     stage = UsdStage::CreateNew(ON_Helpers::ON_wString_to_StdString(tempUsdFilePath));
   }
 }
@@ -1024,14 +1029,6 @@ void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const
   //// continue ...
 }
 
-bool UsdExportImport::AnythingToSave()
-{
-  return currentMeshIndex > 0 ||
-        !materialsAddedToScene.empty() ||
-        currentNurbsCurveIndex > 0 ||
-        currentBlockIndex > 0;
-}
-
 void UsdExportImport::SetDefaultPrim()
 {
   ON_wString rootPath("/");
@@ -1060,9 +1057,11 @@ void UsdExportImport::SetAuthorMetadata()
 void UsdExportImport::Save()
 {
   stage->Save();
-  UsdShared::CopyFileTo(tempUsdFilePath, usdFullFileName);
   
-  ON_FileSystem::RemoveFile(tempUsdFilePath.Array());
+  UsdFilePathPair& newPair = Exported.AppendNew();
+  newPair.Real = usdFullFileName;
+  newPair.Temporary = tempUsdFilePath;
+    
   return;
 }
 

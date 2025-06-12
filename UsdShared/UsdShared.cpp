@@ -16,22 +16,6 @@ void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& des
   dst << src.rdbuf();
 }
 
-void UsdShared::CreateUsdzFile(const ON_wString& fullFileNameNoExtension, const std::vector<ON_wString>& filesToInclude)
-{
-  ON_wString usdaFullFileName = fullFileNameNoExtension + ".usda";
-  ON_wString usdaFileName = ON_FileSystemPath::FileNameFromPath(usdaFullFileName, true);
-  ON_wString usdzFullFileName = fullFileNameNoExtension + ".usdz";
-  UsdZipFileWriter writer = UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(usdzFullFileName));
-  // usda has to be added before textures
-  writer.AddFile(ON_Helpers::ON_wString_to_StdString(usdaFullFileName), ON_Helpers::ON_wString_to_StdString(usdaFileName));
-  for (ON_wString fullFileName : filesToInclude)
-  {
-    ON_wString fileName = ON_FileSystemPath::FileNameFromPath(fullFileName, true);
-    writer.AddFile(ON_Helpers::ON_wString_to_StdString(fullFileName), ON_Helpers::ON_wString_to_StdString(fileName));
-  }
-  writer.Save();
-}
-
 ON_wString UsdShared::PathWithoutExtension(const ON_wString& fullFileName)
 {
   // I didn't see an obvious ON_FileSystemPath way to do this.

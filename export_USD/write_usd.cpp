@@ -117,6 +117,7 @@ int WriteUSDFile(const wchar_t* filename,
   double metersPerUnit(doc.ModelUnits().MetersPerUnit(ON_DBL_QNAN));
 
   const ON_wString fn(filename);
+  
   UsdExportImport usdEI(fn, metersPerUnit, usdOptions, doc);
   
   for(int i = 0; i < packets.Count(); i++)
@@ -127,6 +128,7 @@ int WriteUSDFile(const wchar_t* filename,
 
   // usdEI.SetAuthorMetadata(); // <-- Causes crash
   usdEI.Save();
+  
   return 1;
 }
 
@@ -167,3 +169,5 @@ bool MeshPackets(ON_ClassArray<std::shared_ptr<UsdPacket>>& meshPackets,
 
   return true;
 }
+
+

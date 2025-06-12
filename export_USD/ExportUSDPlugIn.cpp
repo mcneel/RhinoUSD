@@ -7,9 +7,6 @@
 
 #include "ExportUSDPlugIn.h"
 #include "Resource.h"
-#include "UsdExportOptions.h"
-#include "write_usd.h"
-#include "../UsdShared/UsdPacket.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -101,12 +98,57 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
 		HandleUserInput(ExportOptions);
   }
 
-  // bool usda = 1 == index;
-
   ON_ClassArray<std::shared_ptr<UsdPacket>> packets;
   if (GetPackets(doc, options, ExportOptions, packets) <= 0) return -1;
   
-  return WriteUSDFile(filename, doc, packets, ExportOptions);
+  int result = WriteUSDFile(filename, doc, packets, ExportOptions);
+  
+  SaveFiles();
+  
+  return result;
+}
+
+bool CExportUSDPlugIn::SaveFiles()
+{
+  ON_ClassArray<UsdFilePathPair> filePairs = UsdExportImport::Exported;
+  if (filePairs.Count() <= 0) return false;
+  
+  UsdFilePathPair baseFilePair = filePairs[0];
+  const ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(baseFilePair.Real);
+  if (extension.EqualOrdinal(L".usdz", true))
+  {
+    pxr::UsdZipFileWriter writer = pxr::UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(baseFilePair.Real));
+    
+    for (UsdFilePathPair filePair : filePairs)
+    {
+      writer.AddFile(ON_Helpers::ON_wString_to_StdString(filePair.Temporary));
+      ON_FileSystem::RemoveFile(filePair.Temporary);
+    }
+    
+    writer.Save();
+    
+    filePairs.Empty();
+    
+    return true;
+  }
+  else if (extension.EqualOrdinal(L".usd", true) ||
+           extension.EqualOrdinal(L".usda", true) ||
+           extension.EqualOrdinal(L".usdc", true))
+  {
+    for (UsdFilePathPair filePair : filePairs)
+    {
+      UsdShared::CopyFileTo(filePair.Temporary, filePair.Real);
+      ON_FileSystem::RemoveFile(filePair.Temporary);
+    }
+    
+    filePairs.Empty();
+    
+    return true;
+  }
+  
+  filePairs.Empty();
+  
+  return false;
 }
 
 void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)

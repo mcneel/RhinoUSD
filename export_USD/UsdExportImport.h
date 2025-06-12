@@ -5,6 +5,7 @@
 
 #include "UsdExportOptions.h"
 #include "../UsdShared/UsdPacket.h"
+#include "write_usd.h"
 
 // Move this to it's own header/cpp
 class UsdExportImport
@@ -37,6 +38,8 @@ public:
   const UsdExportOptions& UsdOptions;
 
   ON_wString tempUsdFilePath;
+  
+  static ON_ClassArray<UsdFilePathPair> Exported;
 
 private:
   CRhinoDoc& Doc;
