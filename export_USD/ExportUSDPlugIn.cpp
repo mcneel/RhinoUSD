@@ -110,16 +110,15 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
 
 bool CExportUSDPlugIn::SaveFiles()
 {
-  ON_ClassArray<UsdFilePathPair> filePairs = UsdExportImport::Exported;
-  if (filePairs.Count() <= 0) return false;
+  if (UsdExportImport::Exported.Count() <= 0) return false;
   
-  UsdFilePathPair baseFilePair = filePairs[0];
+  UsdFilePathPair baseFilePair = UsdExportImport::Exported[0];
   const ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(baseFilePair.Real);
   if (extension.EqualOrdinal(L".usdz", true))
   {
     pxr::UsdZipFileWriter writer = pxr::UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(baseFilePair.Real));
     
-    for (UsdFilePathPair filePair : filePairs)
+    for (UsdFilePathPair filePair : UsdExportImport::Exported)
     {
       writer.AddFile(ON_Helpers::ON_wString_to_StdString(filePair.Temporary));
       ON_FileSystem::RemoveFile(filePair.Temporary);
@@ -127,7 +126,7 @@ bool CExportUSDPlugIn::SaveFiles()
     
     writer.Save();
     
-    filePairs.Empty();
+    UsdExportImport::Exported.Empty();
     
     return true;
   }
@@ -135,18 +134,18 @@ bool CExportUSDPlugIn::SaveFiles()
            extension.EqualOrdinal(L".usda", true) ||
            extension.EqualOrdinal(L".usdc", true))
   {
-    for (UsdFilePathPair filePair : filePairs)
+    for (UsdFilePathPair filePair : UsdExportImport::Exported)
     {
       UsdShared::CopyFileTo(filePair.Temporary, filePair.Real);
       ON_FileSystem::RemoveFile(filePair.Temporary);
     }
     
-    filePairs.Empty();
+    UsdExportImport::Exported.Empty();
     
     return true;
   }
   
-  filePairs.Empty();
+  UsdExportImport::Exported.Empty();
   
   return false;
 }
