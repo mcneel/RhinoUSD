@@ -125,7 +125,7 @@ int WriteUSDFile(const wchar_t* filename,
     usdEI.WriteObject(packet, usdOptions);
   }
 
-  usdEI.SetAuthorMetadata();
+  // usdEI.SetAuthorMetadata(); // <-- Causes crash
   usdEI.Save();
   return 1;
 }
