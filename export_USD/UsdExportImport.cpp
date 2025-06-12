@@ -407,6 +407,8 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
     {
       WriteObject(packet, usdOptions);
     }
+    
+    return true;
   }
   
   Blocks.Append(definition->Name());
