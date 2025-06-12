@@ -41,6 +41,7 @@ UsdExportImport::UsdExportImport(const ON_wString& fileName, double metersPerUni
   Blocks(ON_SimpleArray<ON_wString>(10))
 {
   CreateUsdFile();
+  SetDefaultPrim();
 
   // Set the Z up direction for Rhino
   pxr::TfToken upAxis = pxr::UsdGeomTokens->y; // z;
@@ -74,7 +75,8 @@ void UsdExportImport::CreateUsdFile()
     fileName += extension;
 
     tempUsdFilePath = ON_FileSystemPath::CombinePaths(tempFolder, false, fileName, true, false);
-
+    
+    // TODO : USDZ is odd and should be written after temp files. USDZ needs a different API.
     stage = UsdStage::CreateNew(ON_Helpers::ON_wString_to_StdString(tempUsdFilePath));
   }
 }
@@ -359,65 +361,80 @@ bool UsdExportImport::AddCurve(const std::shared_ptr<UsdPacket> packet, const Us
 bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
 {
   if (packet->Type() != ON::object_type::instance_reference) return false;
-
+  if (usdOptions.Blocks == BlockHandling::Ignore) return false;
+  
   CRhinoDoc* doc = packet->Object().Document();
   if (!doc) return false;
-
+  
   const ON_Geometry* geometry = packet->Object().Geometry();
   const ON_InstanceRef* reference = ON_InstanceRef::Cast(geometry);
-
+  
   ON_UUID refId = reference->m_instance_definition_uuid;
-
+  
   int index = doc->m_instance_definition_table.FindInstanceDefinition(refId, true);
   if (index < 0) return false;
-
+  
   const CRhinoInstanceDefinition* definition = doc->m_instance_definition_table[index];
   if (Blocks.Search(definition->Name()) > -1)
   {
     return true;
   }
-
+  
   ON_wString rootDirectory = ON_FileSystemPath::DirectoryFromPath(usdFullFileName);
   ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName);
-
+  
   ON_wString blockFileName(definition->Name());
   blockFileName += fileExtension;
-
+  
   ON_wString blockFilePath = ON_FileSystemPath::CombinePaths(rootDirectory, false, blockFileName, true, false);
-
-  ON_ClassArray<std::shared_ptr<UsdPacket>> packets(1);
+  
+  ON_ClassArray<std::shared_ptr<UsdPacket>> packets(0);
   GetInstancePackets(definition, packets);
-  int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
-  if (returnValue < 0) return false;
-
+  
+  if (usdOptions.Blocks == BlockHandling::SeparateFiles)
+  {
+    int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
+    if (returnValue < 0) return false;
+  }
+  else
+  {
+    for (std::shared_ptr<UsdPacket> packet : packets)
+    {
+      WriteObject(packet, usdOptions);
+    }
+  }
+  
   Blocks.Append(definition->Name());
-
+  
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
   ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
   ON_wString blockPrimRefPath(blockPrimPath);
-
+  
   ON_wString blockPrimName;
   blockPrimName.Format(L"/BlockInstance%d", currentBlockIndex++);
   blockPrimPath += blockPrimName;
-
+  
   // TOOD : Make Component
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(ON_Helpers::ON_wString_to_StdString(blockPrimPath)));
-
+  
   UsdPrim prim = instanceForm.GetPrim();
   
-  const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(blockPrimRefPath));
-  const std::string refString(ON_Helpers::ON_wString_to_StdString(blockFilePath));
-  
-// Set Kind -> Causes issues
-//  pxr::UsdEditTarget().MapToSpecPath(path);
-//  pxr::UsdModelAPI modelApi = pxr::UsdModelAPI();
-//  modelApi.SetKind(pxr::KindTokens->assembly);
-  
-  prim.SetInstanceable(true);
-
-  pxr::UsdReferences references = prim.GetReferences();
-  references.AddReference(ON_Helpers::ON_wString_to_StdString(blockFileName), path);
+  if (usdOptions.Blocks == BlockHandling::SeparateFiles)
+  {
+    const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(blockPrimRefPath));
+    const std::string refString(ON_Helpers::ON_wString_to_StdString(blockFilePath));
+    
+    // Set Kind -> Causes issues
+    //  pxr::UsdEditTarget().MapToSpecPath(path);
+    //  pxr::UsdModelAPI modelApi = pxr::UsdModelAPI();
+    //  modelApi.SetKind(pxr::KindTokens->assembly);
+    
+    prim.SetInstanceable(true);
+    
+    pxr::UsdReferences references = prim.GetReferences();
+    references.AddReference(ON_Helpers::ON_wString_to_StdString(blockFileName), path);
+  }
 
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
@@ -1017,21 +1034,20 @@ bool UsdExportImport::AnythingToSave()
 
 void UsdExportImport::SetDefaultPrim()
 {
-  ON_wString absolutePath(L"/");
-  absolutePath += UsdOptions.RootLayer;
-  std::string stringPath = ON_Helpers::ON_wString_to_StdString(absolutePath);
-  pxr::UsdPrim defaultPrim = stage->GetPrimAtPath(pxr::SdfPath(stringPath));
-
-  stage->GetRootLayer()->SetDefaultPrim(pxr::TfToken(ON_Helpers::ON_wString_to_StdString(UsdOptions.RootLayer)));
+  ON_wString rootPath("/");
+  rootPath += UsdOptions.RootLayer;
+  
+  const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(UsdOptions.RootLayer));
+  const pxr::UsdPrim prim = stage->DefinePrim(path);
+  
+  stage->SetDefaultPrim(prim);
+  // stage->GetRootLayer()->SetDefaultPrim(pxr::TfToken(ON_Helpers::ON_wString_to_StdString(UsdOptions.RootLayer)));
 }
 
 void UsdExportImport::SetAuthorMetadata()
 {
   pxr::UsdPrim defaultPrim = stage->GetDefaultPrim();
   
-#ifdef DEBUG
-  // TODO : This would be good to be in the HEAD of the file
-  // TODO : Time must be in UTC
   if (pxr::UsdAttribute dateAttribute = defaultPrim.CreateAttribute(pxr::TfToken("date"), pxr::SdfValueTypeNames->String))
   {
     const std::chrono::system_clock::time_point& now = std::chrono::system_clock::now();
@@ -1039,7 +1055,6 @@ void UsdExportImport::SetAuthorMetadata()
       
     dateAttribute.Set(pxr::VtValue(std::ctime(&tt)));
   }
-#endif
 }
 
 void UsdExportImport::Save()
@@ -1049,27 +1064,6 @@ void UsdExportImport::Save()
   
   ON_FileSystem::RemoveFile(tempUsdFilePath.Array());
   return;
-
-  // I think out of date
-  if (ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName) == L".usdz")
-  {
-    ON_wString fullFileNameWithoutExtension = UsdShared::PathWithoutExtension(usdFullFileName);
-    ON_wString usdaFileName = fullFileNameWithoutExtension + ".usda";
-    stage->Export(ON_Helpers::ON_wString_to_StdString(usdaFileName));
-    UsdShared::CreateUsdzFile(fullFileNameWithoutExtension, filesInExport);
-    ON_FileSystem::RemoveFile(usdaFileName.Array());
-  }
-  else
-  {
-    stage->Export(ON_Helpers::ON_wString_to_StdString(usdFullFileName));
-    //ON_wString copyToPath = UsdShared::PathFromFullFileName(usdFileName);
-    ON_wString usdFileName = ON_FileSystemPath::FileNameFromPath(usdFullFileName, true);
-    ON_wString copyToPath = ON_FileSystemPath::RemoveFileName(usdFullFileName, &usdFileName);
-    for (ON_wString fullFileName : filesInExport)
-    {
-      UsdShared::CopyFileTo(fullFileName, copyToPath);
-    }
-  }
 }
 
 std::vector<ON_wString> UsdExportImport::GetLayerNames(const std::shared_ptr<UsdPacket> packet)
