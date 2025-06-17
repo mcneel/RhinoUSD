@@ -10,7 +10,6 @@ using namespace pxr;
 namespace UsdShared
 {
   ON_wString PathWithoutExtension(const ON_wString& fullFileName);
-  void CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination);
   bool IsAcceptableUsdCharacter(wchar_t c);
   ON_wString RhinoLayerNameToUsd(const ON_wString& rhLayerName, const ON_wString& defaultName = L"Default");
   void SetUsdLayersAsXformable(const std::vector<ON_wString>& layerNames, UsdStageRefPtr stage);

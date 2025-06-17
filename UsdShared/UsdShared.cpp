@@ -7,15 +7,6 @@
 
 using namespace pxr;
 
-//todo: I'm sure there's a copy file function that's already available somewhere
-// C++17 std::fileystem::copy_file("source_filename", "dest_filename");
-void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destFullFileName)
-{
-  std::ifstream  src(ON_Helpers::ON_wString_to_StdString(fullFileName), std::ios::binary);
-  std::ofstream  dst(ON_Helpers::ON_wString_to_StdString(destFullFileName),   std::ios::binary);
-  dst << src.rdbuf();
-}
-
 ON_wString UsdShared::PathWithoutExtension(const ON_wString& fullFileName)
 {
   // I didn't see an obvious ON_FileSystemPath way to do this.

@@ -136,8 +136,7 @@ bool CExportUSDPlugIn::SaveFiles()
   {
     for (UsdFilePathPair filePair : UsdExportImport::Exported)
     {
-      UsdShared::CopyFileTo(filePair.Temporary, filePair.Real);
-      ON_FileSystem::RemoveFile(filePair.Temporary);
+      CRhinoFileUtilities::MoveFile(filePair.Temporary, filePair.Real);
     }
     
     UsdExportImport::Exported.Empty();
