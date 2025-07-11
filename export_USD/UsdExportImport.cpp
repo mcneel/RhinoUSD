@@ -16,8 +16,7 @@ using namespace std;
 UsdExportImport::UsdExportImport(const ON_wString& fileName, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
   UsdOptions(options),
   Doc(doc),
-
-  usdFullFileName(fileName),
+  m_usdFullFileName(fileName),
   metersPerUnit(metersPerUnit),
   currentMeshIndex(0),
   //currentMaterialIndex(0),
@@ -73,7 +72,7 @@ void UsdExportImport::CreateUsdFile()
     ON_CreateUuid(uuid);
     ON_UuidToString(uuid, fileName);
 
-    ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName);
+    ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
     if (extension.EqualOrdinal(L".usdz", true))
     {
       extension = L".usdc";
@@ -385,13 +384,14 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
     return true;
   }
   
-  ON_wString rootDirectory = ON_FileSystemPath::DirectoryFromPath(usdFullFileName);
-  ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName);
+  ON_wString oldFileName = ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, true);
+  ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
   
   ON_wString blockFileName(definition->Name());
   blockFileName += fileExtension;
   
-  ON_wString blockFilePath = ON_FileSystemPath::CombinePaths(rootDirectory, false, blockFileName, true, false);
+  ON_wString blockFilePath = m_usdFullFileName.SubString(0, m_usdFullFileName.Length() - oldFileName.Length());
+  blockFilePath += blockFileName;
   
   ON_ClassArray<std::shared_ptr<UsdPacket>> packets(0);
   GetInstancePackets(definition, packets);
@@ -1061,7 +1061,7 @@ void UsdExportImport::Save()
   stage->Save();
   
   UsdFilePathPair& newPair = Exported.AppendNew();
-  newPair.Real = usdFullFileName;
+  newPair.Real = m_usdFullFileName;
   newPair.Temporary = tempUsdFilePath;
     
   return;

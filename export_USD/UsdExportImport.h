@@ -42,6 +42,8 @@ public:
   static ON_ClassArray<UsdFilePathPair> Exported;
 
 private:
+  ON_wString m_usdFullFileName;
+
   CRhinoDoc& Doc;
 
   ON_SimpleArray<ON_wString> Blocks;
@@ -51,7 +53,6 @@ private:
   std::vector<ON_wString> filesInExport;
   // ON_UUID cannot be used as the key to a std::map
   std::map<std::string, ON_wString> materialsAddedToScene;
-  const ON_wString usdFullFileName;
   double metersPerUnit;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
   pxr::UsdStageRefPtr stage;
