@@ -2,7 +2,8 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+script = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(script)
 from lib import *
 
 test_file = get_test_file('material-mapping.3dm')
@@ -22,7 +23,6 @@ os.remove(texture_file)
 
 export_usdc_file()
 assertmsg(os.path.exists(texture_file), 'USDc texture file is missing')
-os.remove(texture_file)
 
 export_usdz_file()
 # Texture File is inside usdz

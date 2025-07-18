@@ -150,7 +150,7 @@ bool CExportUSDPlugIn::SaveFiles()
       ON_wString materialFileName = ON_FileSystemPath::FileNameFromPath(originalMaterialFilePath, true);
       ON_wString materialNewPath = ON_FileSystemPath::CombinePaths(exportDir, false, materialFileName, true, false);
       
-      CRhinoFileUtilities::MoveFile(originalMaterialFilePath, materialNewPath);
+      CRhinoFileUtilities::CopyFile(originalMaterialFilePath, materialNewPath, false);
     }
     
     UsdExportImport::Exported.Empty();

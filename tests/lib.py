@@ -5,6 +5,7 @@ import scriptcontext as sc
 
 def get_test_file(file_name:str):
     root = os.path.dirname(__file__)
+    print(root)
     files = os.path.join(root, 'files')
     test_file = os.path.join(files, file_name)
     
@@ -12,8 +13,6 @@ def get_test_file(file_name:str):
 
 def get_export_dir():
     root = os.path.dirname(__file__)
-    files = os.path.join(root, 'files')
-    test_file = os.path.join(files, 'material-mapping.3dm')
     export_dir = os.path.join(root, 'exports')
     
     return export_dir
@@ -91,10 +90,15 @@ def assertmsg(result:bool, msg:str):
 
 def get_usd_file_text(filepath:str) -> str:
     assertmsg('.usda' in filepath, 'File is not USDA!')
-    return os.path.open(filepath)
+    
+    with open(filepath, 'r') as file:
+        data = file.read()
+        return data;
+    
+    return ''
 
-def assert_element_in_usda_file(usda_data:str, type_name:str element_name:str):
-    assertmsg(f'def {type_name} {element_name}' in usd_data, f'{element_name_name} not found in USDA file!')
+def assert_element_in_usda_file(usda_data:str, type_name:str, element_name:str):
+    assertmsg(f'def {type_name} {element_name}' in usda_data, f'{element_name} not found in USDA file!')
 
 def assert_property_in_usda_file(usda_data:str, property_name:str):
-    assertmsg(f'{property_name}' in usd_data, f'{property_name} not found in USDA file!')
+    assertmsg(f'{property_name}' in usda_data, f'{property_name} not found in USDA file!')
