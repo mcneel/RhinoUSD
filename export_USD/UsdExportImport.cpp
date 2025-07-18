@@ -57,6 +57,7 @@ UsdExportImport::UsdExportImport(const ON_wString& fileName, double metersPerUni
 }
 
 ON_ClassArray<UsdFilePathPair> UsdExportImport::Exported(0);
+std::vector<ON_wString> UsdExportImport::FilesInExport;
 
 const ON_wString TempFolder("TEMP_USD");
 
@@ -262,6 +263,26 @@ bool UsdExportImport::AddMesh(std::shared_ptr<UsdPacket> packet, const UsdExport
       pxr::UsdGeomPrimvar texCoords = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(pxr::TfToken(tokenName), pxr::SdfValueTypeNames->TexCoord2fArray, pxr::UsdGeomTokens->vertex);
       //texCoords.SetInterpolation(pxr::TfToken("vertex")); //already set in CreatePrimvar
       texCoords.Set(uvArray);
+    }
+  }
+  
+  const CRhRdkMaterial* pMaterial = packet->Object().ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
+  if (pMaterial)
+  {
+    ON_UUID matId = pMaterial->InstanceId();
+    ON_wString matName = pMaterial->InstanceName();
+#pragma warning (push)
+#pragma warning (disable: 4996)
+    ON_Material material = pMaterial->SimulatedMaterial();
+#pragma warning (pop)
+    material.ToPhysicallyBased();
+    std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
+    if (pbrMat)
+    {
+      ON_PhysicallyBasedMaterial& pbr = *pbrMat;
+      unsigned int docSerNo = Doc.RuntimeSerialNumber();
+      AddMaterialWithTexturesIfNotAlreadyAdded(docSerNo, matId, matName, &pbr, pbrMat->Material().m_textures);
+      BindPbrMaterialToMesh(matId, meshPath);
     }
   }
 
@@ -937,9 +958,9 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
   }
 }
 
-void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wString meshPath)
+void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wString meshUsdPath)
 {
-  std::string strMeshPath = ON_Helpers::ON_wString_to_StdString(meshPath);
+  std::string strMeshPath = ON_Helpers::ON_wString_to_StdString(meshUsdPath);
   pxr::SdfPath mp(strMeshPath);
   pxr::UsdPrim mesh = stage->GetPrimAtPath(mp);
 

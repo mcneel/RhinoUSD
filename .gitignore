@@ -19,6 +19,8 @@
 # test outputs
 tests/**/exports/*.*
 __pycache__
+*.rhl
+*.bak
 
 # Xcode Project
 **/*.xcodeproj/xcuserdata/

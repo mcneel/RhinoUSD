@@ -144,10 +144,13 @@ bool CExportUSDPlugIn::SaveFiles()
       CRhinoFileUtilities::MoveFile(filePair.Temporary, filePair.Real);
     }
     
-    ON_wString copyToPath = ON_FileSystemPath::FileNameFromPath(baseFilePair.Real, true);
-    for (ON_wString materialFilePath : UsdExportImport::FilesInExport)
+    for (ON_wString originalMaterialFilePath : UsdExportImport::FilesInExport)
     {
-      CRhinoFileUtilities::MoveFile(materialFilePath, copyToPath);
+      ON_wString exportDir = ON_FileSystemPath::DirectoryFromPath(baseFilePair.Real);
+      ON_wString materialFileName = ON_FileSystemPath::FileNameFromPath(originalMaterialFilePath, true);
+      ON_wString materialNewPath = ON_FileSystemPath::CombinePaths(exportDir, false, materialFileName, true, false);
+      
+      CRhinoFileUtilities::MoveFile(originalMaterialFilePath, materialNewPath);
     }
     
     UsdExportImport::Exported.Empty();
