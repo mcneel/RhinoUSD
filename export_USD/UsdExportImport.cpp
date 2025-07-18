@@ -860,7 +860,7 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     ON_wString textureFullFileName = t.m_image_file_reference.FullPath();
     const wchar_t* tffnPtr = textureFullFileName.Array();
     CRhinoFileUtilities::FindFile(docSerNo, tffnPtr, textureFullFileName);
-    filesInExport.push_back(textureFullFileName);
+    FilesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
     if (pbrParam.IsEmpty()) {
@@ -1058,6 +1058,7 @@ void UsdExportImport::SetAuthorMetadata()
 
 void UsdExportImport::Save()
 {
+  
   stage->Save();
   
   UsdFilePathPair& newPair = Exported.AppendNew();

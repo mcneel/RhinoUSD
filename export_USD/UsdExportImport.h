@@ -40,6 +40,9 @@ public:
   ON_wString tempUsdFilePath;
   
   static ON_ClassArray<UsdFilePathPair> Exported;
+  
+  //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
+  static std::vector<ON_wString> FilesInExport;
 
 private:
   ON_wString m_usdFullFileName;
@@ -49,8 +52,6 @@ private:
   ON_SimpleArray<ON_wString> Blocks;
 
   // pxr stuff
-  //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
-  std::vector<ON_wString> filesInExport;
   // ON_UUID cannot be used as the key to a std::map
   std::map<std::string, ON_wString> materialsAddedToScene;
   double metersPerUnit;
