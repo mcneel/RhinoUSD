@@ -16,6 +16,10 @@
 *.pdb
 *.pdb.bak
 
+# test outputs
+tests/**/exports/*.*
+__pycache__
+
 # Xcode Project
 **/*.xcodeproj/xcuserdata/
 **/*.xcworkspace/xcuserdata/
