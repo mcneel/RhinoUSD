@@ -120,13 +120,18 @@ bool CExportUSDPlugIn::SaveFiles()
     
     for (UsdFilePathPair filePair : UsdExportImport::Exported)
     {
-      writer.AddFile(ON_Helpers::ON_wString_to_StdString(filePair.Temporary));
+      ON_wString tempFilePath = filePair.Temporary;
+      ON_wString fileName = ON_FileSystemPath::FileNameFromPath(tempFilePath, true);
+      writer.AddFile(ON_Helpers::ON_wString_to_StdString(tempFilePath), ON_Helpers::ON_wString_to_StdString(fileName));
       ON_FileSystem::RemoveFile(filePair.Temporary);
     }
     
     for (ON_wString materialFilePath : UsdExportImport::FilesInExport)
     {
-      writer.AddFile(ON_Helpers::ON_wString_to_StdString(materialFilePath));
+      ON_wString materialFileName = ON_FileSystemPath::FileNameFromPath(materialFilePath, true);
+      UsdShared::GetValidMaterialName(materialFileName);
+      std::string result = writer.AddFile(ON_Helpers::ON_wString_to_StdString(materialFilePath),
+                                          ON_Helpers::ON_wString_to_StdString(materialFileName));
     }
     
     writer.Save();
@@ -148,6 +153,7 @@ bool CExportUSDPlugIn::SaveFiles()
     {
       ON_wString exportDir = ON_FileSystemPath::DirectoryFromPath(baseFilePair.Real);
       ON_wString materialFileName = ON_FileSystemPath::FileNameFromPath(originalMaterialFilePath, true);
+      UsdShared::GetValidMaterialName(materialFileName);
       ON_wString materialNewPath = ON_FileSystemPath::CombinePaths(exportDir, false, materialFileName, true, false);
       
       CRhinoFileUtilities::CopyFile(originalMaterialFilePath, materialNewPath, false);

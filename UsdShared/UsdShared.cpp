@@ -223,3 +223,8 @@ static void SetBoundingBox(UsdGeomBoundable& boundable, ON_Geometry& obj)
   extents[1].Set((float)bbox.m_max.x, (float)bbox.m_max.y, (float)bbox.m_max.z);
   boundable.GetExtentAttr().Set(extents);
 }
+
+void UsdShared::GetValidMaterialName(ON_wString& materialName)
+{
+  materialName.Replace(L' ', L'_');
+}

@@ -10,7 +10,7 @@ test_file = get_test_file('material-mapping.3dm')
 open_file(test_file)
 
 export_dir = get_export_dir()
-texture_file = os.path.join(export_dir, 'mattano blue.png')
+texture_file = os.path.join(export_dir, 'mattano_blue.png')
 
 export_usd_file()
 
@@ -28,7 +28,7 @@ export_usdz_file()
 # Texture File is inside usdz
 
 usda_data = get_usd_file_text(export_file_usda)
-assert_element_in_usda_file(usda_data, 'Mesh' 'mesh0')
+assert_element_in_usda_file(usda_data, 'Mesh', 'mesh0')
 assert_property_in_usda_file(usda_data, 'material:binding')
 assert_property_in_usda_file(usda_data, 'primvars:st1')
 

@@ -271,6 +271,7 @@ bool UsdExportImport::AddMesh(std::shared_ptr<UsdPacket> packet, const UsdExport
   {
     ON_UUID matId = pMaterial->InstanceId();
     ON_wString matName = pMaterial->InstanceName();
+    
 #pragma warning (push)
 #pragma warning (disable: 4996)
     ON_Material material = pMaterial->SimulatedMaterial();
@@ -898,7 +899,9 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     pxr::UsdShadeShader usdUVTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(textureFullName)));
     usdUVTextureSampler.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdUVTexture")));
 
-    std::string textureFileName = "./" + ON_Helpers::ON_wString_to_StdString(ON_FileSystemPath::FileNameFromPath(textureFullFileName, true));
+    ON_wString onTextureFullFileName = ON_FileSystemPath::FileNameFromPath(textureFullFileName, true);
+    UsdShared::GetValidMaterialName(onTextureFullFileName);
+    std::string textureFileName = ON_Helpers::ON_wString_to_StdString(onTextureFullFileName);
     usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
 
     // Mapping channel is always strictly positive (zero is sometimes used as the default but it should be one).
