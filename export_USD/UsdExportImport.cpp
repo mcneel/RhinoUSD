@@ -974,6 +974,10 @@ void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wStri
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh(mesh);
   pxr::UsdShadeMaterialBindingAPI(usdMesh).Bind(usdMaterial);
+  
+  // RH-86484 Rhino 8 usdz export shows material with rounded corners
+  // Prevents the rounded corners
+  usdMesh.CreateSubdivisionSchemeAttr().Set(UsdGeomTokens->none);
 }
 
 void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames)
@@ -985,7 +989,7 @@ void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::
 
   ON_NurbsCurve nc(*nurbsCurve);
   ON_Helpers::RotateGeometryYUp(&nc);
-
+ 
   ON_wString name;
   name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
   name = layerNamesPath + name;
