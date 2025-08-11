@@ -139,6 +139,9 @@ bool MeshPackets(ON_ClassArray<std::shared_ptr<UsdPacket>>& meshPackets,
   ON_MeshParameters& mp,
   int mesh_ui_style)
 {
+  // No Meshes is OK
+  if (meshObjects.Count() == 0) return true;
+  
   // Perform Meshing
   ON_ClassArray<CRhinoObjectMesh> mesh_list(meshPackets.Count());
 
