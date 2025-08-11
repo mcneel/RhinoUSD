@@ -12,19 +12,19 @@ open_file(test_file)
 export_dir = get_export_dir()
 texture_file = os.path.join(export_dir, 'mattano_blue.png')
 
-export_usd_file()
+export_usd_file('material-mapping')
 
 assertmsg(os.path.exists(texture_file), 'USD texture file is missing')
 os.remove(texture_file)
 
-export_file_usda = export_usda_file()
+export_file_usda = export_usda_file('material-mapping')
 assertmsg(os.path.exists(texture_file), 'USDa texture file is missing')
 os.remove(texture_file)
 
-export_usdc_file()
+export_usdc_file('material-mapping')
 assertmsg(os.path.exists(texture_file), 'USDc texture file is missing')
 
-export_usdz_file()
+export_usdz_file('material-mapping')
 # Texture File is inside usdz
 
 usda_data = get_usd_file_text(export_file_usda)

@@ -17,17 +17,17 @@ def get_export_dir():
     
     return export_dir
 
-def export_usd_files():
+def export_usd_files(filename:str):
     
-    export_usd_file()
-    export_usda_file()
-    export_usdc_file()
-    export_usdz_file()
+    export_usd_file(filename)
+    export_usda_file(filename)
+    export_usdc_file(filename)
+    export_usdz_file(filename)
 
-def export_usd_file() -> str:
+def export_usd_file(filename:str) -> str:
     
     export_dir = get_export_dir()
-    export_file_usd = os.path.join(export_dir, 'material-mapping.usd')
+    export_file_usd = os.path.join(export_dir, f"{filename}.usd")
 
     RhinoApp.RunScript("selAll", True)
     RhinoApp.RunScript(f"-export {export_file_usd} _Enter", True)
@@ -37,10 +37,10 @@ def export_usd_file() -> str:
 
     return export_file_usd
 
-def export_usda_file() -> str:
+def export_usda_file(filename:str) -> str:
     
     export_dir = get_export_dir()
-    export_file_usda = os.path.join(export_dir, 'material-mapping.usda')
+    export_file_usda = os.path.join(export_dir, f"{filename}.usda")
 
     RhinoApp.RunScript("selAll", True)
     RhinoApp.RunScript(f"-export {export_file_usda} _Enter", True)
@@ -50,10 +50,10 @@ def export_usda_file() -> str:
 
     return export_file_usda
 
-def export_usdc_file() -> str:
+def export_usdc_file(filename:str) -> str:
     
     export_dir = get_export_dir()
-    export_file_usdc = os.path.join(export_dir, 'material-mapping.usdc')
+    export_file_usdc = os.path.join(export_dir, f"{filename}.usdc")
 
     RhinoApp.RunScript("selAll", True)
     RhinoApp.RunScript(f"-export {export_file_usdc} _Enter", True)
@@ -63,10 +63,10 @@ def export_usdc_file() -> str:
 
     return export_file_usdc
 
-def export_usdz_file() -> str:
+def export_usdz_file(filename:str) -> str:
     
     export_dir = get_export_dir()
-    export_file_usdz = os.path.join(export_dir, 'material-mapping.usdz')
+    export_file_usdz = os.path.join(export_dir, f"{filename}.usdz")
 
     RhinoApp.RunScript("selAll", True)
     RhinoApp.RunScript(f"-export {export_file_usdz} _Enter", True)
