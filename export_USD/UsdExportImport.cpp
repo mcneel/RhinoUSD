@@ -401,11 +401,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   if (index < 0) return false;
   
   const CRhinoInstanceDefinition* definition = doc->m_instance_definition_table[index];
-  if (Blocks.Search(definition->Name()) > -1)
-  {
-    return true;
-  }
-  
+
   ON_wString oldFileName = ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, true);
   ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
   
@@ -414,26 +410,30 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   
   ON_wString blockFilePath = m_usdFullFileName.SubString(0, m_usdFullFileName.Length() - oldFileName.Length());
   blockFilePath += blockFileName;
-  
-  ON_ClassArray<std::shared_ptr<UsdPacket>> packets(0);
-  GetInstancePackets(definition, packets);
-  
-  if (usdOptions.Blocks == BlockHandling::SeparateFiles)
+
+  if (Blocks.Search(definition->Name()) < 0)
   {
-    int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
-    if (returnValue < 0) return false;
-  }
-  else
-  {
-    for (std::shared_ptr<UsdPacket> packet : packets)
+    
+    ON_ClassArray<std::shared_ptr<UsdPacket>> packets(0);
+    GetInstancePackets(definition, packets);
+    
+    if (usdOptions.Blocks == BlockHandling::SeparateFiles)
     {
-      WriteObject(packet, usdOptions);
+      int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
+      if (returnValue < 0) return false;
+    }
+    else
+    {
+      for (std::shared_ptr<UsdPacket> packet : packets)
+      {
+        WriteObject(packet, usdOptions);
+      }
+      
+      return true;
     }
     
-    return true;
+    Blocks.Append(definition->Name());
   }
-  
-  Blocks.Append(definition->Name());
   
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
   ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
