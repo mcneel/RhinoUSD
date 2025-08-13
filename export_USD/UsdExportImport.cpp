@@ -475,14 +475,20 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   // vtDict.SetValueAtPath("payloadAssetDependencies", pxr::VtValue());
   prim.SetAssetInfo(vtDict);
   prim.SetAssetInfoByKey(pxr::TfToken("id"), pxr::VtValue("example"));
-//  
-//  pxr::SdfSubLayerProxy stack = stage->GetRootLayer()->GetSubLayerPaths();
-//  stack.push_back(ON_Helpers::ON_wString_to_StdString(blockFileName));
-//  
-
-  // TODO : Set Transform!
-  // reference->m_xform
-  // pxr::UsdGeomXformOp op = instanceForm.AddTransformOp();
+  
+  // Set Transform!
+  // TODO : Do this properly, this misses rotations and is innacurate.
+  auto bb = reference->BoundingBox().Center();
+  auto origin_bb = definition->BoundingBox().Center();
+  
+  pxr::UsdGeomXformOp op = instanceForm.AddTranslateOp();
+  
+  const pxr::GfVec3d translation(bb.x - origin_bb.x, bb.y - origin_bb.y, bb.z - origin_bb.z);
+  op.Set(translation);
+  
+//  NOTE : Handy Hotwire
+//  prim.CreateAttribute(TfToken("xformOp:translate"), SdfValueTypeNames->Double3)
+//    Set(GfVec3d(bb.x - origin_bb.x, bb.y - origin_bb.y, bb.z - origin_bb.z));
 
   if (usdOptions.IncludeUserStrings && prim.IsValid())
   {
