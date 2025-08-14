@@ -483,10 +483,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
     // Set Transform!
     
     const ON_Xform xForm = instance->InstanceXform();
-    pxr::GfMatrix4d matrix = pxr::GfMatrix4d(xForm.m_xform[0][0], xForm.m_xform[0][1], xForm.m_xform[0][2], xForm.m_xform[0][3],
-                                             xForm.m_xform[1][0], xForm.m_xform[1][1], xForm.m_xform[1][2], xForm.m_xform[1][3],
-                                             xForm.m_xform[2][0], xForm.m_xform[2][1], xForm.m_xform[2][2], xForm.m_xform[2][3],
-                                             xForm.m_xform[3][0], xForm.m_xform[3][1], xForm.m_xform[3][2], xForm.m_xform[3][3]);
+    const pxr::GfMatrix4d matrix = ON_Helpers::Convert(xForm);
     
     pxr::UsdGeomXformOp op = instanceForm.AddTransformOp();
     op.Set(matrix);

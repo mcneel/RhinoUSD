@@ -88,3 +88,12 @@ void ON_Helpers::RotateGeometryYUp(ON_Geometry* geom)
   rotate_y_up.Rotation(ninetyDegrees, ON_3dVector::XAxis, ON_3dPoint::Origin);
   geom->Transform(rotate_y_up);
 }
+
+const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
+{
+  pxr::GfMatrix4d matrix = pxr::GfMatrix4d(xForm.m_xform[0][0], xForm.m_xform[0][1], xForm.m_xform[0][2], xForm.m_xform[0][3],
+                                           xForm.m_xform[1][0], xForm.m_xform[1][1], xForm.m_xform[1][2], xForm.m_xform[1][3],
+                                           xForm.m_xform[2][0], xForm.m_xform[2][1], xForm.m_xform[2][2], xForm.m_xform[2][3],
+                                           xForm.m_xform[3][0], xForm.m_xform[3][1], xForm.m_xform[3][2], xForm.m_xform[3][3]);
+  return matrix;
+}
