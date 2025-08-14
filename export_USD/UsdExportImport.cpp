@@ -471,20 +471,26 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   vtDict.SetValueAtPath("identifier", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(blockFileName)));
   vtDict.SetValueAtPath("name", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(definition->Name())));
   vtDict.SetValueAtPath("version", pxr::VtValue(ON_Helpers::ON_UUID_to_StdString(refId)));
+  
   // TODO : Include embedded block paths?
   // vtDict.SetValueAtPath("payloadAssetDependencies", pxr::VtValue());
   prim.SetAssetInfo(vtDict);
   prim.SetAssetInfoByKey(pxr::TfToken("id"), pxr::VtValue("example"));
   
-  // Set Transform!
-  // TODO : Do this properly, this misses rotations and is innacurate.
-  auto bb = reference->BoundingBox().Center();
-  auto origin_bb = definition->BoundingBox().Center();
-  
-  pxr::UsdGeomXformOp op = instanceForm.AddTranslateOp();
-  
-  const pxr::GfVec3d translation(bb.x - origin_bb.x, bb.y - origin_bb.y, bb.z - origin_bb.z);
-  op.Set(translation);
+  const CRhinoInstanceObject* instance = dynamic_cast<const CRhinoInstanceObject*>(packet->ObjectPointer());
+  if (instance)
+  {
+    // Set Transform!
+    
+    const ON_Xform xForm = instance->InstanceXform();
+    pxr::GfMatrix4d matrix = pxr::GfMatrix4d(xForm.m_xform[0][0], xForm.m_xform[0][1], xForm.m_xform[0][2], xForm.m_xform[0][3],
+                                             xForm.m_xform[1][0], xForm.m_xform[1][1], xForm.m_xform[1][2], xForm.m_xform[1][3],
+                                             xForm.m_xform[2][0], xForm.m_xform[2][1], xForm.m_xform[2][2], xForm.m_xform[2][3],
+                                             xForm.m_xform[3][0], xForm.m_xform[3][1], xForm.m_xform[3][2], xForm.m_xform[3][3]);
+    
+    pxr::UsdGeomXformOp op = instanceForm.AddTransformOp();
+    op.Set(matrix);
+  }
   
 //  NOTE : Handy Hotwire
 //  prim.CreateAttribute(TfToken("xformOp:translate"), SdfValueTypeNames->Double3)
