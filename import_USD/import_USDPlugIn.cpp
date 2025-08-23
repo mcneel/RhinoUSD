@@ -64,9 +64,11 @@ void Cimport_USDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, c
 {
   CRhinoFileType ft;
   ft.SetFileTypePlugInID(PlugInID());
-  ft.FileTypeDescription(L"USD (*.usd, *.usda)");
-  ft.AddFileTypeExtension(L"usd");
+  ft.FileTypeDescription(L"USD (*.usdc, *.usda, *.usd, *.usdz)");
+  ft.AddFileTypeExtension(L"usdc");
   ft.AddFileTypeExtension(L"usda");
+  ft.AddFileTypeExtension(L"usd");
+  ft.AddFileTypeExtension(L"usdz");
   
   // TODO : Impliment Options Dialog
   // ft.SetDisplayOptionsDialog(true);
