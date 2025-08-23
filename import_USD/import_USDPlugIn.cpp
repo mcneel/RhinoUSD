@@ -24,7 +24,7 @@ RHINO_PLUG_IN_DECLARE
 RHINO_PLUG_IN_NAME(L"Import USD");
 RHINO_PLUG_IN_ID(L"7C5D9A51-4AF7-4CE1-8661-30FE69473C6E");
 RHINO_PLUG_IN_VERSION(__DATE__ "  " __TIME__)
-RHINO_PLUG_IN_DESCRIPTION(L"Import USD and USDA file formats");
+RHINO_PLUG_IN_DESCRIPTION(L"Import USD, USDA, USDC and USDZ file formats");
 
 // Rhino plug-in icon resource id
 // Provide an icon resource this plug-in.

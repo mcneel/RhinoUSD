@@ -21,7 +21,7 @@ RHINO_PLUG_IN_DECLARE
 RHINO_PLUG_IN_NAME(L"Export USD");
 RHINO_PLUG_IN_ID(L"36803D82-097C-4B55-8F42-E4D44764C9DD");
 RHINO_PLUG_IN_VERSION(__DATE__ "  " __TIME__)
-RHINO_PLUG_IN_DESCRIPTION(L"Export USD and USDA file formats");
+RHINO_PLUG_IN_DESCRIPTION(L"Export USD, USDA, USDC and USDZ file formats");
 
 // Rhino plug-in icon resource id
 // Provide an icon resource this plug-in.
