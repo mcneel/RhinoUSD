@@ -1,6 +1,6 @@
 #pragma once
 
-class Cimport_USDPlugIn : public CRhinoFileImportPlugIn
+class Cimport_USDPlugIn : public CRhinoFileImportSystemPlugIn
 {
 public:
   Cimport_USDPlugIn();
