@@ -17,5 +17,5 @@ namespace UsdShared
   ON::object_type GetTypeFromObject(const CRhinoObject* obj);
   void AddUserDataToPrim(const std::shared_ptr<UsdPacket> packet, pxr::UsdPrim* prim);
   void SetTextureCoordinatesOnMesh(const CRhinoObject& obj, ON_Mesh* pMesh, const CRhinoDoc* doc, std::map<int, ON_TextureCoordinates>& tcs);
-  ON_wString GetOnwFromOldString(std::string string);
+  void GetValidMaterialName(ON_wString& materialName);
 }
