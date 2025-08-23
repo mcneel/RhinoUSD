@@ -1,26 +1,28 @@
 #include "stdafx.h"
 #include "iostream"
 #include <fstream>
+#include <chrono>
 
 #include "../UsdShared/UsdShared.h"
 #include "../UsdShared/ON_Helpers.h"
 
 #include "UsdExportOptions.h"
 #include "UsdExportImport.h"
+#include "write_usd.h"
 
 using namespace pxr;
 using namespace std;
 
-UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
-  Options(options),
+UsdExportImport::UsdExportImport(const ON_wString& fileName, double metersPerUnit, const UsdExportOptions& options, CRhinoDoc& doc) :
+  UsdOptions(options),
   Doc(doc),
-
-  usdFullFileName(fn),
+  m_usdFullFileName(fileName),
   metersPerUnit(metersPerUnit),
   currentMeshIndex(0),
   //currentMaterialIndex(0),
   currentShaderIndex(0),
   currentNurbsCurveIndex(0),
+  currentBlockIndex(0),
   tokPreviewSurface("UsdPreviewSurface"),
   tokSurface("surface"),
 
@@ -34,10 +36,11 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
   tokOpacity("opacity"),
   tokIor("ior"),
   tokDisplacement("displacement"),
-  tokOcclusion("occlusion")
+  tokOcclusion("occlusion"),
+  Blocks(ON_SimpleArray<ON_wString>(10))
 {
-  stage = UsdStage::CreateInMemory();
-  //stage = UsdStage::CreateNew(<some path>);
+  CreateUsdFile();
+  SetDefaultPrim();
 
   // Set the Z up direction for Rhino
   pxr::TfToken upAxis = pxr::UsdGeomTokens->y; // z;
@@ -53,44 +56,71 @@ UsdExportImport::UsdExportImport(const ON_wString& fn, double metersPerUnit, con
 
 }
 
+ON_ClassArray<UsdFilePathPair> UsdExportImport::Exported(0);
+std::vector<ON_wString> UsdExportImport::FilesInExport;
 
-void UsdExportImport::WriteObject(UsdPacket& packet, const UsdExportOptions& usdOptions)
+const ON_wString TempFolder("TEMP_USD");
+
+void UsdExportImport::CreateUsdFile()
 {
-  switch (packet.Type())
+  ON_wString tempPath;
+  if (CRhinoFileUtilities::GetTemporaryPath(tempPath))
   {
-  case ON::object_type::curve_object:
-    if (!AddCurve(packet, usdOptions)) return;
-    break;
+    ON_wString tempFolder = ON_FileSystemPath::CombinePaths(tempPath, false, TempFolder, false, false);
 
-    // TODO : Implement
-    //case ON::object_type::instance_reference:
-    //  if (!AddBlock(packet, usdOptions)) return;
-    //  break;
+    UUID uuid;
+    ON_wString fileName;
+    ON_CreateUuid(uuid);
+    ON_UuidToString(uuid, fileName);
 
-      // Default to Mesh for now
-  default:
-    if (!AddMesh(packet, usdOptions)) return;
-    break;
+    ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
+    if (extension.EqualOrdinal(L".usdz", true))
+    {
+      extension = L".usdc";
+    }
+    fileName += extension;
+
+    tempUsdFilePath = ON_FileSystemPath::CombinePaths(tempFolder, false, fileName, true, false);
+    
+    stage = UsdStage::CreateNew(ON_Helpers::ON_wString_to_StdString(tempUsdFilePath));
   }
 }
 
-bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOptions)
+void UsdExportImport::WriteObject(std::shared_ptr<UsdPacket>& packet, const UsdExportOptions& usdOptions)
 {
-  ON_Mesh* mesh = packet.Mesh();
+  switch (packet->Type())
+  {
+    case ON::object_type::curve_object:
+      if (!AddCurve(packet, usdOptions)) return;
+      break;
+
+    case ON::object_type::instance_reference:
+      if (!AddBlock(packet, usdOptions)) return;
+      break;
+
+    default:
+      if (!AddMesh(packet, usdOptions)) return;
+      break;
+  }
+}
+
+bool UsdExportImport::AddMesh(std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
+{
+  ON_Mesh* mesh = packet->Mesh();
 
   if (!mesh) return false;
-  if (packet.Type() != ON::object_type::mesh_object) return false;
+  if (packet->Type() != ON::object_type::mesh_object) return false;
 
-  const CRhinoDoc* doc = packet.Object().Document();
+  const CRhinoDoc* doc = packet->Object().Document();
   if (!doc) return false;
 
   std::map<int, ON_TextureCoordinates> textureCoordinatesByMappingChannel;
   // this has to be done first, before meshes vertices are read to be exported
   // because setting the texture coordinates can modify the mesh vertices
-  UsdShared::SetTextureCoordinatesOnMesh(packet.Object(), mesh, doc, textureCoordinatesByMappingChannel);
+  UsdShared::SetTextureCoordinatesOnMesh(packet->Object(), mesh, doc, textureCoordinatesByMappingChannel);
 
   //todo: check if the m_mesh includes the changed vertices made by the SetTexttureCoordinatesOnMesh call above. If not the object has to be re-read.
-  const ON_wString meshName = packet.Object().Attributes().Name();
+  const ON_wString meshName = packet->Object().Attributes().Name();
 
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
   // AddMeshMaterial();
@@ -103,12 +133,12 @@ bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOpti
 
   ON_wString meshPath;
   if (meshName.IsEmpty())
-    meshPath.Format(L"/mesh%d", currentMeshIndex++);
+    meshPath.Format(L"/Mesh%d", currentMeshIndex++);
   else
   {
     // RhinoLayerNameToUsd function should be renamed to something like On_wStringToValidUsd[Name|String|Path] ...
     ON_wString validMeshName = UsdShared::RhinoLayerNameToUsd(meshName);
-    meshPath.Format(L"/%s_mesh%d", validMeshName.Array(), currentMeshIndex++);
+    meshPath.Format(L"/%s_Mesh%d", validMeshName.Array(), currentMeshIndex++);
   }
   meshPath = layerNamesPath + meshPath;
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(meshPath);
@@ -235,6 +265,27 @@ bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOpti
       texCoords.Set(uvArray);
     }
   }
+  
+  const CRhRdkMaterial* pMaterial = packet->Object().ObjectRdkMaterial(ON_COMPONENT_INDEX::UnsetComponentIndex);
+  if (pMaterial)
+  {
+    ON_UUID matId = pMaterial->InstanceId();
+    ON_wString matName = pMaterial->InstanceName();
+    
+#pragma warning (push)
+#pragma warning (disable: 4996)
+    ON_Material material = pMaterial->SimulatedMaterial();
+#pragma warning (pop)
+    material.ToPhysicallyBased();
+    std::shared_ptr<ON_PhysicallyBasedMaterial> pbrMat = material.PhysicallyBased();
+    if (pbrMat)
+    {
+      ON_PhysicallyBasedMaterial& pbr = *pbrMat;
+      unsigned int docSerNo = Doc.RuntimeSerialNumber();
+      AddMaterialWithTexturesIfNotAlreadyAdded(docSerNo, matId, matName, &pbr, pbrMat->Material().m_textures);
+      BindPbrMaterialToMesh(matId, meshPath);
+    }
+  }
 
   VtVec3fArray extents(2);
   ON_BoundingBox bbox = meshCopy.BoundingBox();
@@ -251,9 +302,11 @@ bool UsdExportImport::AddMesh(UsdPacket& packet, const UsdExportOptions& usdOpti
   return true;
 }
 
-bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions)
+bool UsdExportImport::AddCurve(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
 {
-  const ON_Geometry* geometry = packet.Object().Geometry();
+  if (packet->Type() != ON::object_type::curve_object) return false;
+
+  const ON_Geometry* geometry = packet->Object().Geometry();
   if (!geometry) return false;
 
   // TODO : Support other types of Curves
@@ -272,6 +325,7 @@ bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& 
 
   ON_wString name;
   name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
+  name.Format(L"/NurbsCurve%d", currentNurbsCurveIndex++);
   name = layerNamesPath + name;
   std::string stdStrName = ON_Helpers::ON_wString_to_StdString(name);
   pxr::UsdGeomNurbsCurves usdNc = pxr::UsdGeomNurbsCurves::Define(stage, pxr::SdfPath(stdStrName));
@@ -327,21 +381,206 @@ bool UsdExportImport::AddCurve(const UsdPacket& packet, const UsdExportOptions& 
   return true;
 }
 
-void UsdShared::AddUserDataToPrim(const UsdPacket& packet, pxr::UsdPrim* prim)
+// TODO : This is very hard to read and honestly not that good
+// TODO : Does this work recursively?
+// TOOD : Create a Folder for these files! (Should this offer nesting?)
+bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions)
 {
-  const CRhinoObjectAttributes& attributes = packet.Object().Attributes();
+  if (packet->Type() != ON::object_type::instance_reference) return false;
+  if (usdOptions.Blocks == BlockHandling::Ignore) return false;
+  
+  CRhinoDoc* doc = packet->Object().Document();
+  if (!doc) return false;
+  
+  const ON_Geometry* geometry = packet->Object().Geometry();
+  const ON_InstanceRef* reference = ON_InstanceRef::Cast(geometry);
+  
+  ON_UUID refId = reference->m_instance_definition_uuid;
+  
+  int index = doc->m_instance_definition_table.FindInstanceDefinition(refId, true);
+  if (index < 0) return false;
+  
+  const CRhinoInstanceDefinition* definition = doc->m_instance_definition_table[index];
+
+  ON_wString oldFileName = ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, true);
+  ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
+  
+  ON_wString blockFileName(definition->Name());
+  blockFileName += fileExtension;
+  
+  ON_wString blockFilePath = m_usdFullFileName.SubString(0, m_usdFullFileName.Length() - oldFileName.Length());
+  blockFilePath += blockFileName;
+
+  if (Blocks.Search(definition->Name()) < 0)
+  {
+    
+    ON_ClassArray<std::shared_ptr<UsdPacket>> packets(0);
+    GetInstancePackets(definition, packets);
+    
+    if (usdOptions.Blocks == BlockHandling::SeparateFiles)
+    {
+      int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
+      if (returnValue < 0) return false;
+    }
+    else
+    {
+      for (std::shared_ptr<UsdPacket> packet : packets)
+      {
+        WriteObject(packet, usdOptions);
+      }
+      
+      return true;
+    }
+    
+    Blocks.Append(definition->Name());
+  }
+  
+  std::vector<ON_wString> layerNames = GetLayerNames(packet);
+  ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
+  ON_wString blockPrimRefPath(blockPrimPath);
+  
+  ON_wString blockPrimName;
+  blockPrimName.Format(L"/BlockInstance%d", currentBlockIndex++);
+  blockPrimPath += blockPrimName;
+  
+  // TOOD : Make Component
+  // https://openusd.org/release/glossary.html#usdglossary-assetinfo
+  UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(ON_Helpers::ON_wString_to_StdString(blockPrimPath)));
+  
+  UsdPrim prim = instanceForm.GetPrim();
+  
+  if (usdOptions.Blocks == BlockHandling::SeparateFiles)
+  {
+    const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(blockPrimRefPath));
+    const std::string refString(ON_Helpers::ON_wString_to_StdString(blockFilePath));
+    
+    // Set Kind -> Causes issues
+    //  pxr::UsdEditTarget().MapToSpecPath(path);
+    //  pxr::UsdModelAPI modelApi = pxr::UsdModelAPI();
+    //  modelApi.SetKind(pxr::KindTokens->assembly);
+    
+    prim.SetInstanceable(true);
+    
+    pxr::UsdReferences references = prim.GetReferences();
+    references.AddReference(ON_Helpers::ON_wString_to_StdString(blockFileName), path);
+  }
+
+  // https://openusd.org/release/glossary.html#usdglossary-assetinfo
+  // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
+  pxr::VtDictionary vtDict(4);
+  vtDict.SetValueAtPath("identifier", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(blockFileName)));
+  vtDict.SetValueAtPath("name", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(definition->Name())));
+  vtDict.SetValueAtPath("version", pxr::VtValue(ON_Helpers::ON_UUID_to_StdString(refId)));
+  
+  // TODO : Include embedded block paths?
+  // vtDict.SetValueAtPath("payloadAssetDependencies", pxr::VtValue());
+  prim.SetAssetInfo(vtDict);
+  prim.SetAssetInfoByKey(pxr::TfToken("id"), pxr::VtValue("example"));
+  
+  const CRhinoInstanceObject* instance = dynamic_cast<const CRhinoInstanceObject*>(packet->ObjectPointer());
+  if (instance)
+  {
+    // Set Transform!
+    
+    const ON_Xform xForm = instance->InstanceXform();
+    const pxr::GfMatrix4d matrix = ON_Helpers::Convert(xForm);
+    
+    pxr::UsdGeomXformOp op = instanceForm.AddTransformOp();
+    op.Set(matrix);
+  }
+  
+//  NOTE : Handy Hotwire
+//  prim.CreateAttribute(TfToken("xformOp:translate"), SdfValueTypeNames->Double3)
+//    Set(GfVec3d(bb.x - origin_bb.x, bb.y - origin_bb.y, bb.z - origin_bb.z));
+
+  if (usdOptions.IncludeUserStrings && prim.IsValid())
+  {
+    UsdShared::AddUserDataToPrim(packet, &prim);
+  }
+
+  return true;
+}
+
+// TODO : Use Smart Pointers
+void UsdExportImport::GetInstancePackets(const CRhinoInstanceDefinition* definition, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets)
+{
+  ObjectArray objects;
+  definition->GetObjects(objects);
+
+  const CRhinoFileWriteOptions fileOptions;
+
+  GetPacketsFromCRhinoObjects(objects, fileOptions, packets);
+}
+
+bool UsdExportImport::GetPacketsFromCRhinoObjects(ObjectArray& objects, const CRhinoFileWriteOptions& fileOptions, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets, int mesh_ui_style)
+{
+  CRhinoWaitCursor hourglass;
+  ON_wString backupname;
+
+  ON_ClassArray<std::shared_ptr<UsdPacket>> meshPackets;
+  ON_SimpleArray<const CRhinoObject*> meshObjects;
+  for (const CRhinoObject* obj : objects)
+  {
+    // We handle all of the NON-Mesh objects first, then do every mesh object at once because it is simpler.
+    const ON_Geometry* geometry = obj->Geometry();
+    if (nullptr == geometry)
+      continue;
+
+    if (!UsdShared::IsValidUsdObject(obj->ObjectType()))
+      continue;
+
+    ON::object_type type = UsdShared::GetTypeFromObject(obj);
+    if (type == ON::object_type::mesh_object)
+    {
+      meshObjects.Append(obj);
+      meshPackets.Append(std::make_shared<UsdPacket>(*obj, type));
+    }
+    else
+    {
+      packets.Append(std::make_unique<UsdPacket>(*obj, type));
+    }
+  }
+
+  if (packets.Count() <= 0 && meshPackets.Count() <= 0)
+  {
+    return false;
+  }
+
+  ON_MeshParameters params = UsdOptions.MeshingParams;
+  if (!MeshPackets(meshPackets, packets, meshObjects, fileOptions.Transformation(), params, mesh_ui_style)) return false;
+  if (mesh_ui_style < 2 && mesh_ui_style > 0)
+  {
+    Doc.Redraw(); // clean up display after interactive meshing.
+  }
+
+  // TODO : Add meshPackets to packets
+
+  return false;
+}
+
+
+const ON_Mesh& UsdExportImport::GetMeshFromSubD(ON_SubD& subD, const ON_MeshParameters mp)
+{
+  int mesh_density = 5;
+  ON_SubDDisplayParameters limit_mesh_parameters = ON_SubDDisplayParameters::CreateFromDisplayDensity(mp.MeshDensity());
+  return *subD.GetSurfaceMesh(limit_mesh_parameters, nullptr);
+}
+
+void UsdShared::AddUserDataToPrim(const std::shared_ptr<UsdPacket> packet, pxr::UsdPrim* prim)
+{
+  const CRhinoObjectAttributes& attributes = packet->Object().Attributes();
 
   ON_ClassArray<ON_UserString> user_strings;
   attributes.GetUserStrings(user_strings);
 
   /* TODO : Do these 2 need to be supported?
   ON_ClassArray<ON_UserString> object_user_strings;
-  packet.Object().GetUserStrings(object_user_strings);
+  packet->Object().GetUserStrings(object_user_strings);
 
-  if (packet.Object().Geometry())
+  if (packet->Object().Geometry())
   {
     ON_ClassArray<ON_UserString> geoemtry_user_strings;
-    packet.Object().Geometry()->GetUserStrings(geoemtry_user_strings);
+    packet->Object().Geometry()->GetUserStrings(geoemtry_user_strings);
   }
   */
 
@@ -652,7 +891,7 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     ON_wString textureFullFileName = t.m_image_file_reference.FullPath();
     const wchar_t* tffnPtr = textureFullFileName.Array();
     CRhinoFileUtilities::FindFile(docSerNo, tffnPtr, textureFullFileName);
-    filesInExport.push_back(textureFullFileName);
+    FilesInExport.push_back(textureFullFileName);
 
     pxr::TfToken pbrParam = this->TextureTypeToUsdPbrPropertyTfToken(tt);
     if (pbrParam.IsEmpty()) {
@@ -669,7 +908,9 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
     pxr::UsdShadeShader usdUVTextureSampler = UsdShadeShader::Define(stage, pxr::SdfPath(ON_Helpers::ON_wString_to_StdString(textureFullName)));
     usdUVTextureSampler.CreateIdAttr(pxr::VtValue(pxr::TfToken("UsdUVTexture")));
 
-    std::string textureFileName = "./" + ON_Helpers::ON_wString_to_StdString(ON_FileSystemPath::FileNameFromPath(textureFullFileName, true));
+    ON_wString onTextureFullFileName = ON_FileSystemPath::FileNameFromPath(textureFullFileName, true);
+    UsdShared::GetValidMaterialName(onTextureFullFileName);
+    std::string textureFileName = ON_Helpers::ON_wString_to_StdString(onTextureFullFileName);
     usdUVTextureSampler.CreateInput(TfToken("file"), pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(textureFileName));
 
     // Mapping channel is always strictly positive (zero is sometimes used as the default but it should be one).
@@ -729,9 +970,9 @@ void UsdExportImport::AddMaterialWithTexturesIfNotAlreadyAdded(unsigned int docS
   }
 }
 
-void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wString meshPath)
+void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wString meshUsdPath)
 {
-  std::string strMeshPath = ON_Helpers::ON_wString_to_StdString(meshPath);
+  std::string strMeshPath = ON_Helpers::ON_wString_to_StdString(meshUsdPath);
   pxr::SdfPath mp(strMeshPath);
   pxr::UsdPrim mesh = stage->GetPrimAtPath(mp);
 
@@ -742,6 +983,10 @@ void UsdExportImport::BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wStri
   mesh.ApplyAPI<pxr::UsdShadeMaterialBindingAPI>();
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh(mesh);
   pxr::UsdShadeMaterialBindingAPI(usdMesh).Bind(usdMaterial);
+  
+  // RH-86484 Rhino 8 usdz export shows material with rounded corners
+  // Prevents the rounded corners
+  usdMesh.CreateSubdivisionSchemeAttr().Set(UsdGeomTokens->none);
 }
 
 void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames)
@@ -753,7 +998,7 @@ void UsdExportImport::AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::
 
   ON_NurbsCurve nc(*nurbsCurve);
   ON_Helpers::RotateGeometryYUp(&nc);
-
+ 
   ON_wString name;
   name.Format(L"nurbsCurve%d", currentNurbsCurveIndex++);
   name = layerNamesPath + name;
@@ -823,52 +1068,51 @@ void UsdExportImport::AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const
   //// continue ...
 }
 
-bool UsdExportImport::AnythingToSave()
-{
-  return currentMeshIndex > 0 || !materialsAddedToScene.empty() || currentNurbsCurveIndex > 0;
-}
-
 void UsdExportImport::SetDefaultPrim()
 {
-  ON_wString absolutePath(L"/");
-  absolutePath += Options.RootLayer;
-  std::string stringPath = ON_Helpers::ON_wString_to_StdString(absolutePath);
-  pxr::UsdPrim defaultPrim = stage->GetPrimAtPath(pxr::SdfPath(stringPath));
+  ON_wString rootPath("/");
+  rootPath += UsdOptions.RootLayer;
+  
+  const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(UsdOptions.RootLayer));
+  const pxr::UsdPrim prim = stage->DefinePrim(path);
+  
+  stage->SetDefaultPrim(prim);
+  // stage->GetRootLayer()->SetDefaultPrim(pxr::TfToken(ON_Helpers::ON_wString_to_StdString(UsdOptions.RootLayer)));
+}
 
-  stage->SetDefaultPrim(defaultPrim);
+void UsdExportImport::SetAuthorMetadata()
+{
+  pxr::UsdPrim defaultPrim = stage->GetDefaultPrim();
+  
+  if (pxr::UsdAttribute dateAttribute = defaultPrim.CreateAttribute(pxr::TfToken("date"), pxr::SdfValueTypeNames->String))
+  {
+    const std::chrono::system_clock::time_point& now = std::chrono::system_clock::now();
+    const std::time_t tt = std::chrono::system_clock::to_time_t(now);
+      
+    dateAttribute.Set(pxr::VtValue(std::ctime(&tt)));
+  }
 }
 
 void UsdExportImport::Save()
 {
-  if (ON_FileSystemPath::FileNameExtensionFromPath(usdFullFileName) == L".usdz")
-  {
-    ON_wString fullFileNameWithoutExtension = UsdShared::PathWithoutExtension(usdFullFileName);
-    ON_wString usdaFileName = fullFileNameWithoutExtension + ".usda";
-    stage->Export(ON_Helpers::ON_wString_to_StdString(usdaFileName));
-    UsdShared::CreateUsdzFile(fullFileNameWithoutExtension, filesInExport);
-    ON_FileSystem::RemoveFile(usdaFileName.Array());
-  }
-  else
-  {
-    stage->Export(ON_Helpers::ON_wString_to_StdString(usdFullFileName));
-    //ON_wString copyToPath = UsdShared::PathFromFullFileName(usdFileName);
-    ON_wString usdFileName = ON_FileSystemPath::FileNameFromPath(usdFullFileName, true);
-    ON_wString copyToPath = ON_FileSystemPath::RemoveFileName(usdFullFileName, &usdFileName);
-    for (ON_wString fullFileName : filesInExport)
-    {
-      UsdShared::CopyFileTo(fullFileName, copyToPath);
-    }
-  }
+  
+  stage->Save();
+  
+  UsdFilePathPair& newPair = Exported.AppendNew();
+  newPair.Real = m_usdFullFileName;
+  newPair.Temporary = tempUsdFilePath;
+    
+  return;
 }
 
-std::vector<ON_wString> UsdExportImport::GetLayerNames(const UsdPacket& packet)
+std::vector<ON_wString> UsdExportImport::GetLayerNames(const std::shared_ptr<UsdPacket> packet)
 {
   std::vector<ON_wString> names;
 
-  CRhinoDoc* doc = packet.Object().Document();
+  CRhinoDoc* doc = packet->Object().Document();
   if (!doc) return names;
 
-  const CRhinoObjectAttributes& attributes = packet.Object().Attributes();
+  const CRhinoObjectAttributes& attributes = packet->Object().Attributes();
   int layer_index = attributes.m_layer_index;
 
   const CRhinoLayerTable& layer_table = doc->m_layer_table;
@@ -887,12 +1131,12 @@ std::vector<ON_wString> UsdExportImport::GetLayerNames(const UsdPacket& packet)
     pid = id;
   }
   names.insert(names.begin(), L"Geometry");
-  if (!Options.ModelName.IsEmpty())
+  if (!UsdOptions.ModelName.IsEmpty())
   {
-    names.insert(names.begin(), Options.ModelName);
+    names.insert(names.begin(), UsdOptions.ModelName);
   }
 
-  names.insert(names.begin(), Options.RootLayer);
+  names.insert(names.begin(), UsdOptions.RootLayer);
   return names;
 }
 

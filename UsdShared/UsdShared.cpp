@@ -12,32 +12,6 @@
 
 using namespace pxr;
 
-//todo: I'm sure there's a copy file function that's already available somewhere
-void UsdShared::CopyFileTo(const ON_wString& fullFileName, const ON_wString& destination)
-{
-  ON_wString fileName = ON_FileSystemPath::FileNameFromPath(fullFileName, true);
-  ON_wString destFullFileName = destination + fileName;
-  std::ifstream  src(ON_Helpers::ON_wString_to_StdString(fullFileName), std::ios::binary);
-  std::ofstream  dst(ON_Helpers::ON_wString_to_StdString(destFullFileName),   std::ios::binary);
-  dst << src.rdbuf();
-}
-
-void UsdShared::CreateUsdzFile(const ON_wString& fullFileNameNoExtension, const std::vector<ON_wString>& filesToInclude)
-{
-  ON_wString usdaFullFileName = fullFileNameNoExtension + ".usda";
-  ON_wString usdaFileName = ON_FileSystemPath::FileNameFromPath(usdaFullFileName, true);
-  ON_wString usdzFullFileName = fullFileNameNoExtension + ".usdz";
-  UsdZipFileWriter writer = UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(usdzFullFileName));
-  // usda has to be added before textures
-  writer.AddFile(ON_Helpers::ON_wString_to_StdString(usdaFullFileName), ON_Helpers::ON_wString_to_StdString(usdaFileName));
-  for (ON_wString fullFileName : filesToInclude)
-  {
-    ON_wString fileName = ON_FileSystemPath::FileNameFromPath(fullFileName, true);
-    writer.AddFile(ON_Helpers::ON_wString_to_StdString(fullFileName), ON_Helpers::ON_wString_to_StdString(fileName));
-  }
-  writer.Save();
-}
-
 ON_wString UsdShared::PathWithoutExtension(const ON_wString& fullFileName)
 {
   // I didn't see an obvious ON_FileSystemPath way to do this.
@@ -126,7 +100,6 @@ bool UsdShared::IsValidUsdObject(ON::object_type type)
     case ON::object_type::annotation_object:
     case ON::object_type::userdata_object:
     case ON::object_type::instance_definition: // TODO : Support
-      // case ON::object_type::instance_reference: // TODO : Support
     case ON::object_type::text_dot:
     case ON::object_type::grip_object:
     case ON::object_type::detail_object:
@@ -157,7 +130,7 @@ ON::object_type UsdShared::GetTypeFromObject(const CRhinoObject* obj)
   {
     // Supported Objects
     case ON::object_type::curve_object:
-    // case ON::object_type::instance_reference: // TODO : Impliment
+    case ON::object_type::instance_reference:
       return  obj->ObjectType();
       break;
 
@@ -266,11 +239,7 @@ static void SetBoundingBox(UsdGeomBoundable& boundable, ON_Geometry& obj)
   boundable.GetExtentAttr().Set(extents);
 }
 
-ON_wString GetOnwFromOldString(std::string string)
+void UsdShared::GetValidMaterialName(ON_wString& materialName)
 {
-  std::wstring wstring(string.begin(), string.end());
-
-  ON_UserString onUString;
-  ON_wString ons(static_cast<const wchar_t*>(wstring.c_str()));
-  return ons;
+  materialName.Replace(L' ', L'_');
 }

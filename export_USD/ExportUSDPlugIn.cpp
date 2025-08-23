@@ -7,9 +7,6 @@
 
 #include "ExportUSDPlugIn.h"
 #include "Resource.h"
-#include "UsdExportOptions.h"
-#include "write_usd.h"
-#include "../UsdShared/UsdPacket.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4073)
@@ -63,10 +60,11 @@ void CExportUSDPlugIn::AddFileType(ON_ClassArray<CRhinoFileType>& extensions, co
 {
 	CRhinoFileType ft;
 	ft.SetFileTypePlugInID(PlugInID());
-	ft.FileTypeDescription(L"USD (*.usdz, *.usda, *.usd)");
-  ft.AddFileTypeExtension(L"usdz");
+	ft.FileTypeDescription(L"USD (*.usdc, *.usda, *.usd, *.usdz)");
+  ft.AddFileTypeExtension(L"usdc");
   ft.AddFileTypeExtension(L"usda");
   ft.AddFileTypeExtension(L"usd");
+  ft.AddFileTypeExtension(L"usdz");
   ft.SetDisplayOptionsDialog(true);
 
   extensions.Append(ft);
@@ -100,12 +98,75 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
 		HandleUserInput(ExportOptions);
   }
 
-  // bool usda = 1 == index;
-
-  ON_ClassArray<UsdPacket> packets;
+  ON_ClassArray<std::shared_ptr<UsdPacket>> packets;
   if (GetPackets(doc, options, ExportOptions, packets) <= 0) return -1;
   
-  return WriteUSDFile(filename, doc, packets, ExportOptions);
+  int result = WriteUSDFile(filename, doc, packets, ExportOptions);
+  
+  SaveFiles();
+  
+  return result;
+}
+
+bool CExportUSDPlugIn::SaveFiles()
+{
+  if (UsdExportImport::Exported.Count() <= 0) return false;
+  
+  UsdFilePathPair baseFilePair = UsdExportImport::Exported[0];
+  const ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(baseFilePair.Real);
+  if (extension.EqualOrdinal(L".usdz", true))
+  {
+    pxr::UsdZipFileWriter writer = pxr::UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(baseFilePair.Real));
+    
+    for (UsdFilePathPair filePair : UsdExportImport::Exported)
+    {
+      ON_wString tempFilePath = filePair.Temporary;
+      ON_wString fileName = ON_FileSystemPath::FileNameFromPath(tempFilePath, true);
+      writer.AddFile(ON_Helpers::ON_wString_to_StdString(tempFilePath), ON_Helpers::ON_wString_to_StdString(fileName));
+      ON_FileSystem::RemoveFile(filePair.Temporary);
+    }
+    
+    for (ON_wString materialFilePath : UsdExportImport::FilesInExport)
+    {
+      ON_wString materialFileName = ON_FileSystemPath::FileNameFromPath(materialFilePath, true);
+      UsdShared::GetValidMaterialName(materialFileName);
+      std::string result = writer.AddFile(ON_Helpers::ON_wString_to_StdString(materialFilePath),
+                                          ON_Helpers::ON_wString_to_StdString(materialFileName));
+    }
+    
+    writer.Save();
+    
+    UsdExportImport::Exported.Empty();
+    
+    return true;
+  }
+  else if (extension.EqualOrdinal(L".usd", true) ||
+           extension.EqualOrdinal(L".usda", true) ||
+           extension.EqualOrdinal(L".usdc", true))
+  {
+    for (UsdFilePathPair filePair : UsdExportImport::Exported)
+    {
+      CRhinoFileUtilities::MoveFile(filePair.Temporary, filePair.Real);
+    }
+    
+    for (ON_wString originalMaterialFilePath : UsdExportImport::FilesInExport)
+    {
+      ON_wString exportDir = ON_FileSystemPath::DirectoryFromPath(baseFilePair.Real);
+      ON_wString materialFileName = ON_FileSystemPath::FileNameFromPath(originalMaterialFilePath, true);
+      UsdShared::GetValidMaterialName(materialFileName);
+      ON_wString materialNewPath = ON_FileSystemPath::CombinePaths(exportDir, false, materialFileName, true, false);
+      
+      CRhinoFileUtilities::CopyFile(originalMaterialFilePath, materialNewPath, false);
+    }
+    
+    UsdExportImport::Exported.Empty();
+    
+    return true;
+  }
+  
+  UsdExportImport::Exported.Empty();
+  
+  return false;
 }
 
 void CExportUSDPlugIn::LoadProfile(LPCTSTR lpszSection, CRhinoProfileContext& pc)

@@ -68,6 +68,11 @@ public:
     ON_ASSERT(m_rhino_object != nullptr);
     return *m_rhino_object;
   }
+  
+  const CRhinoObject* ObjectPointer() const
+  {
+    return m_rhino_object;
+  }
 
   const ON::object_type Type() const
   {

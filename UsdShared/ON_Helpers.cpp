@@ -3,10 +3,8 @@
 
 std::string ON_Helpers::ON_wString_to_StdString(const ON_wString& onwstr)
 {
-  // todo: problems with potentially losing data
-  std::wstring wstr(static_cast<const wchar_t*>(onwstr));
-  std::string str(wstr.begin(), wstr.end());
-  return str;
+  ON_String utf8Str(onwstr);
+  return static_cast<const char*>(utf8Str);
 }
 
 ON_wString ON_Helpers::StdString_to_ON_wString(const std::string& str)
@@ -95,4 +93,13 @@ void ON_Helpers::RotateGeometryYUp(ON_Geometry* geom)
   double ninetyDegrees = ON_PI / -2.0;
   rotate_y_up.Rotation(ninetyDegrees, ON_3dVector::XAxis, ON_3dPoint::Origin);
   geom->Transform(rotate_y_up);
+}
+
+const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
+{
+  pxr::GfMatrix4d matrix = pxr::GfMatrix4d(xForm.m_xform[0][0], xForm.m_xform[0][1], xForm.m_xform[0][2], xForm.m_xform[0][3],
+                                           xForm.m_xform[1][0], xForm.m_xform[1][1], xForm.m_xform[1][2], xForm.m_xform[1][3],
+                                           xForm.m_xform[2][0], xForm.m_xform[2][1], xForm.m_xform[2][2], xForm.m_xform[2][3],
+                                           xForm.m_xform[3][0], xForm.m_xform[3][1], xForm.m_xform[3][2], xForm.m_xform[3][3]);
+  return matrix;
 }

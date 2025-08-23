@@ -1,5 +1,14 @@
 #pragma once
+#include "stdafx.h"
+
 #include "UsdExportOptions.h"
+#include "write_usd.h"
+#include "UsdExportOptions.h"
+#include "UsdExportImport.h"
+
+#include "../UsdShared/UsdPacket.h"
+#include "../UsdShared/ON_Helpers.h"
+#include "../UsdShared/UsdShared.h"
 
 class CExportUSDPlugIn : public CRhinoFileExportSystemPlugIn
 {
@@ -26,6 +35,8 @@ public:
   void DisplayOptionsDialog(HWND parent, const CRhinoFileType& fileType) override;
 
   void PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& fileWriteOptions);
+  
+  bool SaveFiles();
 
 private:
   ON_wString m_plugin_version;

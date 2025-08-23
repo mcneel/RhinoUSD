@@ -5,8 +5,7 @@
 
 #include "UsdExportOptions.h"
 #include "../UsdShared/UsdPacket.h"
-
-using namespace pxr;
+#include "write_usd.h"
 
 // Move this to it's own header/cpp
 class UsdExportImport
@@ -19,35 +18,50 @@ public:
   void BindPbrMaterialToMesh(const ON_UUID& matId, const ON_wString meshPath);
   void AddNurbsCurve(const ON_NurbsCurve* nurbsCurve, const std::vector<ON_wString>& layerNames);
   void AddNurbsSurface(const ON_NurbsSurface* nurbsSurface, const std::vector<ON_wString>& layerNames);
+  bool AddBlock(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions);
+  void GetInstancePackets(const CRhinoInstanceDefinition* definition, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets);
+  bool GetPacketsFromCRhinoObjects(ObjectArray& objects, const CRhinoFileWriteOptions& fileOptions, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets, int mesh_ui_style = -1);
+  const ON_Mesh& GetMeshFromSubD(ON_SubD& subD, const ON_MeshParameters mp);
   bool AnythingToSave();
-  void Save(/*const ON_wString& fileName*/);
+  void Save();
+  void CreateUsdFile();
 
-  void WriteObject(UsdPacket& packet, const UsdExportOptions& usdOptions);
-  bool AddCurve(const UsdPacket& packet, const UsdExportOptions& usdOptions);
-  bool AddMesh(UsdPacket& packet, const UsdExportOptions& usdOptions);
+  void WriteObject(std::shared_ptr<UsdPacket>& packet, const UsdExportOptions& usdOptions);
+  bool AddCurve(const std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions);
+  bool AddMesh(std::shared_ptr<UsdPacket> packet, const UsdExportOptions& usdOptions);
 
-  std::vector<ON_wString> GetLayerNames(const UsdPacket& packet);
+  std::vector<ON_wString> GetLayerNames(const std::shared_ptr<UsdPacket> packet);
 
   void SetDefaultPrim();
+  void SetAuthorMetadata();
 
-  const UsdExportOptions& Options;
+  const UsdExportOptions& UsdOptions;
+
+  ON_wString tempUsdFilePath;
+  
+  static ON_ClassArray<UsdFilePathPair> Exported;
+  
+  //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
+  static std::vector<ON_wString> FilesInExport;
 
 private:
+  ON_wString m_usdFullFileName;
+
   CRhinoDoc& Doc;
 
+  ON_SimpleArray<ON_wString> Blocks;
+
   // pxr stuff
-  //std::vector<std::tuple<pxr::TfToken, ON_Texture::TYPE, std::string>> usd_texture_pbr_mapping;
-  std::vector<ON_wString> filesInExport;
   // ON_UUID cannot be used as the key to a std::map
   std::map<std::string, ON_wString> materialsAddedToScene;
-  const ON_wString usdFullFileName;
   double metersPerUnit;
   pxr::TfToken TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYPE& type);
-  UsdStageRefPtr stage;
+  pxr::UsdStageRefPtr stage;
   int currentMeshIndex;
   //int currentMaterialIndex;
   int currentShaderIndex;
   int currentNurbsCurveIndex;
+  int currentBlockIndex;
   pxr::TfToken tokPreviewSurface;
   pxr::TfToken tokSurface;
 
