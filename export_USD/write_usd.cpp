@@ -52,6 +52,7 @@ static void WorkoutTextureCoordinates(
 
 int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, const UsdExportOptions& usdOptions, ON_ClassArray<std::shared_ptr<UsdPacket>>& packets)
 {
+  // TODO : Document why this is necessary
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
   NSString* resources = [[NSBundle mainBundle] resourcePath];

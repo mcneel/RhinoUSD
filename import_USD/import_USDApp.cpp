@@ -43,7 +43,7 @@ Cimport_USDApp theApp;
 
 // Cimport_USDApp initialization
 
-BOOL Cimport_USDApp::InitInstance()
+BOOL32 Cimport_USDApp::InitInstance()
 {
   // CRITICAL: DO NOT CALL RHINO SDK FUNCTIONS HERE!
   // Only standard MFC DLL instance initialization belongs here. 

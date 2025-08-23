@@ -7,6 +7,12 @@ std::string ON_Helpers::ON_wString_to_StdString(const ON_wString& onwstr)
   return static_cast<const char*>(utf8Str);
 }
 
+ON_wString ON_Helpers::StdString_to_ON_wString(const std::string& str)
+{
+  ON_String onStr(str.data());
+  return ON_wString(onStr);
+}
+
 ON_wString ON_Helpers::ON_TextureTYPE_to_ON_wString(const ON_Texture::TYPE type)
 {
   // there's probably an better way to convert an enum to string in C++

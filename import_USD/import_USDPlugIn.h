@@ -25,7 +25,7 @@ public:
   void AddFileType(ON_ClassArray<CRhinoFileType>& extensions, const CRhinoFileReadOptions& options) override;
   
   // Called by Rhino to read document geometry from an external file.
-  BOOL ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options) override;
+  BOOL32 ReadFile(const wchar_t* filename, int index, CRhinoDoc& doc, const CRhinoFileReadOptions& options) override;
 private:
   ON_wString m_plugin_version;
 };

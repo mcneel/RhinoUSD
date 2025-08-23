@@ -8,6 +8,7 @@ class ON_wString;
 namespace ON_Helpers 
 {
   std::string ON_wString_to_StdString(const ON_wString& onwstr);
+  ON_wString StdString_to_ON_wString(const std::string& str);
   ON_wString ON_TextureTYPE_to_ON_wString(const ON_Texture::TYPE type);
   ON_wString ON_wString_vector_to_ON_wString_path(const std::vector<ON_wString>& names);
   ON_wString ON_UUID_to_ON_wString(const ON_UUID& uuid);
