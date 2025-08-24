@@ -1,0 +1,43 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 0.001
+    upAxis = "Y"
+)
+
+def Xform "One"
+{
+    def Xform "OneOne"
+    {
+        def Xform "OneOneOne"
+        {
+            def Xform "OneOneOneOne"
+            {
+            }
+            def Xform "OneOneOneTwo"
+            {
+            }
+        }
+        def Xform "OneOneTwo"
+        {
+    }
+    def Xform "OneTwo"
+    {
+    }
+    def Xform "OneThree"
+    {
+      def Xform "OneThreeOne"
+      {
+        def Xform "OneThreeOneOne"
+        {
+        }
+      }
+      def Xform "OneThreeTwo"
+      {
+        def Xform "OneThreeTwoOne"
+        {
+        }
+      }
+    }
+}
+

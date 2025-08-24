@@ -78,6 +78,9 @@ def export_usdz_file(filename:str) -> str:
 
     return export_file_usdz
 
+def new_file():
+    RhinoApp.RunScript(f"-new N", True)
+
 def open_file(path:str):
     RhinoApp.RunScript(f"-open {path}", True)
     RhinoApp.RunScript(f"ZE", True)
@@ -104,3 +107,29 @@ def assert_element_in_usda_file(usda_data:str, type_name:str, element_name:str):
 
 def assert_property_in_usda_file(usda_data:str, property_name:str):
     assertmsg(f"{property_name}" in usda_data, f"{property_name} not found in USDA file!")
+
+# Import Functions
+
+def import_usd_file(filename:str) -> str:
+    
+    import_file = get_test_file(f"{filename}.usd")
+    RhinoApp.RunScript(f"-import {import_file} _Enter", True)
+    return import_file
+
+def import_usda_file(filename:str) -> str:
+    
+    import_file = get_test_file(f"{filename}.usda")
+    RhinoApp.RunScript(f"-import {import_file} _Enter", True)
+    return import_file
+
+def import_usdc_file(filename:str) -> str:
+    
+    import_file = get_test_file(f"{filename}.usdc")
+    RhinoApp.RunScript(f"-import {import_file} _Enter", True)
+    return import_file
+
+def import_usdz_file(filename:str) -> str:
+    
+    import_file = get_test_file(f"{filename}.usdz")
+    RhinoApp.RunScript(f"-import {import_file} _Enter", True)
+    return import_file
