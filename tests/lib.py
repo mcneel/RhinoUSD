@@ -14,6 +14,8 @@ def get_test_file(file_name:str):
 def get_export_dir():
     root = os.path.dirname(__file__)
     export_dir = os.path.join(root, 'exports')
+    if not os.path.exists(export_dir):
+        os.mkdir(export_dir)
     
     return export_dir
 
