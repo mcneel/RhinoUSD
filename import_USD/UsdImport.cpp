@@ -11,7 +11,8 @@
 bool UsdImport::ReadFile()
 {
   const ON_wString wPath(m_filename);
-  const std::string filePath = ON_Helpers::ON_wString_to_StdString(wPath);
+  // const std::string filePath = ON_Helpers::ON_wString_to_StdString(wPath);
+  const std::string filePath = "/Users/sykes/gits/rhino9/src4/rhino4/Plug-ins/RhinoUSD/tests/files/prims.usda";
   Model = pxr::UsdStage::Open(filePath);
   
   // TODO : Layers
@@ -19,7 +20,7 @@ bool UsdImport::ReadFile()
   size_t st = layerStack.size();
   
   // TODO : Use Stage Direction to set Rhino WorldXY
-
+ 
   // Traverse all prims in the stage
   // NOTE : This is ALL prims, including ones we likely don't want,
   //        e.g abstract, hidden, etc! Ensure to filter correctly.
@@ -43,13 +44,6 @@ bool UsdImport::ReadFile()
     auto name = prim.GetDisplayName();
     
     int layerIndex = ConvertMetadata::GetOrCreateLayerIndex(m_doc, prim);
-
-    pxr::TfTokenVector properties = prim.GetPropertyNames();
-    for (auto& property : properties)
-    {
-      auto propertyString = property.GetString();
-      int t = 7;
-    }
 
     if (std::shared_ptr<ON_Geometry> geom = ConvertGeometry::TryGetPrimGeometry(prim))
     {

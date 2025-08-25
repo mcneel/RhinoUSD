@@ -5,11 +5,10 @@
 
 std::shared_ptr<const ON_3dmObjectAttributes> ConvertMetadata::TryGetAttributesFromPrim(pxr::UsdPrim& prim)
 {
-
   ON_3dmObjectAttributes attribs;
 
   std::string usdName = prim.GetName().GetString();
-  // attribs->SetName(onString.To, true);
+  attribs.SetName(ON_Helpers::StdString_to_ON_wString(usdName), true);
 
   // Attribs
   pxr::UsdAttributeVector attribVectors = prim.GetAttributes();
@@ -23,11 +22,22 @@ std::shared_ptr<const ON_3dmObjectAttributes> ConvertMetadata::TryGetAttributesF
     {
       // TODO : Set attribs
     }
-
+  }
+  
+  // Custom Data
+  pxr::VtDictionary dict = prim.GetCustomData();
+  for (const auto& property : dict)
+  {
+    const ON_wString name = ON_Helpers::StdString_to_ON_wString(property.first);
+    if (property.second.CanCast<std::string>())
+    {
+      std::string strValue = property.second.Get<std::string>();
+      const ON_wString value = ON_Helpers::StdString_to_ON_wString(strValue);
+      attribs.SetUserString(name, value);
+    }
   }
 
-  std::shared_ptr<const ON_3dmObjectAttributes> constAttribs = std::make_shared<ON_3dmObjectAttributes>(attribs);
-  return constAttribs;
+  return std::make_shared<ON_3dmObjectAttributes>(attribs);
 }
 
 std::shared_ptr<ON_Layer> ConvertMetadata::TryGetLayerFromPrim(pxr::UsdPrim& prim)
