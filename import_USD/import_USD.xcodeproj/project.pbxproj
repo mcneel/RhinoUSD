@@ -46,9 +46,6 @@
 		1A03266F2DCA6FEC0055EA64 /* import_USDApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = import_USDApp.cpp; sourceTree = "<group>"; };
 		1A0326702DCA6FEC0055EA64 /* import_USDPlugIn.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = import_USDPlugIn.cpp; sourceTree = "<group>"; };
 		1A0326712DCA6FEC0055EA64 /* read_usd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = read_usd.cpp; sourceTree = "<group>"; };
-		1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDebug.xcconfig; path = /Users/sykes/gits/rhino9/src4/Mac/XCConfig/PluginDebug.xcconfig; sourceTree = "<absolute>"; };
-		1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDistribution.xcconfig; path = /Users/sykes/gits/rhino9/src4/Mac/XCConfig/PluginDistribution.xcconfig; sourceTree = "<absolute>"; };
-		1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginRelease.xcconfig; path = /Users/sykes/gits/rhino9/src4/Mac/XCConfig/PluginRelease.xcconfig; sourceTree = "<absolute>"; };
 		1A03272E2DCA74F90055EA64 /* RhCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RhCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0327322DCA75030055EA64 /* OpenNURBS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenNURBS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0327352DCA75470055EA64 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../MacOS/Frameworks/libtbb.dylib; sourceTree = "<group>"; };
@@ -60,6 +57,9 @@
 		1AF24B352DCE1FDA00D9C60D /* UsdImportPacket.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UsdImportPacket.cpp; sourceTree = "<group>"; };
 		1AF24B372DCE210700D9C60D /* ON_Helpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ON_Helpers.h; path = ../UsdShared/ON_Helpers.h; sourceTree = SOURCE_ROOT; };
 		1AF24B382DCE462500D9C60D /* ON_Helpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ON_Helpers.cpp; path = ../UsdShared/ON_Helpers.cpp; sourceTree = SOURCE_ROOT; };
+		379AF9C22E5CD85300664127 /* PluginDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDebug.xcconfig; path = ../../../../Mac/XCConfig/PluginDebug.xcconfig; sourceTree = "<group>"; };
+		379AF9C32E5CD85300664127 /* PluginDistribution.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginDistribution.xcconfig; path = ../../../../Mac/XCConfig/PluginDistribution.xcconfig; sourceTree = "<group>"; };
+		379AF9C42E5CD85300664127 /* PluginRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PluginRelease.xcconfig; path = ../../../../Mac/XCConfig/PluginRelease.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,9 +67,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A0327362DCA75470055EA64 /* libtbb.dylib in Frameworks */,
-				1A03272F2DCA74F90055EA64 /* RhCore.framework in Frameworks */,
 				1A0327332DCA75030055EA64 /* OpenNURBS.framework in Frameworks */,
+				1A03272F2DCA74F90055EA64 /* RhCore.framework in Frameworks */,
+				1A0327362DCA75470055EA64 /* libtbb.dylib in Frameworks */,
 				1A653F9A2DCA758E00677735 /* libusd_ms.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -100,9 +100,9 @@
 		1A0326642DCA6C1F0055EA64 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */,
-				1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */,
-				1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */,
+				379AF9C22E5CD85300664127 /* PluginDebug.xcconfig */,
+				379AF9C32E5CD85300664127 /* PluginDistribution.xcconfig */,
+				379AF9C42E5CD85300664127 /* PluginRelease.xcconfig */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -243,7 +243,7 @@
 /* Begin XCBuildConfiguration section */
 		1A03265E2DCA6A790055EA64 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1A0326772DCA70390055EA64 /* PluginDebug.xcconfig */;
+			baseConfigurationReference = 379AF9C22E5CD85300664127 /* PluginDebug.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
@@ -277,7 +277,7 @@
 		};
 		1A03265F2DCA6A790055EA64 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1A0326792DCA70390055EA64 /* PluginRelease.xcconfig */;
+			baseConfigurationReference = 379AF9C42E5CD85300664127 /* PluginRelease.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
@@ -331,7 +331,7 @@
 		};
 		1A03267D2DCA706A0055EA64 /* Distribution */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1A0326782DCA70390055EA64 /* PluginDistribution.xcconfig */;
+			baseConfigurationReference = 379AF9C32E5CD85300664127 /* PluginDistribution.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
