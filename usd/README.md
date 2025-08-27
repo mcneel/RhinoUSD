@@ -15,6 +15,8 @@ git checkout tags/v23.02
 
 ## Getting requirements
 
+Install [UV](https://docs.astral.sh/uv/#projects)
+
 You will already have CMake/C++ working on your OS if you can build Rhino.
 
 ``` bash
