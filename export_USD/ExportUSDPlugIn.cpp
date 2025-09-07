@@ -103,26 +103,30 @@ int CExportUSDPlugIn::WriteFile(const wchar_t* filename,
   
   int result = WriteUSDFile(filename, doc, packets, ExportOptions);
   
-  SaveFiles();
+  SaveFiles(filename);
   
   return result;
 }
 
-bool CExportUSDPlugIn::SaveFiles()
+bool CExportUSDPlugIn::SaveFiles(const wchar_t* hostFileName)
 {
   if (UsdExportImport::Exported.Count() <= 0) return false;
   
-  UsdFilePathPair baseFilePair = UsdExportImport::Exported[0];
-  const ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(baseFilePair.Real);
+  ON_wString wFileName(hostFileName);
+  const ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(wFileName);
+  
   if (extension.EqualOrdinal(L".usdz", true))
   {
-    pxr::UsdZipFileWriter writer = pxr::UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(baseFilePair.Real));
+    pxr::UsdZipFileWriter writer = pxr::UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(wFileName));
+    writer.AddFile();
     
     for (UsdFilePathPair filePair : UsdExportImport::Exported)
     {
       ON_wString tempFilePath = filePair.Temporary;
       ON_wString fileName = ON_FileSystemPath::FileNameFromPath(tempFilePath, true);
-      writer.AddFile(ON_Helpers::ON_wString_to_StdString(tempFilePath), ON_Helpers::ON_wString_to_StdString(fileName));
+      ON_wString filePathInArchive = ON_FileSystemPath::FileNameFromPath(filePair.Real, true);
+      
+      writer.AddFile(ON_Helpers::ON_wString_to_StdString(tempFilePath), ON_Helpers::ON_wString_to_StdString(filePathInArchive));
       ON_FileSystem::RemoveFile(filePair.Temporary);
     }
     
@@ -151,7 +155,7 @@ bool CExportUSDPlugIn::SaveFiles()
     
     for (ON_wString originalMaterialFilePath : UsdExportImport::FilesInExport)
     {
-      ON_wString exportDir = ON_FileSystemPath::DirectoryFromPath(baseFilePair.Real);
+      ON_wString exportDir = ON_FileSystemPath::DirectoryFromPath(wFileName);
       ON_wString materialFileName = ON_FileSystemPath::FileNameFromPath(originalMaterialFilePath, true);
       UsdShared::GetValidMaterialName(materialFileName);
       ON_wString materialNewPath = ON_FileSystemPath::CombinePaths(exportDir, false, materialFileName, true, false);
