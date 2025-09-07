@@ -28,7 +28,7 @@ export_usdz_file('material-mapping')
 # Texture File is inside usdz
 
 usda_data = get_usd_file_text(export_file_usda)
-assert_element_in_usda_file(usda_data, 'Mesh', 'mesh0')
+assert_element_in_usda_file(usda_data, 'Mesh', 'Mesh0')
 assert_property_in_usda_file(usda_data, 'material:binding')
 assert_property_in_usda_file(usda_data, 'primvars:st1')
 

@@ -103,7 +103,7 @@ def get_usd_file_text(filepath:str) -> str:
     return ''
 
 def assert_element_in_usda_file(usda_data:str, type_name:str, element_name:str):
-    assertmsg(f"def {type_name} {element_name}" in usda_data, f"{element_name} not found in USDA file!")
+    assertmsg(f"def {type_name} \"{element_name}\"" in usda_data, f"{element_name} not found in USDA file!")
 
 def assert_property_in_usda_file(usda_data:str, property_name:str):
     assertmsg(f"{property_name}" in usda_data, f"{property_name} not found in USDA file!")
