@@ -95,6 +95,7 @@ void ON_Helpers::RotateGeometryYUp(ON_Geometry* geom)
   geom->Transform(rotate_y_up);
 }
 
+//
 const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
 {
   // Direct Transform between Rhino's column-major to Pixar's row-major
@@ -104,13 +105,11 @@ const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
       matrix[r][c] = xForm.m_xform[c][r];
   
   // Z/Y swap
-  double zValue = matrix[3][2];
   double yValue = matrix[3][1];
-  if (yValue > 0)
-    yValue = -yValue;
+  double zValue = matrix[3][2];
   
-  matrix[3][2] = yValue;
   matrix[3][1] = zValue;
+  matrix[3][2] = yValue * -1;
   
   return matrix;
 }
