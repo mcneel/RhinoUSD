@@ -409,7 +409,7 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
     fileExtension = L".usda";
   }
   
-  ON_wString blockFileName(definition->Name());
+  ON_wString blockFileName(ON_Helpers::RemoveSpacesFromNames(definition->Name()));
   blockFileName += fileExtension;
   
   ON_wString blockFilePath = m_usdFullFileName.SubString(0, m_usdFullFileName.Length() - oldFileName.Length());
@@ -1106,7 +1106,7 @@ void UsdExportImport::Save()
   
   // filePathInArchive += ".usda";
   const ON_wString directory = ON_FileSystemPath::DirectoryFromPath(m_usdFullFileName);
-  ON_wString filename = ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, false);
+  ON_wString filename = ON_Helpers::RemoveSpacesFromNames(ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, false));
   filename += ".usda";
   ON_wString fullPath = ON_FileSystemPath::CombinePaths(directory, false, filename, true, false);
 

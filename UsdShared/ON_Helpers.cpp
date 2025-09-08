@@ -103,3 +103,11 @@ const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
                                            xForm.m_xform[3][0], xForm.m_xform[3][1], xForm.m_xform[3][2], xForm.m_xform[3][3]);
   return matrix;
 }
+
+// TODO : Make this configurable
+ON_wString ON_Helpers::RemoveSpacesFromNames(const ON_wString& string)
+{
+  ON_wString replacable(string);
+  replacable.Replace(L" ", L"-");
+  return replacable;
+}

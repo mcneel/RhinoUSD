@@ -118,7 +118,6 @@ bool CExportUSDPlugIn::SaveFiles(const wchar_t* hostFileName)
   if (extension.EqualOrdinal(L".usdz", true))
   {
     pxr::UsdZipFileWriter writer = pxr::UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(wFileName));
-    writer.AddFile();
     
     for (UsdFilePathPair filePair : UsdExportImport::Exported)
     {
