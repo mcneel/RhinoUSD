@@ -97,11 +97,20 @@ void ON_Helpers::RotateGeometryYUp(ON_Geometry* geom)
 
 const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
 {
+  // Direct Transform between Rhino's column-major to Pixar's row-major
+  pxr::GfMatrix4d matrix;
+  for (int r = 0; r < 4; r++)
+    for (int c = 0; c < 4; c++)
+      matrix[r][c] = xForm.m_xform[c][r];
   
-  pxr::GfMatrix4d matrix = pxr::GfMatrix4d(xForm.m_xform[0][0], xForm.m_xform[1][0], xForm.m_xform[2][0], xForm.m_xform[3][0],
-                                            xForm.m_xform[0][1], xForm.m_xform[1][1], xForm.m_xform[2][1], xForm.m_xform[3][1],
-                                            xForm.m_xform[0][2], xForm.m_xform[1][2], xForm.m_xform[2][2], xForm.m_xform[3][2],
-                                            xForm.m_xform[0][3], xForm.m_xform[1][3], xForm.m_xform[2][3], xForm.m_xform[3][3]);
+  // Z/Y swap
+  double zValue = matrix[3][2];
+  double yValue = matrix[3][1];
+  if (yValue > 0)
+    yValue = -yValue;
+  
+  matrix[3][2] = yValue;
+  matrix[3][1] = zValue;
   
   return matrix;
 }
