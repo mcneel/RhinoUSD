@@ -11,8 +11,8 @@
 bool UsdImport::ReadFile()
 {
   const ON_wString wPath(m_filename);
-  // const std::string filePath = ON_Helpers::ON_wString_to_StdString(wPath);
-  const std::string filePath = "/Users/sykes/gits/rhino9/src4/rhino4/Plug-ins/RhinoUSD/tests/files/prims.usda";
+   const std::string filePath = ON_Helpers::ON_wString_to_StdString(wPath);
+  //const std::string filePath = "/Users/sykes/gits/rhino9/src4/rhino4/Plug-ins/RhinoUSD/tests/files/prims.usda";
   Model = pxr::UsdStage::Open(filePath);
   
   // TODO : Layers

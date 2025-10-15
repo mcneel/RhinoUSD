@@ -45,6 +45,12 @@
     <ClCompile Include="convert_metadata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UsdImport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UsdImportPacket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="import_USDApp.h">
@@ -72,6 +78,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="convert_metadata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UsdImport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UsdImportPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

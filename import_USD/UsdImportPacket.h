@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+
 //
 //  UsdImportPacket.h
 //  import_USD

@@ -1,11 +1,7 @@
 #include "stdafx.h"
 #include "iostream"
 #include <fstream>
-#include "UsdExportOptions.h"
 #include "UsdPacket.h"
-#include "ExportUSDPlugin.h"
-#include "UsdExportImport.h"
-#include "write_usd.h"
 
 #include "UsdShared.h"
 #include "ON_Helpers.h"

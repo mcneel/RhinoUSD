@@ -1,3 +1,5 @@
+#pragma once
+#include "stdafx.h"
 #include "UsdImportPacket.h"
 
 void UsdImportPacket::SetGeometry(std::shared_ptr<ON_Geometry> geometry)
