@@ -71,7 +71,7 @@ void UsdShared::SetUsdLayersAsXformable(const std::vector<ON_wString>& layerName
     }
     catch (...)
     {
-      ON_DEBUG("Null Prim in Export USD, throwing on prim.IsActive()");
+//      ON_DEBUG("Null Prim in Export USD, throwing on prim.IsActive()");
       // RhinoApp().Print(L"MESSAGE\n");
       // C Sykes : Above codes function is unknown.
       // NOTE : I don't think this exception matters.
