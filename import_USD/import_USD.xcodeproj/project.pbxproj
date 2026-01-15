@@ -80,6 +80,7 @@
 		1A0326532DCA6A790055EA64 = {
 			isa = PBXGroup;
 			children = (
+				370DA89C2F197EC200EB66F5 /* Products */,
 				1A0326672DCA6C770055EA64 /* Resources */,
 				1A0326662DCA6C610055EA64 /* Source Files */,
 				1A0326652DCA6C3C0055EA64 /* Header Files */,
@@ -89,7 +90,7 @@
 			);
 			sourceTree = "<group>";
 		};
-		1A03265D2DCA6A790055EA64 /* Products */ = {
+		370DA89C2F197EC200EB66F5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				1A03265C2DCA6A790055EA64 /* import_USD.rhp */,
