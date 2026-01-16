@@ -79,8 +79,9 @@ const int ConvertMetadata::GetOrCreateLayerIndex(CRhinoDoc& doc, const ON_wStrin
   {
     ON_wString parentFullPath = layerFullPath.SubString(0, colonIndex -1);
     int parentLayerIndex = ConvertMetadata::GetOrCreateLayerIndex(doc, parentFullPath);
-    index = doc.m_layer_table.AddSublayer(parentLayerIndex);
-    ON_Layer newLayer = doc.m_layer_table[index];
+    ON_Layer newLayer;
+    doc.m_layer_table.GetDefaultLayerProperties(newLayer);
+    newLayer.SetParentLayerId(doc.m_layer_table[parentLayerIndex].Id());
 
     ON_wString newLayerName = layerFullPath.SubString(colonIndex);
     while(newLayerName.StartsWith(L":"))
@@ -89,7 +90,7 @@ const int ConvertMetadata::GetOrCreateLayerIndex(CRhinoDoc& doc, const ON_wStrin
     }
 
     newLayer.SetName(newLayerName);
-    doc.m_layer_table.ModifyLayer(newLayer, index);
+    index = doc.m_layer_table.AddLayer(newLayer);
     return index;
   }
 
