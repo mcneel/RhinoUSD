@@ -56,14 +56,14 @@ std::shared_ptr<ON_Layer> ConvertMetadata::TryGetLayerFromPrim(pxr::UsdPrim& pri
 const int ConvertMetadata::GetOrCreateLayerIndex(CRhinoDoc& doc, pxr::UsdPrim& prim)
 {
   const pxr::SdfPath path = prim.GetPath();
-  const ON_wString pathString = ON_Helpers::StdString_to_ON_wString(path.GetString());
+  ON_wString layerFullPath = path.GetString().c_str();
   
-  // TODO : Remove the first :: or /
-  ON_wString layerFullPath(pathString);
+  if (layerFullPath.StartsWith(L"/"))
+    layerFullPath = layerFullPath.SubString(1);
+  
   layerFullPath.Replace(L"/", ON_Layer::NamePathSeparator);
   
-  const ON_wString constPath(layerFullPath);
-  return ConvertMetadata::GetOrCreateLayerIndex(doc, constPath);
+  return ConvertMetadata::GetOrCreateLayerIndex(doc, layerFullPath);
 }
   
 const int ConvertMetadata::GetOrCreateLayerIndex(CRhinoDoc& doc, const ON_wString& layerFullPath)
@@ -73,28 +73,27 @@ const int ConvertMetadata::GetOrCreateLayerIndex(CRhinoDoc& doc, const ON_wStrin
   {
     return index;
   }
-  
-  ON_Layer newLayer;
-  ON_wString newLayerName;
-  
+    
   int colonIndex = layerFullPath.ReverseFind(L":");
   if (colonIndex > -1)
   {
-    const ON_wString parentFullPath = layerFullPath.SubString(0, colonIndex -1);
+    ON_wString parentFullPath = layerFullPath.SubString(0, colonIndex -1);
     int parentLayerIndex = ConvertMetadata::GetOrCreateLayerIndex(doc, parentFullPath);
-    newLayer.SetParentId(doc.m_layer_table[index].Id());
-    
-    newLayerName = layerFullPath.SubString(colonIndex);
+    index = doc.m_layer_table.AddSublayer(parentLayerIndex);
+    ON_Layer newLayer = doc.m_layer_table[index];
+
+    ON_wString newLayerName = layerFullPath.SubString(colonIndex);
+    while(newLayerName.StartsWith(L":"))
+    {
+      newLayerName = newLayerName.SubString(1);
+    }
+
+    newLayer.SetName(newLayerName);
+    doc.m_layer_table.ModifyLayer(newLayer, index);
+    return index;
   }
-  else
-  {
-    // Root Layer, none of the path exists
-    newLayerName = layerFullPath;
-  }
-  
-  newLayer.SetName(newLayerName);
-  
-  const ON_Layer constLayer(newLayer);
-  index = doc.m_layer_table.AddLayer(constLayer);
+
+  // Root Layer, none of the path exists
+  index = doc.m_layer_table.AddLayer(layerFullPath, ON_Color::Black, false);
   return index;
 }
