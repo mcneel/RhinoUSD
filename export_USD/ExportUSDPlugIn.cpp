@@ -23,11 +23,6 @@ RHINO_PLUG_IN_ID(L"36803D82-097C-4B55-8F42-E4D44764C9DD");
 RHINO_PLUG_IN_VERSION(__DATE__ "  " __TIME__)
 RHINO_PLUG_IN_DESCRIPTION(L"Export USD, USDA, USDC and USDZ file formats");
 
-// Rhino plug-in icon resource id
-// Provide an icon resource this plug-in.
-// Icon resource should contain 16, 24, 32, 48, and 256-pixel image sizes.
-RHINO_PLUG_IN_ICON_RESOURCE_ID(IDI_ICON);
-
 RHINO_PLUG_IN_UPDATE_URL( L"http://www2.rhino3d.com/sr/plugin.asp?id=36803D82-097C-4B55-8F42-E4D44764C9DD" );
 
 // The one and only CExportUSDPlugIn object
