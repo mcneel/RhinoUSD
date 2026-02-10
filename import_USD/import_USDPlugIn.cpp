@@ -83,7 +83,7 @@ BOOL32 Cimport_USDPlugIn::ReadFile(const wchar_t* filename, int index, CRhinoDoc
   
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
-  NSString* resources = [[NSBundle mainBundle] resourcePath];
+  NSString* resources = [[NSBundle rhinoApplicationBundle] resourcePath];
   ON_String usd_resource_path = [resources ONString];
   usd_resource_path += "/usd";
   pxr::PlugRegistry::GetInstance().RegisterPlugins(std::string(usd_resource_path.Array()));

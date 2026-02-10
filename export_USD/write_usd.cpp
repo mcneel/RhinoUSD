@@ -55,7 +55,7 @@ int GetPackets(CRhinoDoc& doc, const CRhinoFileWriteOptions& fileOptions, const 
   // TODO : Document why this is necessary
 #if defined(ON_RUNTIME_APPLE)
   std::vector<std::string> searchPath;
-  NSString* resources = [[NSBundle mainBundle] resourcePath];
+  NSString* resources = [[NSBundle rhinoApplicationBundle] resourcePath];
   ON_String usd_resource_path = [resources ONString];
   usd_resource_path += "/usd";
   pxr::PlugRegistry::GetInstance().RegisterPlugins(std::string(usd_resource_path.Array()));
