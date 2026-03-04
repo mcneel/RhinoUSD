@@ -86,16 +86,7 @@
 				1A0326652DCA6C3C0055EA64 /* Header Files */,
 				1A0326642DCA6C1F0055EA64 /* Supporting Files */,
 				1A03272D2DCA74F90055EA64 /* Frameworks */,
-				1A03265D2DCA6A790055EA64 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		370DA89C2F197EC200EB66F5 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				1A03265C2DCA6A790055EA64 /* import_USD.rhp */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		1A0326642DCA6C1F0055EA64 /* Supporting Files */ = {
@@ -157,6 +148,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		370DA89C2F197EC200EB66F5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A03265C2DCA6A790055EA64 /* import_USD.rhp */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -204,7 +203,6 @@
 			mainGroup = 1A0326532DCA6A790055EA64;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 1A03265D2DCA6A790055EA64 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -246,6 +244,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 379AF9C22E5CD85300664127 /* PluginDebug.xcconfig */;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -280,6 +279,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 379AF9C42E5CD85300664127 /* PluginRelease.xcconfig */;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -334,6 +334,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 379AF9C32E5CD85300664127 /* PluginDistribution.xcconfig */;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
