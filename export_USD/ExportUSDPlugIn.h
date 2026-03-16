@@ -36,7 +36,7 @@ public:
 
   void PushFileWriteOptionsToUsdOptions(const CRhinoFileWriteOptions& fileWriteOptions);
   
-  bool SaveFiles();
+  bool SaveFiles(const wchar_t* hostFileName);
 
 private:
   ON_wString m_plugin_version;

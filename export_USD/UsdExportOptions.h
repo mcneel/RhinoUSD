@@ -14,7 +14,8 @@ public:
     Blocks(DefaultBlocks),
     ForceMeshes(DefaultForceMeshes),
     IncludeUserStrings(DefaultIncludeUserStrings),
-    Headless(false)
+    Headless(false),
+    SpaceReplacement(L"-")
   {
 
   }
@@ -24,6 +25,7 @@ public:
   BlockHandling DefaultBlocks = BlockHandling::SeparateFiles;
   bool DefaultForceMeshes = false;
   bool DefaultIncludeUserStrings = true;
+  ON_wString DefaultSpaceReplacement = L"-";
 
   // If Model Name is empty that layer/prim isn't included
   ON_wString ModelName;
@@ -31,6 +33,7 @@ public:
   BlockHandling Blocks;
   bool ForceMeshes;
   bool IncludeUserStrings;
+  ON_wString SpaceReplacement = L"-";
 
   // Non-User Settings
   bool Headless;

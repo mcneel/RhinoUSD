@@ -67,7 +67,7 @@ void UsdExportImport::CreateUsdFile()
   if (CRhinoFileUtilities::GetTemporaryPath(tempPath))
   {
     ON_wString tempFolder = ON_FileSystemPath::CombinePaths(tempPath, false, TempFolder, false, false);
-
+    
     UUID uuid;
     ON_wString fileName;
     ON_CreateUuid(uuid);
@@ -76,7 +76,7 @@ void UsdExportImport::CreateUsdFile()
     ON_wString extension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
     if (extension.EqualOrdinal(L".usdz", true))
     {
-      extension = L".usdc";
+      extension = L".usda";
     }
     fileName += extension;
 
@@ -404,8 +404,12 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   ON_wString oldFileName = ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, true);
   ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
+  if (fileExtension.EqualOrdinal(L".usdz", true))
+  {
+    fileExtension = L".usda";
+  }
   
-  ON_wString blockFileName(definition->Name());
+  ON_wString blockFileName(ON_Helpers::RemoveSpacesFromNames(definition->Name()));
   blockFileName += fileExtension;
   
   ON_wString blockFilePath = m_usdFullFileName.SubString(0, m_usdFullFileName.Length() - oldFileName.Length());
@@ -1099,7 +1103,14 @@ void UsdExportImport::Save()
   stage->Save();
   
   UsdFilePathPair& newPair = Exported.AppendNew();
-  newPair.Real = m_usdFullFileName;
+  
+  // filePathInArchive += ".usda";
+  const ON_wString directory = ON_FileSystemPath::DirectoryFromPath(m_usdFullFileName);
+  ON_wString filename = ON_Helpers::RemoveSpacesFromNames(ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, false));
+  filename += ".usda";
+  ON_wString fullPath = ON_FileSystemPath::CombinePaths(directory, false, filename, true, false);
+
+  newPair.Real = fullPath;
   newPair.Temporary = tempUsdFilePath;
     
   return;

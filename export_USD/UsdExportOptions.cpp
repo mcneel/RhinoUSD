@@ -15,6 +15,7 @@ bool HandleUserInput(UsdExportOptions& options)
   args.SetBool(L"force-meshes", options.ForceMeshes);
   args.SetBool(L"include-user-strings", options.IncludeUserStrings);
   args.SetBool(L"scripting", options.Headless);
+  args.SetBool(L"space-replacement", options.SpaceReplacement);
 
   if (!RhExecuteNamedCallback(L"ShowExportUsdDialog", args)) return false;
   bool userChoseOk;
@@ -26,6 +27,7 @@ bool HandleUserInput(UsdExportOptions& options)
   ON_wString modelNameValue;
   bool forceMeshesValue;
   bool includeUserStringsValue;
+  ON_wString splaceReplacementValue;
 
   if (args.GetInt(L"blocks", blocksValue))
   {
@@ -50,6 +52,11 @@ bool HandleUserInput(UsdExportOptions& options)
   if (args.GetBool(L"include-user-strings", includeUserStringsValue))
   {
     options.IncludeUserStrings = includeUserStringsValue;
+  }
+  
+  if (args.GetString(L"space-replacement", splaceReplacementValue))
+  {
+    options.SpaceReplacement = splaceReplacementValue;
   }
 
   return true;

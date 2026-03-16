@@ -18,4 +18,5 @@ namespace ON_Helpers
   template <class TYPE> TYPE DegreesToRadians(TYPE deg) { return deg * ON_PI / 180.0; }
   template <class TYPE> TYPE RadiansToDegrees(TYPE rad) { return rad / ON_PI * 180.0; }
   const pxr::GfMatrix4d Convert(const ON_Xform& xForm);
+  ON_wString RemoveSpacesFromNames(const ON_wString& string);
 }
