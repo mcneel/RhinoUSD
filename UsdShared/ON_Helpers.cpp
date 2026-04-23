@@ -103,3 +103,11 @@ const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
                                            xForm.m_xform[3][0], xForm.m_xform[3][1], xForm.m_xform[3][2], xForm.m_xform[3][3]);
   return matrix;
 }
+
+const pxr::GfMatrix4d ON_Helpers::ConvertInstanceXform(const ON_Xform& xForm)
+{
+  // Courtesy of https://forum.aousd.org/t/matrix-transforms-and-changing-up/2684/6
+  pxr::GfMatrix4d C;
+  C.SetRotate(pxr::GfRotation(pxr::GfVec3d(1, 0, 0), -90.0));
+  return C.GetInverse() * Convert(xForm) * C;
+}
