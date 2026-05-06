@@ -112,11 +112,20 @@ bool CExportUSDPlugIn::SaveFiles()
   if (extension.EqualOrdinal(L".usdz", true))
   {
     pxr::UsdZipFileWriter writer = pxr::UsdZipFileWriter::CreateNew(ON_Helpers::ON_wString_to_StdString(baseFilePair.Real));
-    
+
     for (UsdFilePathPair filePair : UsdExportImport::Exported)
     {
+      // Use a deterministic in-zip name derived from the "Real" path so that
+      // references written by AddBlock (which use <DefName>.usdc) resolve.
+      // The temp file basename is a random uuid and would not match.
       ON_wString tempFilePath = filePair.Temporary;
-      ON_wString fileName = ON_FileSystemPath::FileNameFromPath(tempFilePath, true);
+      ON_wString fileName = ON_FileSystemPath::FileNameFromPath(filePair.Real, true);
+      ON_wString realExt = ON_FileSystemPath::FileNameExtensionFromPath(fileName);
+      if (realExt.EqualOrdinal(L".usdz", true))
+      {
+        fileName = fileName.SubString(0, fileName.Length() - realExt.Length());
+        fileName += L".usdc";
+      }
       writer.AddFile(ON_Helpers::ON_wString_to_StdString(tempFilePath), ON_Helpers::ON_wString_to_StdString(fileName));
       ON_FileSystem::RemoveFile(filePair.Temporary);
     }

@@ -37,7 +37,7 @@ UsdExportImport::UsdExportImport(const ON_wString& fileName, double metersPerUni
   tokIor("ior"),
   tokDisplacement("displacement"),
   tokOcclusion("occlusion"),
-  Blocks(ON_SimpleArray<ON_wString>(10))
+  Blocks(ON_ClassArray<ON_wString>(10))
 {
   CreateUsdFile();
   SetDefaultPrim();
@@ -404,71 +404,104 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
 
   ON_wString oldFileName = ON_FileSystemPath::FileNameFromPath(m_usdFullFileName, true);
   ON_wString fileExtension = ON_FileSystemPath::FileNameExtensionFromPath(m_usdFullFileName);
-  
+
+  // The block-file path used to write the external block (and to recurse via WriteUSDFile)
+  // mirrors the outer file's extension. For .usdz output the file is repackaged inside the
+  // zip as .usdc by SaveFiles, so the reference target written into the main stage must
+  // use .usdc instead of .usdz.
   ON_wString blockFileName(definition->Name());
   blockFileName += fileExtension;
-  
+
   ON_wString blockFilePath = m_usdFullFileName.SubString(0, m_usdFullFileName.Length() - oldFileName.Length());
   blockFilePath += blockFileName;
 
-  if (Blocks.Search(definition->Name()) < 0)
+  ON_wString blockReferenceFileName(definition->Name());
+  if (fileExtension.EqualOrdinal(L".usdz", true))
+    blockReferenceFileName += L".usdc";
+  else
+    blockReferenceFileName += fileExtension;
+
+  // For SeparateFiles: write the external block file once per definition.
+  // For InsideFile: each instance gets its own copy of the geometry under its
+  // Xform, so we don't need to gate on "already written" for that mode.
+  bool blockAlreadyWritten = false;
+  for (int i = 0; i < Blocks.Count(); i++)
   {
-    
-    ON_ClassArray<std::shared_ptr<UsdPacket>> packets(0);
-    GetInstancePackets(definition, packets);
-    
-    if (usdOptions.Blocks == BlockHandling::SeparateFiles)
+    if (Blocks[i] == definition->Name())
     {
-      int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, packets, usdOptions);
-      if (returnValue < 0) return false;
+      blockAlreadyWritten = true;
+      break;
     }
-    else
-    {
-      for (std::shared_ptr<UsdPacket> packet : packets)
-      {
-        WriteObject(packet, usdOptions);
-      }
-      
-      return true;
-    }
-    
+  }
+  if (usdOptions.Blocks == BlockHandling::SeparateFiles && !blockAlreadyWritten)
+  {
+    ON_ClassArray<std::shared_ptr<UsdPacket>> blockPackets(0);
+    GetInstancePackets(definition, blockPackets);
+
+    int returnValue = WriteUSDFile(blockFilePath.Array(), *doc, blockPackets, usdOptions);
+    if (returnValue < 0) return false;
+
     Blocks.Append(definition->Name());
   }
-  
+
   std::vector<ON_wString> layerNames = GetLayerNames(packet);
   ON_wString blockPrimPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
   ON_wString blockPrimRefPath(blockPrimPath);
-  
+
   ON_wString blockPrimName;
   blockPrimName.Format(L"/BlockInstance%d", currentBlockIndex++);
   blockPrimPath += blockPrimName;
-  
+
   // TOOD : Make Component
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   UsdGeomXform instanceForm = UsdGeomXform::Define(stage, SdfPath(ON_Helpers::ON_wString_to_StdString(blockPrimPath)));
-  
+
   UsdPrim prim = instanceForm.GetPrim();
-  
+
   if (usdOptions.Blocks == BlockHandling::SeparateFiles)
   {
     const pxr::SdfPath path(ON_Helpers::ON_wString_to_StdString(blockPrimRefPath));
     const std::string refString(ON_Helpers::ON_wString_to_StdString(blockFilePath));
-    
+
     // Set Kind -> Causes issues
     //  pxr::UsdEditTarget().MapToSpecPath(path);
     //  pxr::UsdModelAPI modelApi = pxr::UsdModelAPI();
     //  modelApi.SetKind(pxr::KindTokens->assembly);
-    
+
     prim.SetInstanceable(true);
-    
+
     pxr::UsdReferences references = prim.GetReferences();
-    references.AddReference(ON_Helpers::ON_wString_to_StdString(blockFileName), path);
+    references.AddReference(ON_Helpers::ON_wString_to_StdString(blockReferenceFileName), path);
+  }
+  else if (usdOptions.Blocks == BlockHandling::InsideFile)
+  {
+    // Write the block's contents as children of this instance Xform. The
+    // override redirects AddMesh/AddCurve/AddNurbsCurve/AddNurbsSurface (and
+    // recursive AddBlock for nested instance refs) to use the instance's path
+    // as their parent, so the geometry inherits the instance transform.
+    std::vector<ON_wString> instancePathParts(layerNames);
+    ON_wString instanceLeaf(blockPrimName);
+    if (instanceLeaf.Length() > 0 && instanceLeaf[0] == L'/')
+      instanceLeaf = instanceLeaf.SubString(1, instanceLeaf.Length() - 1);
+    instancePathParts.push_back(instanceLeaf);
+
+    std::vector<ON_wString> savedOverride = m_layerPathOverride;
+    m_layerPathOverride = instancePathParts;
+
+    ON_ClassArray<std::shared_ptr<UsdPacket>> blockPackets(0);
+    GetInstancePackets(definition, blockPackets);
+    for (std::shared_ptr<UsdPacket> blockPacket : blockPackets)
+    {
+      WriteObject(blockPacket, usdOptions);
+    }
+
+    m_layerPathOverride = savedOverride;
   }
 
   // https://openusd.org/release/glossary.html#usdglossary-assetinfo
   // https://github.com/ColinKennedy/USD-Cookbook/tree/master/features/asset_info
   pxr::VtDictionary vtDict(4);
-  vtDict.SetValueAtPath("identifier", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(blockFileName)));
+  vtDict.SetValueAtPath("identifier", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(blockReferenceFileName)));
   vtDict.SetValueAtPath("name", pxr::VtValue(ON_Helpers::ON_wString_to_StdString(definition->Name())));
   vtDict.SetValueAtPath("version", pxr::VtValue(ON_Helpers::ON_UUID_to_StdString(refId)));
   
@@ -1107,6 +1140,12 @@ void UsdExportImport::Save()
 
 std::vector<ON_wString> UsdExportImport::GetLayerNames(const std::shared_ptr<UsdPacket> packet)
 {
+  // When an override is active (e.g. while writing block contents under an
+  // instance Xform for BlockHandling::InsideFile), bypass the layer hierarchy
+  // and use the override path instead.
+  if (!m_layerPathOverride.empty())
+    return m_layerPathOverride;
+
   std::vector<ON_wString> names;
 
   CRhinoDoc* doc = packet->Object().Document();

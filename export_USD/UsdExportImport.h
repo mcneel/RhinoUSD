@@ -49,7 +49,15 @@ private:
 
   CRhinoDoc& Doc;
 
-  ON_SimpleArray<ON_wString> Blocks;
+  // ON_wString is ref-counted internally, so it must be stored in a class array
+  // (which uses copy/destruct), not an ON_SimpleArray (which uses memcpy).
+  ON_ClassArray<ON_wString> Blocks;
+
+  // When non-empty, AddMesh/AddCurve/AddNurbsCurve/AddNurbsSurface/AddBlock
+  // will write their prims under this path instead of the layer-derived path.
+  // Used to redirect block contents under the instance's Xform when handling
+  // BlockHandling::InsideFile.
+  std::vector<ON_wString> m_layerPathOverride;
 
   // pxr stuff
   // ON_UUID cannot be used as the key to a std::map
