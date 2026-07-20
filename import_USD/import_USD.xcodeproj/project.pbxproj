@@ -244,7 +244,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 379AF9C22E5CD85300664127 /* PluginDebug.xcconfig */;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -279,7 +278,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 379AF9C42E5CD85300664127 /* PluginRelease.xcconfig */;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -334,7 +332,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 379AF9C32E5CD85300664127 /* PluginDistribution.xcconfig */;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				DEVELOPMENT_TEAM = D6XDM4N99E;
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/../../../MacOS/MacPlugIn_Prefix.pch";
 				HEADER_SEARCH_PATHS = (
