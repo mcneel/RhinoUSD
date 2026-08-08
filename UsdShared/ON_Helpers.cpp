@@ -79,27 +79,47 @@ std::string ON_Helpers::ON_UUID_to_StdString(const ON_UUID& uuid)
   return ON_wString_to_StdString(ON_Helpers::ON_UUID_to_ON_wString(uuid));
 }
 
-void ON_Helpers::RotateYUp(ON_Mesh* mesh)
+const ON_Xform ON_Helpers::YUpRotation()
 {
   ON_Xform rotate_y_up;
-  double ninetyDegrees = ON_PI / -2.0;
+  const double ninetyDegrees = ON_PI / -2.0;
   rotate_y_up.Rotation(ninetyDegrees, ON_3dVector::XAxis, ON_3dPoint::Origin);
-  mesh->Transform(rotate_y_up);
+  return rotate_y_up;
 }
 
 void ON_Helpers::RotateGeometryYUp(ON_Geometry* geom)
 {
-  ON_Xform rotate_y_up;
-  double ninetyDegrees = ON_PI / -2.0;
-  rotate_y_up.Rotation(ninetyDegrees, ON_3dVector::XAxis, ON_3dPoint::Origin);
-  geom->Transform(rotate_y_up);
+  geom->Transform(YUpRotation());
+}
+
+const pxr::GfMatrix4d ON_Helpers::ConvertToYUp(const ON_Xform& xForm)
+{
+  // The geometry this transform gets applied to has already been baked into the
+  // Y-up frame (see RotateYUp), so the transform has to be expressed in that
+  // same frame: R * X * R^-1.
+  const ON_Xform R = YUpRotation();
+
+  // R is a pure rotation, so its inverse is the same rotation the other way.
+  // Building it directly keeps this exact.
+  ON_Xform Rinv;
+  Rinv.Rotation(ON_PI / 2.0, ON_3dVector::XAxis, ON_3dPoint::Origin);
+
+  return Convert(R * xForm * Rinv);
 }
 
 const pxr::GfMatrix4d ON_Helpers::Convert(const ON_Xform& xForm)
 {
-  pxr::GfMatrix4d matrix = pxr::GfMatrix4d(xForm.m_xform[0][0], xForm.m_xform[0][1], xForm.m_xform[0][2], xForm.m_xform[0][3],
-                                           xForm.m_xform[1][0], xForm.m_xform[1][1], xForm.m_xform[1][2], xForm.m_xform[1][3],
-                                           xForm.m_xform[2][0], xForm.m_xform[2][1], xForm.m_xform[2][2], xForm.m_xform[2][3],
-                                           xForm.m_xform[3][0], xForm.m_xform[3][1], xForm.m_xform[3][2], xForm.m_xform[3][3]);
+  // NOTE : This is a transpose, not a straight copy.
+  //
+  // ON_Xform multiplies column vectors (p' = M * p) and keeps its translation
+  // in the last column. pxr::GfMatrix4d multiplies row vectors (p' = p * M) and
+  // keeps its translation in the last row. Copying the coefficients across
+  // unchanged puts the translation in GfMatrix4d's projective column, so every
+  // transformed point divides down towards the origin - which is what made all
+  // but one block instance collapse on top of each other. See RH-88698.
+  pxr::GfMatrix4d matrix = pxr::GfMatrix4d(xForm.m_xform[0][0], xForm.m_xform[1][0], xForm.m_xform[2][0], xForm.m_xform[3][0],
+                                           xForm.m_xform[0][1], xForm.m_xform[1][1], xForm.m_xform[2][1], xForm.m_xform[3][1],
+                                           xForm.m_xform[0][2], xForm.m_xform[1][2], xForm.m_xform[2][2], xForm.m_xform[3][2],
+                                           xForm.m_xform[0][3], xForm.m_xform[1][3], xForm.m_xform[2][3], xForm.m_xform[3][3]);
   return matrix;
 }

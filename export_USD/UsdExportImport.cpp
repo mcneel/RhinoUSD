@@ -126,7 +126,7 @@ bool UsdExportImport::AddMesh(std::shared_ptr<UsdPacket> packet, const UsdExport
   // AddMeshMaterial();
 
   ON_Mesh meshCopy(*mesh);
-  ON_Helpers::RotateYUp(&meshCopy);
+  ON_Helpers::RotateGeometryYUp(&meshCopy);
 
   UsdShared::SetUsdLayersAsXformable(layerNames, stage);
   ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
@@ -481,10 +481,13 @@ bool UsdExportImport::AddBlock(const std::shared_ptr<UsdPacket> packet, const Us
   if (instance)
   {
     // Set Transform!
-    
+    //
+    // The block definition's geometry was baked Y-up when it was written, so
+    // the instance transform has to be moved into the Y-up frame too, rather
+    // than authored in Rhino's Z-up world. See RH-88698.
     const ON_Xform xForm = instance->InstanceXform();
-    const pxr::GfMatrix4d matrix = ON_Helpers::Convert(xForm);
-    
+    const pxr::GfMatrix4d matrix = ON_Helpers::ConvertToYUp(xForm);
+
     pxr::UsdGeomXformOp op = instanceForm.AddTransformOp();
     op.Set(matrix);
   }
@@ -654,7 +657,7 @@ pxr::TfToken UsdExportImport::TextureTypeToUsdPbrPropertyTfToken(ON_Texture::TYP
 ON_wString UsdExportImport::AddMesh(const ON_Mesh* mesh, const ON_wString meshName, const std::vector<ON_wString>& layerNames, const std::map<int, ON_TextureCoordinates>& tcs)
 {
   ON_Mesh meshCopy(*mesh);
-  ON_Helpers::RotateYUp(&meshCopy);
+  ON_Helpers::RotateGeometryYUp(&meshCopy);
 
   UsdShared::SetUsdLayersAsXformable(layerNames, stage);
   ON_wString layerNamesPath = ON_Helpers::ON_wString_vector_to_ON_wString_path(layerNames);
