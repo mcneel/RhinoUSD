@@ -1127,9 +1127,11 @@ std::vector<ON_wString> UsdExportImport::GetLayerNames(const std::shared_ptr<Usd
   while (!ON_UuidIsNil(pid))
   {
     layer_index = layer_table.FindLayerFromId(pid, false, false, -1);
+    if (layer_index < 0)
+      break;
     const CRhinoLayer& parentLayer = layer_table[layer_index];
     ON_wString parentLayerName = UsdShared::RhinoLayerNameToUsd(parentLayer.Name());
-    names.push_back(parentLayerName);
+    names.insert(names.begin(), parentLayerName);
     ON_UUID id(parentLayer.ParentId());
     pid = id;
   }
